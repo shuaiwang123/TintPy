@@ -1,8 +1,9 @@
+#! /usr/bin/env python
 # -*- coding:utf-8 -*-
-import math
 import argparse
-import urllib.request
+import math
 import os
+import urllib.request
 
 no_srtm_dem = """01_01-01_03-01_04-01_05-01_06-01_08-01_09-01_10-01_11-01_13-
 01_14-01_20-01_22-01_23-01_24-02_03-02_04-02_05-02_06-02_10-02_11-02_12-02_18-
@@ -177,7 +178,7 @@ def srtm_dem(s, n, w, e):
                 url = "{}{}_{}.zip".format(HEADER, num_lon, num_lat)
                 download_urls.append(url)
             else:
-                download_urls.append('no srtm dem')
+                download_urls.append('No SRTM DEM')
     return lon_lat_list, download_urls
 
 
@@ -191,24 +192,24 @@ def get_urls(flag, bound):
         if is_num(s) and is_num(n) and is_num(w) and is_num(e):
             s, n, w, e = float(s), float(n), float(w), float(e)
             if w >= e or s >= n:
-                print("Error bound, please reset it!")
+                print('Error bound, please reset it ("S N W E")!')
             else:
-                if flag in ['srtm', 'SRTM']:
+                if flag.upper() == 'SRTM':
                     if s < -60 or n > 60:
                         print(
                             'Latitude range of SRTM is -60 ~ 60, please reset it!'
                         )
                     else:
                         lon_lat, download_urls = srtm_dem(s, n, w, e)
-                elif flag in ['alos', 'ALOS']:
+                elif flag.upper() == 'ALOS':
                     lon_lat, download_urls = alos_dem(s, n, w, e)
                 else:
-                    print('Error flag, please reset it!')
+                    print('Error flag, please reset it (alos ALOS srtm SRTM)!')
         else:
-            print("Error bound, please reset it!")
+            print('Error bound, please reset it ("S N W E")!')
     else:
-        print("Error bound, please reset it!")
-    # print lon_lat urls
+        print('Error bound, please reset it ("S N W E")!')
+    print("\nDownload urls of all DEM:")
     for i, j in zip(lon_lat, download_urls):
         if lon_lat.index(i) == len(lon_lat) - 1:
             print("{}: {}\n".format(i, j))
@@ -226,75 +227,76 @@ def download_progress(blocknum, blocksize, totalsize):
     percent = 100.0 * blocknum * blocksize / totalsize
     if percent > 100:
         percent = 100
-        print("\r    Downloaded: " + "#" * int(percent) + " %.2f%%" % percent,
+        print("\rDownloaded: " + "#" * int(percent / 2) + " %.2f%%" % percent,
               end=" ",
               flush=True)
     else:
-        print("\r    Downloading: " + "#" * int(percent) + " %.2f%%" % percent,
+        print("\rDownloading: " + "#" * int(percent / 2) + " %.2f%%" % percent,
               end=" ",
               flush=True)
 
 
 def download_dem(url, save_path):
+    abs_path = os.path.join(save_path, url.split('/')[-1])
     try:
-        urllib.request.urlretrieve(url,
-                                   os.path.join(save_path,
-                                                url.split('/')[-1]),
-                                   download_progress)
+        urllib.request.urlretrieve(url, abs_path, download_progress)
     except Exception as e:
-        print(f'    {e}')
+        print(f'{e}')
+
+
+INTRODUCTION = '''
+########################################################################################
+    Copy Right(c): 2019-2020, Yuan Lei
+   
+    Download SRTM (90m) or ALOS (30m) DEM (tif).
+   
+    1) You can download DEM using this script;
+    2) If you don't want to download DEM using this script, you can copy urls of DEM,
+       then download them using other downloaders.
+'''
+
+EXAMPLE = '''
+    Examples:
+        # only get urls of DEM
+        python download_dem.py -f srtm -b "30 40 100 105"
+        # get urls of DEM and download them
+        python download_dem.py -f srtm -b "30 40 100 105" -s D:\\test
+        python download_dem.py -f alos -b "30 40 100 105" -s D:\\test
+########################################################################################
+'''
 
 
 def cmdline_parser():
     parser = argparse.ArgumentParser(
-        description='Download SRTM or ALOS dem (tif)')
+        description='Download SRTM (90m) or ALOS (30m) DEM (tif)',
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=INTRODUCTION + '\n' + EXAMPLE)
     parser.add_argument('-f',
                         dest='flag',
                         required=True,
                         type=str,
-                        help='dem type (alos, ALOS, srtm, SRTM)')
+                        help='DEM type (alos, ALOS, srtm, SRTM)')
     parser.add_argument('-b',
                         dest='bound',
                         required=True,
                         type=str,
-                        help='dem bound (S N W E)')
+                        help='DEM bound ("S N W E")')
     parser.add_argument('-s',
                         dest='save_path',
                         type=str,
-                        help='path of saving dem')
+                        help='Path of saving DEM')
     return parser
 
 
-def usage():
-    u = '''
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#                                                                             #
-#                       Download SRTM or ALOS dem (tif)                       #
-#                                                                             #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# author : leiyuan                                                            #
-# date   : 2020-05-02                                                         #
-# version: 2.2.2                                                              #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Examples:                                                                   #
-#   python download_dem.py -f srtm -b '30 32 100 102'                         #
-#   python download_dem.py -f srtm -b '30 32 100 102' -s D:\\test              #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    '''
-    print(u)
-
-
 def main():
-    usage()
     # argument parser
     parser = cmdline_parser()
     args = parser.parse_args()
-    # get urls of dem
-    print("urls of all dem:")
+    # get urls of DEM
     download_urls = get_urls(args.flag, args.bound)
-    # download dem
+    # download DEM
     if args.save_path:
-        print("start to download dem:")
+        print("Start to download all DEM:")
         for url in download_urls:
             print(f"{url.split('/')[-1]}")
             download_dem(url, args.save_path)
