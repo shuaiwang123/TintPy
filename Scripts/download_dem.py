@@ -73,25 +73,18 @@ no_srtm_dem = """01_01-01_03-01_04-01_05-01_06-01_08-01_09-01_10-01_11-01_13-
 72_10-72_11-72_12-72_17-72_18-72_19-72_23-72_24"""
 
 
-def is_num(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
-
 
 def alos_dem(s, n, w, e):
     download_urls = []
     lon_lat_list = []
     HEADER = "https://www.eorc.jaxa.jp/ALOS/aw3d30/data/release_v1903/"
-    # 计算经纬度，必须为5的倍数
+    # calculate latitude and longitude, it must be a multiple of 5
     lon_min = int(w // 5 * 5)
     lon_max = math.ceil(e / 5) * 5
     lat_min = int(s // 5 * 5)
     lat_max = math.ceil(n / 5) * 5
 
-    # 格式化函数，补零操作
+    # format num, add 0
     def format_num(num, flag):
         if num < 0:
             zero_num = flag - len(str(num)[1:])
@@ -106,7 +99,7 @@ def alos_dem(s, n, w, e):
             else:
                 return str(num)
 
-    # 遍历获取下载链接
+    # traverse to get download urls
     for i in range(lat_min, lat_max, 5):
         for j in range(lon_min, lon_max, 5):
             i_5, j_5 = i + 5, j + 5
@@ -118,7 +111,7 @@ def alos_dem(s, n, w, e):
                 i_5, 3)) if i_5 < 0 else "N{}".format(format_num(i_5, 3))
             j_5 = "W{}".format(format_num(
                 j_5, 3)) if j_5 < 0 else "E{}".format(format_num(j_5, 3))
-            # 判断经纬度的正负
+            # determine the positive and negative of latitude and longitude
             tmp_lon_s = int(j_0[1:] if 'E' in j_0 else '-' + j_0[1:])
             tmp_lon_b = int(j_5[1:] if 'E' in j_5 else '-' + j_5[1:])
             tmp_s = int(i_0[1:] if 'N' in i_0 else '-' + i_0[1:])
@@ -136,10 +129,10 @@ def srtm_dem(s, n, w, e):
     download_urls = []
     lon_lat_list = []
     HEADER = "http://srtm.csi.cgiar.org/wp-content/uploads/files/srtm_5x5/tiff/srtm_"
-    # 计算编号起始点经纬度
+    # latitude and longitude of starting point for calculating dem number
     lon_min = -180
     lat_max = 60
-    # 计算dem编号
+    # calculate dem number
     num_min_lon = (w - lon_min) / 5 + 1
     num_max_lon = (e - lon_min) / 5 + 1
     num_min_lat = (lat_max - n) / 5 + 1
@@ -152,15 +145,15 @@ def srtm_dem(s, n, w, e):
         num_min_lat = int(num_min_lat)
     if num_max_lat > int(num_max_lat):
         num_max_lat = int(num_max_lat + 1)
-    # 遍历生成下载链接
+    # traverse to get download urls
     for i in range(int(num_min_lon), int(num_max_lon)):
         for j in range(int(num_min_lat), int(num_max_lat)):
-            # 计算dem的经纬度范围
+            # calculate the longitude and latitude range of dem
             w = i * 5 - 180
             e = w - 5
             s = 60 - j * 5
             n = s + 5
-            # 设置格式，补零
+            # add 0
             w = "0" + str(w) if len(str(w)) == 1 else str(w)
             e = "0" + str(e) if len(str(e)) == 1 else str(e)
             s = "0" + str(s) if len(str(s)) == 1 else str(s)
@@ -186,29 +179,24 @@ def get_urls(flag, bound):
     lon_lat = []
     download_urls = []
     # check bound
-    if len(bound.split()) == 4:
-        s, n, w, e = bound.split()[0], bound.split()[1], bound.split(
-        )[2], bound.split()[3]
-        if is_num(s) and is_num(n) and is_num(w) and is_num(e):
-            s, n, w, e = float(s), float(n), float(w), float(e)
-            if w >= e or s >= n:
-                print('Error bound, please reset it ("S N W E")!')
-            else:
-                if flag.upper() == 'SRTM':
-                    if s < -60 or n > 60:
-                        print(
-                            'Latitude range of SRTM is -60 ~ 60, please reset it!'
-                        )
-                    else:
-                        lon_lat, download_urls = srtm_dem(s, n, w, e)
-                elif flag.upper() == 'ALOS':
-                    lon_lat, download_urls = alos_dem(s, n, w, e)
-                else:
-                    print('Error flag, please reset it (alos ALOS srtm SRTM)!')
+    if len(bound) == 4:
+        s, n, w, e = bound[0], bound[1], bound[2], bound[3]
+        if w >= e or s >= n:
+            print('Error bound, please reset it (S N W E)!')
         else:
-            print('Error bound, please reset it ("S N W E")!')
+            if flag.upper() == 'SRTM':
+                if s < -60 or n > 60:
+                    print(
+                        'Latitude range of SRTM is -60 ~ 60, please reset it!'
+                    )
+                else:
+                    lon_lat, download_urls = srtm_dem(s, n, w, e)
+            elif flag.upper() == 'ALOS':
+                lon_lat, download_urls = alos_dem(s, n, w, e)
+            else:
+                print('Error flag, please reset it (alos ALOS srtm SRTM)!')
     else:
-        print('Error bound, please reset it ("S N W E")!')
+        print('Error bound, please reset it (S N W E)!')
     print("\nDownload urls of all DEM:")
     for i, j in zip(lon_lat, download_urls):
         if lon_lat.index(i) == len(lon_lat) - 1:
@@ -258,10 +246,10 @@ INTRODUCTION = '''
 EXAMPLE = '''
     Examples:
         # only get urls of DEM
-        python download_dem.py -f srtm -b "30 40 100 105"
+        python download_dem.py -f srtm -b 30 40 100 105
         # get urls of DEM and download them
-        python download_dem.py -f srtm -b "30 40 100 105" -s D:\\test
-        python download_dem.py -f alos -b "30 40 100 105" -s D:\\test
+        python download_dem.py -f srtm -b 30 40 100 105 -s D:\\test
+        python download_dem.py -f alos -b 30 40 100 105 -s D:\\test
 ########################################################################################
 '''
 
@@ -279,8 +267,9 @@ def cmdline_parser():
     parser.add_argument('-b',
                         dest='bound',
                         required=True,
-                        type=str,
-                        help='DEM bound ("S N W E")')
+                        type=float,
+                        nargs='+',
+                        help='DEM bound (S N W E)')
     parser.add_argument('-s',
                         dest='save_path',
                         type=str,
