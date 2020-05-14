@@ -179,6 +179,7 @@ INTRODUCTION = '''
 
 EXAMPLE = '''
     Examples:
+        python download_orbits.py -i . -s .
         python download_orbits.py -i D:\\test -s D:\\test
         python download_orbits.py -i D:\\test\\test.txt -s D:\\test
 ########################################################################
