@@ -248,6 +248,7 @@ EXAMPLE = '''
         # only get urls of DEM
         python download_dem.py -f srtm -b 30 40 100 105
         # get urls of DEM and download them
+        python download_dem.py -f srtm -b 30 40 100 105 -s .
         python download_dem.py -f srtm -b 30 40 100 105 -s D:\\test
         python download_dem.py -f alos -b 30 40 100 105 -s D:\\test
 ########################################################################################
