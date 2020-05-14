@@ -2,12 +2,10 @@
 from osgeo import gdal
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import numpy as np
 from skimage import io
 import argparse
 import os
 import sys
-import math
 
 
 def load_data(tif, band=1):
