@@ -254,11 +254,11 @@ def main():
                 for d_m in not_exist_date_and_mission:
                     num += 1
                     tmp = str(num) + '.'
-                    # print(f"\n{tmp}Crawling: {d_m}")
-                    # url = get_urls(d_m)
-                    # if url:
-                    #     print(f"Crawled: {url}")
-                    #     download_orbits(url, args.save_path)
+                    print(f"\n{tmp}Crawling: {d_m}")
+                    url = get_urls(d_m)
+                    if url:
+                        print(f"Crawled: {url}")
+                        download_orbits(url, args.save_path)
         else:
             print("Nothing found, please check path!")
     elif exist_i and not exist_s:
