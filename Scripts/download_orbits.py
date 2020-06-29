@@ -141,7 +141,7 @@ def download_orbits(url, save_path):
 
 
 def check_exist_orbits(save_path, all_date_and_mission):
-    not_exist_date_and_mission = []
+    exist_date_and_mission = []
     tmp = all_date_and_mission
     orbits = [i for i in os.listdir(save_path) if i.endswith('.EOF')]
     orbits_path = [os.path.join(save_path, o) for o in orbits]
@@ -150,10 +150,10 @@ def check_exist_orbits(save_path, all_date_and_mission):
     ]
     for e, p in zip(date_and_mission, orbits_path):
         file_size = os.path.getsize(p)
-        if e in tmp and file_size < 4409593:
+        if e in tmp and file_size > 4400000:
             all_date_and_mission.remove(e)
-            not_exist_date_and_mission.append(e)
-    return all_date_and_mission, not_exist_date_and_mission
+            exist_date_and_mission.append(e)
+    return all_date_and_mission, exist_date_and_mission
 
 
 def print_oneline_five(print_list, num=5):
@@ -232,26 +232,26 @@ def main():
                     "\nNo Sentinel-1 A/B date_missions is excluded (now - date <= 21)"
                 )
             # check orbit files if exist in saving directory
-            date_and_mission, not_exist_date_and_mission = check_exist_orbits(
+            date_and_mission, exist_date_and_mission = check_exist_orbits(
                 args.save_path, date_and_mission)
-            if date_and_mission:
+            if exist_date_and_mission:
                 print(
                     "\nSentinel-1 A/B date_and_mission exist in save_path: {}\n"
-                    .format(len(date_and_mission)))
-                print_oneline_five(date_and_mission)
+                    .format(len(exist_date_and_mission)))
+                print_oneline_five(exist_date_and_mission)
             else:
                 print(
                     "\nNo Sentinel-1 A/B date_missions(orbits) exist in save_path"
                 )
-            if not_exist_date_and_mission:
+            if date_and_mission:
                 print("\nSentinel-1 A/B orbit urls need to crawl: {}\n".format(
-                    len(not_exist_date_and_mission)))
-                print_oneline_five(not_exist_date_and_mission)
+                    len(date_and_mission)))
+                print_oneline_five(date_and_mission)
             else:
                 print("\nAll orbits exist, nothing to download")
             num = 0
-            if not_exist_date_and_mission:
-                for d_m in not_exist_date_and_mission:
+            if date_and_mission:
+                for d_m in date_and_mission:
                     num += 1
                     tmp = str(num) + '.'
                     print(f"\n{tmp}Crawling: {d_m}")
