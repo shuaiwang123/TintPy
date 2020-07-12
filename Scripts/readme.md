@@ -1,1 +1,1 @@
-## some scripts for InSAR
+## Some scripts for InSAR processing
