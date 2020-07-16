@@ -1,8 +1,8 @@
 clc;clear all;close all;
-%% ¶ÁÈ¡ÀÛ»ıĞÎ±ä
+%% è¯»å–ç´¯ç§¯å½¢å˜
 dispname=struct2cell(dir('*_disp_geo'));
 [k,len]=size(dispname);
-% ×Ô¶¯´Ódisp_geo.hdrÎÄ¼şÖĞ¶ÁÈ¡²ÎÊı
+% è‡ªåŠ¨ä»disp_geo.hdræ–‡ä»¶ä¸­è¯»å–å‚æ•°
 hdrname=struct2cell(dir('*_disp_geo.hdr'));
 fid = fopen(hdrname{1,1});
 A = textscan(fid,'%s','headerlines', 7);
@@ -30,30 +30,30 @@ disp0=disp(:,4:4:end);
 disp=[inf disp0];
 [m,~]=size(disp);
 C=zeros(m,1);
-disp=[disp(:,1:3) C disp(:,4:end)];       % ×îÖÕµÃµ½µÄÀÛ»ıĞÎ±äÊı¾İ£¨µãºÅ¡¢¾­¶È¡¢Î³¶È¡¢Ã¿ÕÅÓ°ÏñµÄÀÛ»ıĞÎ±ä£©
+disp=[disp(:,1:3) C disp(:,4:end)];       % æœ€ç»ˆå¾—åˆ°çš„ç´¯ç§¯å½¢å˜æ•°æ®ï¼ˆç‚¹å·ã€ç»åº¦ã€çº¬åº¦ã€æ¯å¼ å½±åƒçš„ç´¯ç§¯å½¢å˜ï¼‰
 save disp;
-%% »æÖÆÆ½¾ùËÙÂÊÍ¼
+%% ç»˜åˆ¶å¹³å‡é€Ÿç‡å›¾
 dat0=freadbk('SI_vel_geo',line,'float32');
 figure,imagesc(dat0);colorbar;colormap;axis image;
 numout0=find(~isnan(dat0));
 scout0=[numout0 lon(numout0) lat(numout0) dat0(numout0)];
 save 'vel_geo.txt' scout0 -ascii;
-%% »æÖÆÀÛ»ıĞÎ±äÍ¼
-dat1=freadbk(dispname{1,len},line,'float32');                                % ¶ÁÈ¡×îºóÒ»ÕÅÊ±¼äµÄĞÎ±äÍ¼
+%% ç»˜åˆ¶ç´¯ç§¯å½¢å˜å›¾
+dat1=freadbk(dispname{1,len},line,'float32');                                % è¯»å–æœ€åä¸€å¼ æ—¶é—´çš„å½¢å˜å›¾
 figure,imagesc(dat1);colorbar;colormap;axis image;
 numout1=find(~isnan(dat1));
 scout1=[lon(numout1) lat(numout1) dat1(numout1)];
 save 'last_disp_geo.txt' scout1 -ascii;
-%% ¸ù¾İµãºÅ»ñÈ¡ÀÛ¼ÆĞÎ±ä
-a=1;                          % Ğè¶ÁÈ¡µãµÄ¸öÊı
+%% æ ¹æ®ç‚¹å·è·å–ç´¯è®¡å½¢å˜
+a=1;                          % éœ€è¯»å–ç‚¹çš„ä¸ªæ•°
 [m,n]=size(disp);
 D=zeros(a,n);
 for i=1:a
-    x=input('¼üÈëĞòÁĞºÅ:');
+    x=input('é”®å…¥åºåˆ—å·:');
     A=find(disp(:,1)==x);
     D(i,:)=disp(A,:);
 end
-%% »ñÈ¡Ó°ÏñÈÕÆÚ£¨Ê¹ÓÃExcel»­Í¼Ê±£¬½«Æä×ª»»ÎªÈÕÆÚ¸ñÊ½£©
+%% è·å–å½±åƒæ—¥æœŸï¼ˆä½¿ç”¨Excelç”»å›¾æ—¶ï¼Œå°†å…¶è½¬æ¢ä¸ºæ—¥æœŸæ ¼å¼ï¼‰
 dispname=struct2cell(dir('*_disp_geo'));
 [~,len]=size(dispname);
 for i=1:len
@@ -61,16 +61,16 @@ for i=1:len
     tmp=str2double(text{1,2});
     date(i)=tmp;
 end
-%% Ëæ»úÌŞ³ıÆ½¾ùËÙÂÊÍ¼ÖĞµÄµã
+%% éšæœºå‰”é™¤å¹³å‡é€Ÿç‡å›¾ä¸­çš„ç‚¹
 clear all;clc;close all;
 a=load('vel_geo.txt');
 % num=length(a);
-% a(:,1)=a(:,1)-0.000258;  % ×ø±êÆ«ÒÆĞŞ¸´
-% È¥³ıNaNÖµ
+% a(:,1)=a(:,1)-0.000258;  % åæ ‡åç§»ä¿®å¤
+% å»é™¤NaNå€¼
 % c=find(~isnan(a(:,1)));
 % b=[a(c,1:2) a(c,4)];
 % b=a(c,1:3);
-% ²Ã¼ô
+% è£å‰ª
 % c=find(a(:,2)>=103.669664&a(:,2)<=103.684189&a(:,3)>=30.274171&a(:,3)<30.281289);
 % c=find(a(:,2)>=103.67&a(:,2)<=103.68&a(:,3)>=30.27&a(:,3)<30.28);
 % c=find(a(:,2)>=102.362804&a(:,2)<=102.405109&a(:,3)>=29.929177&a(:,3)<29.962863);
@@ -79,23 +79,23 @@ a=load('vel_geo.txt');
 % mean_down=mean;
 
 mean=a;
-% ÔÚÖ¸¶¨Çø¼äÄÚËæ»úÌŞµã
-a=-100000;b=100000;                                    % Ö¸¶¨Çø¼ä×óÓÒ¶Ëµã
-n=4;                                                                 % Ö¸¶¨½µ²ÉÑùµÄ±¶Êı
-c_in=find(mean(:,4)>=a&mean(:,4)<=b);      % ËÑË÷Çø¼äÄÚµÄµã
-c_out=find(mean(:,4)<a|mean(:,4)>b);           % ËÑË÷Çø¼äÍâµÄµã
-c_in_num=length(c_in);                                  % ¶ÁÈ¡Çø¼äÄÚµÄµãµÄ¸öÊı
-R=1+fix(rand(1,round(c_in_num/n))*c_in_num);   % ÔÚÇø¼ä[1,c_in_num]ÄÚ²úÉú1/n±¶c_in_num¸öËæ»úÊı
-R_num=length(R);          % ¶ÁÈ¡Ëæ»úµãµÄ¸öÊı
+% åœ¨æŒ‡å®šåŒºé—´å†…éšæœºå‰”ç‚¹
+a=-100000;b=100000;                                    % æŒ‡å®šåŒºé—´å·¦å³ç«¯ç‚¹
+n=4;                                                                 % æŒ‡å®šé™é‡‡æ ·çš„å€æ•°
+c_in=find(mean(:,4)>=a&mean(:,4)<=b);      % æœç´¢åŒºé—´å†…çš„ç‚¹
+c_out=find(mean(:,4)<a|mean(:,4)>b);           % æœç´¢åŒºé—´å¤–çš„ç‚¹
+c_in_num=length(c_in);                                  % è¯»å–åŒºé—´å†…çš„ç‚¹çš„ä¸ªæ•°
+R=1+fix(rand(1,round(c_in_num/n))*c_in_num);   % åœ¨åŒºé—´[1,c_in_num]å†…äº§ç”Ÿ1/nå€c_in_numä¸ªéšæœºæ•°
+R_num=length(R);          % è¯»å–éšæœºç‚¹çš„ä¸ªæ•°
 R=R';
-% ¸ù¾İ²úÉúµÄËæ»úÊı¶ÔÔ­Ê¼Çø¼äÄÚµÄµãÖØ²ÉÑù
+% æ ¹æ®äº§ç”Ÿçš„éšæœºæ•°å¯¹åŸå§‹åŒºé—´å†…çš„ç‚¹é‡é‡‡æ ·
 c_down=zeros(R_num,1);
 for q=1:R_num
-    p=R(q,1);                           % ÒÀ´Î¶ÁÈ¡Ëæ»úÊı
-    c_down(q,1)=c_in(p,1);     % ¶ÁÈ¡Ëæ»úÊı¶ÔÓ¦µÄµãµÄÔ­Ê¼ĞòºÅ
+    p=R(q,1);                           % ä¾æ¬¡è¯»å–éšæœºæ•°
+    c_down(q,1)=c_in(p,1);     % è¯»å–éšæœºæ•°å¯¹åº”çš„ç‚¹çš„åŸå§‹åºå·
 end
 c_all=[c_out;c_down];
 mean_down=mean(c_all,:);
-fid=fopen('xsc_T.txt','wt');     % ²»ÒªÊ¹ÓÃsave±£´æÎÄ¼ş£¬ArcGIS·Ö¸îÁĞÊı¾İÊ±£¬´æÔÚÎÊÌâ
+fid=fopen('xsc_T.txt','wt');     % ä¸è¦ä½¿ç”¨saveä¿å­˜æ–‡ä»¶ï¼ŒArcGISåˆ†å‰²åˆ—æ•°æ®æ—¶ï¼Œå­˜åœ¨é—®é¢˜
 fprintf(fid,'%d\t%f\t%f\t%f\n',mean_down');
 fclose(fid);
