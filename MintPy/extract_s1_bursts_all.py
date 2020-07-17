@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+###############################################################
+# extract Sentinel-1 bursts using GAMMA for MintPy            #
+# Copyright (c) 2020, Lei Yuan                                #
+###############################################################
 
 import os
 import glob
@@ -9,7 +13,7 @@ import re
 INTRODUCTION = '''
 #############################################################################
    
-   Extract the bursts for S1 TOPs data.
+   Extract bursts for Sentinel-1 TOPS data.
 '''
 
 EXAMPLE = '''
@@ -25,7 +29,7 @@ EXAMPLE = '''
 
 
 def cmdLineParse():
-    parser = argparse.ArgumentParser(description='Extract the bursts for S1 TOPs data.',\
+    parser = argparse.ArgumentParser(description='Extract bursts for Sentinel-1 TOPS data.',\
                                      formatter_class=argparse.RawTextHelpFormatter,\
                                      epilog=INTRODUCTION+'\n'+EXAMPLE)
 
@@ -108,6 +112,7 @@ def main():
     alks = inps.alks
 
     # check input
+    slc_dir = os.path.abspath(slc_dir)
     if not os.path.exists(slc_dir):
         print('{} not exists.'.format(slc_dir))
         sys.exit(1)
@@ -115,7 +120,7 @@ def main():
     files = os.listdir(slc_dir)
     all_date = []
     for i in files:
-        if re.match(r'\d{8}', i):
+        if re.findall(r'^\d{8}$', i):
             all_date.append(i)
 
     if all_date:
