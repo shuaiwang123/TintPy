@@ -217,7 +217,7 @@ INTRODUCTION = '''
 EXAMPLE = """Usage:
   
   ./stacking_multi_bursts_old.py /ly/slc /ly/stacking /ly/dem 4
-  ./stacking_multi_bursts_old.py /ly/slc /ly/stacking /ly/dem 4 --rlks 8 --alks 8
+  ./stacking_multi_bursts_old.py /ly/slc /ly/stacking /ly/dem 4 --rlks 8 --alks 2
   
 ------------------------------------------------------------------- 
 """
@@ -299,7 +299,7 @@ def main():
 
         # run dinsar script
         os.chdir(path)
-        call_str = 'sh ' + i + '_DinSAR.sh'
+        call_str = 'sh ' + i + '_DInSAR.sh'
         os.system(call_str)
 
 

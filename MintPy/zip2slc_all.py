@@ -106,8 +106,7 @@ def check_inputs(zip_file, orbit_dir, slc_dir, iw_num):
         sys.exit(1)
     # check slc directory
     if not os.path.exists(slc_dir):
-        print('{} not exists.'.format(slc_dir))
-        sys.exit(1)
+        os.mkdir(slc_dir)
     # check iw number
     for i in iw_num:
         if not i in [1, 2, 3]:
@@ -201,7 +200,7 @@ def main():
     rlks = inps.rlks
     alks = inps.alks
 
-    zip_files = glob.glob(zip_dir + '/' + 'S1*_IW_SLC*.zip')
+    zip_files = glob.glob(zip_dir + '/S1*_IW_SLC*.zip')
 
     for zip_file in zip_files:
         orbit_dir = inps.orbit_dir
