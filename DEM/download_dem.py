@@ -125,7 +125,35 @@ def alos_dem(s, n, w, e):
     return lon_lat_list, download_urls
 
 
-def srtm_dem(s, n, w, e):
+def srtm_dem30(s, n, w, e):
+    HEADER = "https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/"
+    download_urls = []
+    lon_lat_list = []
+    lon_min = math.floor(w)
+    lon_max = math.ceil(e)
+    lat_min = math.floor(s)
+    lat_max = math.ceil(n)
+
+    for i in range(lat_min, lat_max):
+        for j in range(lon_min, lon_max):
+            lon_lat = "({}° ~ {}° , {}° ~ {}°)".format(j, j+1, i, i+1)
+            lon_lat_list.append(lon_lat)
+            if i >=0:
+                if j >=0:
+                    name = "N{}E{}.SRTMGL1.hgt.zip".format(i, j)
+                else:
+                    name = "N{}W{}.SRTMGL1.hgt.zip".format(i, j)
+            else:
+                if j >=0:
+                    name = "S{}E{}.SRTMGL1.hgt.zip".format(i, j)
+                else:
+                    name = "S{}W{}.SRTMGL1.hgt.zip".format(i, j)
+            download_urls.append(HEADER + name)
+    
+    return lon_lat_list, download_urls
+
+
+def srtm_dem90(s, n, w, e):
     download_urls = []
     lon_lat_list = []
     HEADER = "http://srtm.csi.cgiar.org/wp-content/uploads/files/srtm_5x5/tiff/srtm_"
@@ -178,19 +206,26 @@ def srtm_dem(s, n, w, e):
 def get_urls(flag, bound):
     lon_lat = []
     download_urls = []
-    # check bound
+    # check boundary
     if len(bound) == 4:
         s, n, w, e = bound[0], bound[1], bound[2], bound[3]
         if w >= e or s >= n:
             print('Error bound, please reset it (S N W E)!')
         else:
-            if flag.upper() == 'SRTM':
+            if flag.upper() == 'SRTM90':
                 if s < -60 or n > 60:
                     print(
                         'Latitude range of SRTM is -60 ~ 60, please reset it!'
                     )
                 else:
-                    lon_lat, download_urls = srtm_dem(s, n, w, e)
+                    lon_lat, download_urls = srtm_dem90(s, n, w, e)
+            elif flag.upper() == 'SRTM30':
+                if s < -60 or n > 60:
+                    print(
+                        'Latitude range of SRTM is -60 ~ 60, please reset it!'
+                    )
+                else:
+                    lon_lat, download_urls = srtm_dem30(s, n, w, e)
             elif flag.upper() == 'ALOS':
                 lon_lat, download_urls = alos_dem(s, n, w, e)
             else:
@@ -236,7 +271,7 @@ INTRODUCTION = '''
 ########################################################################################
     Copy Right(c): 2019-2020, Yuan Lei
    
-    Download SRTM (90m) or ALOS (30m) DEM (tif).
+    Download SRTM (30m or 90m) or ALOS (30m) DEM (tif).
    
     1) You can download DEM using this script;
     2) If you don't want to download DEM using this script, you can copy urls of DEM,
@@ -246,10 +281,10 @@ INTRODUCTION = '''
 EXAMPLE = '''
     Examples:
         # only get urls of DEM
-        python download_dem.py -f srtm -b 30 40 100 105
+        python download_dem.py -f srtm30 -b 30 40 100 105
         # get urls of DEM and download them
-        python download_dem.py -f srtm -b 30 40 100 105 -s .
-        python download_dem.py -f srtm -b 30 40 100 105 -s D:\\test
+        python download_dem.py -f srtm90 -b 30 40 100 105 -s .
+        python download_dem.py -f srtm90 -b 30 40 100 105 -s D:\\test
         python download_dem.py -f alos -b 30 40 100 105 -s D:\\test
 ########################################################################################
 '''
@@ -264,7 +299,7 @@ def cmdline_parser():
                         dest='flag',
                         required=True,
                         type=str,
-                        help='DEM type (alos, ALOS, srtm, SRTM)')
+                        help='DEM type (alos, ALOS, srtm90, srtm30, SRTM90, SRTM30)')
     parser.add_argument('-b',
                         dest='bound',
                         required=True,
