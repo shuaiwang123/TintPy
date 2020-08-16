@@ -134,20 +134,36 @@ def srtm_dem30(s, n, w, e):
     lat_min = math.floor(s)
     lat_max = math.ceil(n)
 
+    def add_zero(i, flag):
+        s = str(abs(i))
+        if flag == 'SN':
+            if len(s) == 1:
+                return '0' + s
+            else:
+                return s
+        if flag == 'WE':
+            if len(s) == 1:
+                return '00' + s
+            elif len(s) == 2:
+                return '0' + s
+            else:
+                return s
+
+
     for i in range(lat_min, lat_max):
         for j in range(lon_min, lon_max):
             lon_lat = "({}° ~ {}° , {}° ~ {}°)".format(j, j+1, i, i+1)
             lon_lat_list.append(lon_lat)
             if i >=0:
                 if j >=0:
-                    name = "N{}E{}.SRTMGL1.hgt.zip".format(i, j)
+                    name = "N{}E{}.SRTMGL1.hgt.zip".format(add_zero(i, 'SN'), add_zero(j, 'WE'))
                 else:
-                    name = "N{}W{}.SRTMGL1.hgt.zip".format(i, j)
+                    name = "N{}W{}.SRTMGL1.hgt.zip".format(add_zero(i, 'SN'), add_zero(j, 'WE'))
             else:
                 if j >=0:
-                    name = "S{}E{}.SRTMGL1.hgt.zip".format(i, j)
+                    name = "S{}E{}.SRTMGL1.hgt.zip".format(add_zero(i, 'SN'), add_zero(j, 'WE'))
                 else:
-                    name = "S{}W{}.SRTMGL1.hgt.zip".format(i, j)
+                    name = "S{}W{}.SRTMGL1.hgt.zip".format(add_zero(i, 'SN'), add_zero(j, 'WE'))
             download_urls.append(HEADER + name)
     
     return lon_lat_list, download_urls
@@ -271,7 +287,7 @@ INTRODUCTION = '''
 ########################################################################################
     Copy Right(c): 2019-2020, Yuan Lei
    
-    Download SRTM (30m or 90m) or ALOS (30m) DEM (tif).
+    Download SRTM (30m[only get download link] or 90m) or ALOS (30m) DEM (tif).
    
     1) You can download DEM using this script;
     2) If you don't want to download DEM using this script, you can copy urls of DEM,
