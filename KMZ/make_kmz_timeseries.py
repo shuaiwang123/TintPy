@@ -58,6 +58,15 @@ def cmdline_parser():
     return parser
 
 
+def get_scale(cb):
+    scale = []
+    for i in cb.keys():
+        scale.append(i.split('~')[0])
+        scale.append(i.split('~')[1])
+    scale = sorted(list(set(scale)), key=lambda i: float(i))
+    return scale
+
+
 def plot_symbol(cb, dir_name, dpi=12):
     """plot symbol for displaying points"""
     for label, color in cb.items():
@@ -74,22 +83,22 @@ def plot_symbol(cb, dir_name, dpi=12):
 
 def plot_colorbar(cb, dir_name, dpi=100):
     """plot colorbar for display"""
-    fig, ax = plt.subplots(figsize=(4, 14))
+    fig, ax = plt.subplots(figsize=(4, 12))
     ax.set_axis_off()
     ax.set_xlim(0, 1.5)
-    ax.set_ylim(0, 6.5)
+    ax.set_ylim(0, len(cb.keys()) * 0.5 + 0.5)
     # plt.subplots_adjust(top = 1, bottom = 0.05, right = 0.9, left = 0.1, hspace = 1, wspace = 0)
     y = 0.05
     for color in list(cb.values())[::-1]:
         # circle = mpathes.Circle((0.5, y), 0.3, color=color)
-        rect = plt.Rectangle((0, y), 1, 0.5, color=color)
+        rect = plt.Rectangle((0, y), 1, 0.45, color=color)
         y += 0.5
         ax.add_patch(rect)
-    yy = 0
-    for i in range(-60, 70, 10):
-        ax.text(1.2, yy, str(i), fontsize=30)
+    yy = -0.05
+    for i in get_scale(cb):
+        ax.text(1.2, yy, i, fontsize=30)
         yy += 0.5
-    ax.text(0.1, 6.2, 'mm/yr', fontsize=30)
+    ax.text(0.15, 0.5 * len(cb.keys()) + 0.2, 'mm/yr', fontsize=30)
     file_path = os.path.join(dir_name, 'colorbar.png')
     fig.savefig(file_path, dpi=dpi, bbox_inches='tight')
     # plt.show()
@@ -225,15 +234,16 @@ def write_kml(lons, lats, vels, ts, dates, cb, dygraph_file, scale, out_file):
     # create placemark
     for j in range(lons.shape[0]):
         lon, lat, vel, disp = lons[j], lats[j], vels[j], ts[j, :]
-        for i in range(-60, 60, 10):
-            min = i
-            max = min + 10
-            if vel >= min and vel < max:
-                id = f"{min}-{max}"
-            elif vel < -60:
-                id = "-60--50"
-            elif vel > 60:
-                id = "50-60"
+        scale = get_scale(cb)
+        for i in range(len(scale) - 1):
+            min_vel = int(scale[i])
+            max_vel = int(scale[i + 1])
+            if vel >= min_vel and vel < max_vel:
+                id = f"{min_vel}~{max_vel}"
+            elif vel < int(scale[0]):
+                id = f"{scale[0]}~{scale[1]}"
+            elif vel > int(scale[-1]):
+                id = f"{scale[-2]}~{scale[-1]}"
         description = get_description_string(
             lon, lat, vel, disp[-1]) + generate_js_datastring(
                 dates, dygraph_file, disp)
@@ -363,33 +373,33 @@ def main():
 
 
 if __name__ == "__main__":
-    # color and label
+    # label and color
     cb_r = {
-        '50-60': '#AA0000',
-        '40-50': '#FF0000',
-        '30-40': '#FF5500',
-        '20-30': '#FFAA00',
-        '10-20': '#FFFF00',
-        '0-10': '#008B00',
-        '-10-0': '#008B00',
-        '-20--10': '#00FFFF',
-        '-30--20': '#00AAFF',
-        '-40--30': '#0055FF',
-        '-50--40': '#0000FF',
-        '-60--50': '#0000AA',
+        '50~60': '#AA0000',
+        '40~50': '#FF0000',
+        '30~40': '#FF5500',
+        '20~30': '#FFAA00',
+        '10~20': '#FFFF00',
+        '0~10': '#008B00',
+        '-10~0': '#008B00',
+        '-20~-10': '#00FFFF',
+        '-30~-20': '#00AAFF',
+        '-40~-30': '#0055FF',
+        '-50~-40': '#0000FF',
+        '-60~-50': '#0000AA',
     }
     cb = {
-        '50-60': '#0000AA',
-        '40-50': '#0000FF',
-        '30-40': '#0055FF',
-        '20-30': '#00AAFF',
-        '10-20': '#00FFFF',
-        '0-10': '#008B00',
-        '-10-0': '#008B00',
-        '-20--10': '#FFFF00',
-        '-30--20': '#FFAA00',
-        '-40--30': '#FF5500',
-        '-50--40': '#FF0000',
-        '-60--50': '#AA0000',
+        '50~60': '#0000AA',
+        '40~50': '#0000FF',
+        '30~40': '#0055FF',
+        '20~30': '#00AAFF',
+        '10~20': '#00FFFF',
+        '0~10': '#008B00',
+        '-10~0': '#008B00',
+        '-20~-10': '#FFFF00',
+        '-30~-20': '#FFAA00',
+        '-40~-30': '#FF5500',
+        '-50~-40': '#FF0000',
+        '-60~-50': '#AA0000',
     }
     main()
