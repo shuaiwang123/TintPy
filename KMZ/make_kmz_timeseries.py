@@ -1,5 +1,5 @@
-# -*- coding:utf-8 -*-
 #!/usr/bin/env python3
+# -*- coding:utf-8 -*-
 ####################################################################################
 # display velocity and time-series displacement derived by InSAR in Google Earth   #
 # Author: Yuan Lei, 2020                                                           #
