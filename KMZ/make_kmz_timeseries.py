@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 ####################################################################################
-# display velocity and time-series displacement derived by InSAR in Google Earth   #
+# Display velocity and time-series displacement derived by InSAR in Google Earth   #
 # Author: Yuan Lei, 2020                                                           #
 ####################################################################################
 import argparse
@@ -17,9 +17,20 @@ from lxml import etree
 from pykml.factory import KML_ElementMaker as KML
 
 EXAMPLE = r"""Example:
+  # Windows
   python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz
   python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js
   python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js -r 0.5 -s 0.7
+  # Linux
+  python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz
+  python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js
+  python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js -r 0.5 -s 0.7
+  # data format
+    -1   -1   -1    -1       date1       date2       date3 ...
+  num1 lon1 lat1  vel1 date1-disp1 date2-disp1 date3-disp1 ...
+  num2 lon2 lat2  vel2 date1-disp2 date2-disp2 date3-disp2 ...
+  num3 lon3 lat3  vel3 date1-disp3 date2-disp3 date3-disp3 ...
+  ...
 """
 
 
@@ -36,7 +47,7 @@ def cmdline_parser():
     parser.add_argument('-o',
                         dest='out_file',
                         required=True,
-                        help='output KMZ file(path)')
+                        help='output KMZ file (path)')
     parser.add_argument(
         '-j',
         dest='js_file',
@@ -49,7 +60,9 @@ def cmdline_parser():
         dest='rate',
         default=1,
         type=float,
-        help='rate of keeping points (default: 1, keep all points)')
+        help=
+        'rate of keeping points (default: 1, keep all points) [random downsample]'
+    )
     parser.add_argument('-s',
                         dest='scale',
                         default=0.5,
@@ -58,18 +71,19 @@ def cmdline_parser():
     return parser
 
 
-def get_scale(cb):
-    scale = []
-    for i in cb.keys():
-        scale.append(i.split('~')[0])
-        scale.append(i.split('~')[1])
-    scale = sorted(list(set(scale)), key=lambda i: float(i))
-    return scale
+def get_cutoff_vel(colorbar):
+    """get cutoff velocity"""
+    cutoff_vel = []
+    for i in colorbar.keys():
+        cutoff_vel.append(i.split('~')[0])
+        cutoff_vel.append(i.split('~')[1])
+    cutoff_vel = sorted(list(set(cutoff_vel)), key=lambda i: float(i))
+    return cutoff_vel
 
 
-def plot_symbol(cb, dir_name, dpi=12):
+def plot_symbol(colorbar, dir_name, dpi):
     """plot symbol for displaying points"""
-    for label, color in cb.items():
+    for label, color in colorbar.items():
         fig, ax = plt.subplots(figsize=(1, 1))
         ax.set_axis_off()
         ax.set_xlim(0, 1)
@@ -78,35 +92,32 @@ def plot_symbol(cb, dir_name, dpi=12):
         ax.add_patch(circle)
         file_path = os.path.join(dir_name, label + '.png')
         fig.savefig(file_path, transparent=True, dpi=dpi, bbox_inches='tight')
-        # plt.show()
 
 
-def plot_colorbar(cb, dir_name, dpi=100):
+def plot_colorbar(colorbar, dir_name, dpi):
     """plot colorbar for display"""
     fig, ax = plt.subplots(figsize=(4, 12))
     ax.set_axis_off()
     ax.set_xlim(0, 1.5)
-    ax.set_ylim(0, len(cb.keys()) * 0.5 + 0.5)
-    # plt.subplots_adjust(top = 1, bottom = 0.05, right = 0.9, left = 0.1, hspace = 1, wspace = 0)
+    ax.set_ylim(0, len(colorbar.keys()) * 0.5 + 0.5)
     y = 0.05
-    for color in list(cb.values())[::-1]:
-        # circle = mpathes.Circle((0.5, y), 0.3, color=color)
+    for color in list(colorbar.values())[::-1]:
         rect = plt.Rectangle((0, y), 1, 0.45, color=color)
         y += 0.5
         ax.add_patch(rect)
     yy = -0.05
-    for i in get_scale(cb):
+    for i in get_cutoff_vel(colorbar):
         ax.text(1.2, yy, i, fontsize=30)
         yy += 0.5
-    ax.text(0.15, 0.5 * len(cb.keys()) + 0.2, 'mm/yr', fontsize=30)
+    ax.text(0.15, 0.5 * len(colorbar.keys()) + 0.2, 'mm/yr', fontsize=30)
     file_path = os.path.join(dir_name, 'colorbar.png')
     fig.savefig(file_path, dpi=dpi, bbox_inches='tight')
     # plt.show()
 
 
-def load_data(txt):
+def load_data(ts_file):
     """load timeseries data"""
-    content = np.loadtxt(txt, np.float64)
+    content = np.loadtxt(ts_file, np.float64)
     dates = np.asarray(content[0, 4:], np.int64)
     dates = [
         str(d)[0:4] + '-' + str(d)[4:6] + '-' + str(d)[6:8] for d in dates
@@ -130,14 +141,13 @@ def random_downsample(nums, lons, lats, vels, ts, rate):
 def get_description_string(lon, lat, vel, cum_disp, font_size=4):
     """Description information of each data point."""
     des_str = "<font size={}>".format(font_size)
-    des_str += "Longitude: {}˚ <br /> \n".format(lon)
-    des_str += "Latitude: {}˚ <br /> \n".format(lat)
+    des_str += "Longitude: {} <br /> \n".format(lon)
+    des_str += "Latitude: {} <br /> \n".format(lat)
     des_str += " <br /> \n"
     des_str += "Mean LOS velocity [mm/year]: {} <br /> \n".format(vel)
     des_str += "Cumulative displacement [mm]: {} <br /> \n".format(cum_disp)
     des_str += "</font>"
     des_str += " <br />  <br /> "
-    des_str += "*Double click to reset plot <br /> <br />\n"
     des_str += "\n\n"
     return des_str
 
@@ -219,91 +229,9 @@ def generate_js_datastring(dates, dygraph_file, ts):
     return js_data_string
 
 
-def write_kml(nums, lons, lats, vels, ts, dates, cb, dygraph_file, scale, out_file):
-    """write kml file and unzip files into kmz"""
-    # create document
-    doc = KML.kml(
-        KML.Document(KML.Folder(KML.name(os.path.basename(out_file)))))
-    # create icon style
-    for label in cb.keys():
-        style = KML.Style(KML.IconStyle(KML.Icon(KML.href(label + '.png')),
-                                        KML.scale(str(scale))),
-                          KML.LabelStyle(KML.color('00000000'),
-                                         KML.scale('0.000000')),
-                          id=label)
-        doc.Document.append(style)
-    # create placemark
-    for j in range(lons.shape[0]):
-        num, lon, lat, vel, disp = nums[j], lons[j], lats[j], vels[j], ts[j, :]
-        scale = get_scale(cb)
-        for i in range(len(scale) - 1):
-            min_vel = int(scale[i])
-            max_vel = int(scale[i + 1])
-            if vel >= min_vel and vel < max_vel:
-                id = f"{min_vel}~{max_vel}"
-            elif vel < int(scale[0]):
-                id = f"{scale[0]}~{scale[1]}"
-            elif vel > int(scale[-1]):
-                id = f"{scale[-2]}~{scale[-1]}"
-        description = get_description_string(
-            lon, lat, vel, disp[-1]) + generate_js_datastring(
-                dates, dygraph_file, disp)
-        placemark = KML.Placemark(
-            KML.name(str(int(num))), KML.description(description),
-            KML.styleUrl(f"#{id}"),
-            KML.Point(KML.altitudeMode('clampToGround'),
-                      KML.coordinates(f"{lon},{lat},{vel}")))
-        doc.Document.Folder.append(placemark)
-    # create colorbar
-    colorbar = KML.ScreenOverlay(
-        KML.name('colorbar'),
-        KML.Icon(KML.href('colorbar.png')),
-        KML.overlayXY(
-            x="0.0",
-            y="1",
-            xunits="fraction",
-            yunits="fraction",
-        ),
-        KML.screenXY(
-            x="0.0",
-            y="1",
-            xunits="fraction",
-            yunits="fraction",
-        ),
-        KML.rotationXY(
-            x="0.",
-            y="1.",
-            xunits="fraction",
-            yunits="fraction",
-        ),
-        KML.size(
-            x="0",
-            y="0.4",
-            xunits="fraction",
-            yunits="fraction",
-        ),
-    )
-    doc.Document.Folder.append(colorbar)
-    kml_str = etree.tostring(doc, pretty_print=True)
-    # write kml file
-    dir_name = os.path.dirname(out_file)
-    kml_file = os.path.join(dir_name, 'doc.kml')
-    with open(kml_file, 'wb') as f:
-        f.write(kml_str)
-    # unzip kml, symbol, colorbar, dygraph_file
-    with zipfile.ZipFile(out_file, 'w') as f:
-        os.chdir(dir_name)
-        f.write('doc.kml')
-        f.write('colorbar.png')
-        for i in cb.keys():
-            f.write(i + '.png')
-        os.chdir(os.path.dirname(dygraph_file))
-        f.write(os.path.basename(dygraph_file))
-
-
 def del_files(dir_name):
     """delete files(doc.kml symbol colorbar)"""
-    for i in cb.keys():
+    for i in colorbar.keys():
         tmp = os.path.join(dir_name, i + '.png')
         if os.path.isfile(tmp):
             os.remove(tmp)
@@ -313,7 +241,8 @@ def del_files(dir_name):
             os.remove(tmp)
 
 
-def main():
+def write_kmz(colorbar, symbol_dpi=12, colorbar_dpi=200):
+    """write kml file and unzip files into kmz"""
     # get inputs
     parser = cmdline_parser()
     inps = parser.parse_args()
@@ -347,35 +276,109 @@ def main():
     if scale < 0:
         print('scale cannot smaller than 0.')
         sys.exit()
+    if scale == 0:
+        print('scale cannot be equal 0.')
+        sys.exit()
     # get lons, lats, vels, ts, dates
     try:
         nums, lons, lats, vels, ts, dates = load_data(ts_file)
         if rate < 1:
-            nums, lons, lats, vels, ts = random_downsample(nums, lons, lats, vels, ts, rate)
+            nums, lons, lats, vels, ts = random_downsample(
+                nums, lons, lats, vels, ts, rate)
     except:
         print('error format of {}'.format(ts_file))
         sys.exit()
+    # create document
+    doc = KML.kml(
+        KML.Document(KML.Folder(KML.name(os.path.basename(out_file)))))
+    # create icon style
+    for label in colorbar.keys():
+        style = KML.Style(KML.IconStyle(KML.Icon(KML.href(label + '.png')),
+                                        KML.scale(str(scale))),
+                          KML.LabelStyle(KML.color('00000000'),
+                                         KML.scale('0.000000')),
+                          id=label)
+        doc.Document.append(style)
+    # create placemark
+    for j in range(lons.shape[0]):
+        num, lon, lat, vel, disp = nums[j], lons[j], lats[j], vels[j], ts[j, :]
+        cutoff_vel = get_cutoff_vel(colorbar)
+        for i in range(len(cutoff_vel) - 1):
+            min_vel = int(cutoff_vel[i])
+            max_vel = int(cutoff_vel[i + 1])
+            if vel >= min_vel and vel < max_vel:
+                id = f"{min_vel}~{max_vel}"
+            elif vel < int(cutoff_vel[0]):
+                id = f"{cutoff_vel[0]}~{cutoff_vel[1]}"
+            elif vel > int(cutoff_vel[-1]):
+                id = f"{cutoff_vel[-2]}~{cutoff_vel[-1]}"
+        description = get_description_string(
+            lon, lat, vel, disp[-1]) + generate_js_datastring(
+                dates, js_file, disp)
+        placemark = KML.Placemark(
+            KML.name(str(int(num))), KML.description(description),
+            KML.styleUrl(f"#{id}"),
+            KML.Point(KML.altitudeMode('clampToGround'),
+                      KML.coordinates(f"{lon},{lat},{vel}")))
+        doc.Document.Folder.append(placemark)
+    # create legend
+    legend = KML.ScreenOverlay(
+        KML.name('colorbar'),
+        KML.Icon(KML.href('colorbar.png')),
+        KML.overlayXY(
+            x="0.0",
+            y="1",
+            xunits="fraction",
+            yunits="fraction",
+        ),
+        KML.screenXY(
+            x="0.0",
+            y="1",
+            xunits="fraction",
+            yunits="fraction",
+        ),
+        KML.rotationXY(
+            x="0.",
+            y="1.",
+            xunits="fraction",
+            yunits="fraction",
+        ),
+        KML.size(
+            x="0",
+            y="0.4",
+            xunits="fraction",
+            yunits="fraction",
+        ),
+    )
+    doc.Document.Folder.append(legend)
+    kml_str = etree.tostring(doc, pretty_print=True)
+    # write kml file
+    print('writing kmz')
+    dir_name = os.path.dirname(out_file)
+    kml_file = os.path.join(dir_name, 'doc.kml')
+    with open(kml_file, 'wb') as f:
+        f.write(kml_str)
     # plot symbol
-    print('plot symbol...')
-    plot_symbol(cb, dir_name, dpi=12)
-    print('done.')
+    plot_symbol(colorbar, dir_name, dpi=symbol_dpi)
     # plot colorbar
-    print('plot colorbar...')
-    plot_colorbar(cb, dir_name, dpi=100)
-    print('done.')
-    # write kml and zip all files
-    print('write kml...')
-    write_kml(nums, lons, lats, vels, ts, dates, cb, js_file, scale, out_file)
-    print('done.')
+    plot_colorbar(colorbar, dir_name, dpi=colorbar_dpi)
+    # unzip kml, symbol, colorbar, dygraph_file
+    with zipfile.ZipFile(out_file, 'w') as f:
+        os.chdir(dir_name)
+        f.write('doc.kml')
+        f.write('colorbar.png')
+        for i in colorbar.keys():
+            f.write(i + '.png')
+        os.chdir(os.path.dirname(js_file))
+        f.write(os.path.basename(js_file))
     # delete files
-    print('delete files...')
     del_files(dir_name)
-    print('done.\n')
+    print('done')
 
 
 if __name__ == "__main__":
-    # label and color
-    cb_r = {
+    # colorbar for display points
+    colorbar_r = {
         '50~60': '#AA0000',
         '40~50': '#FF0000',
         '30~40': '#FF5500',
@@ -389,7 +392,7 @@ if __name__ == "__main__":
         '-50~-40': '#0000FF',
         '-60~-50': '#0000AA',
     }
-    cb = {
+    colorbar = {
         '50~60': '#0000AA',
         '40~50': '#0000FF',
         '30~40': '#0055FF',
@@ -403,4 +406,4 @@ if __name__ == "__main__":
         '-50~-40': '#FF0000',
         '-60~-50': '#AA0000',
     }
-    main()
+    write_kmz(colorbar, symbol_dpi=20, colorbar_dpi=200)
