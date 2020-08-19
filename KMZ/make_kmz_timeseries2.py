@@ -77,7 +77,7 @@ def plot_symbol(cb, dir_name, dpi=12):
         circle = mpathes.Circle((0.5, 0.5), 0.49, color=color)
         ax.add_patch(circle)
         file_path = os.path.join(dir_name, label + '.png')
-        fig.savefig(file_path, transparent=True, dpi=dpi)
+        fig.savefig(file_path, transparent=True, dpi=dpi, bbox_inches='tight')
         # plt.show()
 
 
