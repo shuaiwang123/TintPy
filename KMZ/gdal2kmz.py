@@ -68,18 +68,13 @@ def create_parser():
         type=float,
         default=1.0,
         help='scale factor to scale the data before display (default: 1.0)')
-    parser.add_argument('-r',
-                        dest='reverse_cmap',
-                        type=str,
-                        default='no',
-                        help='reverse color map [yes or no] (default: no)')
     parser.add_argument('-w',
                         dest='rewrap',
                         type=str,
                         default='no',
                         help='rewrap data [yes or no] (default: no)')
     parser.add_argument('-g',
-                        dest='rewarp_range',
+                        dest='rewrap_range',
                         default=3.14,
                         type=float,
                         help='range to rewrap data (default: 3.14)')
@@ -96,43 +91,6 @@ def cmdline_parser():
     parser = create_parser()
     inps = parser.parse_args()
     return inps
-
-
-def reverse_colourmap(cmap, name='my_cmap_r'):
-    """
-    In: 
-    cmap, name 
-    Out:
-    my_cmap_r
-
-    Explanation:
-    t[0] goes from 0 to 1
-    row i:   x  y0  y1 -> t[0] t[1] t[2]
-                   /
-                  /
-    row i+1: x  y0  y1 -> t[n] t[1] t[2]
-
-    so the inverse should do the same:
-    row i+1: x  y1  y0 -> 1-t[0] t[2] t[1]
-                   /
-                  /
-    row i:   x  y1  y0 -> 1-t[n] t[2] t[1]
-    """
-    reverse = []
-    k = []
-
-    for key in cmap._segmentdata:
-        k.append(key)
-        channel = cmap._segmentdata[key]
-        data = []
-
-        for t in channel:
-            data.append((1 - t[0], t[2], t[1]))
-        reverse.append(sorted(data))
-
-    LinearL = dict(zip(k, reverse))
-    my_cmap_r = mpl.colors.LinearSegmentedColormap(name, LinearL)
-    return my_cmap_r
 
 
 def get_lon_lat(file):
@@ -158,16 +116,45 @@ def rewrap(data, re_range):
     return rewrapped
 
 
-def display(inps):
-    file = os.path.abspath(inps.file)
-    ds = gdal.Open(file)
+def plot_colorbar(inps, figsize=(0.18, 3.6), nbins=7):
+    img_file = os.path.abspath(inps.file)
+    vmin = inps.min
+    vmax = inps.max
+    cmap = inps.color_map
+    out_file = img_file + '_colorbar.png'
+    fig, cax = plt.subplots(figsize=figsize)
+    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+    cmap = plt.get_cmap(cmap)
+    cbar = mpl.colorbar.ColorbarBase(cax,
+                                     cmap=cmap,
+                                     norm=norm,
+                                     orientation='vertical')
+    if inps.unit:
+        cbar.set_label(inps.unit, fontsize=12)
+    cbar.locator = mpl.ticker.MaxNLocator(nbins=nbins)
+    cbar.update_ticks()
+    cbar.ax.tick_params(which='both', labelsize=12)
+    fig.patch.set_facecolor('white')
+    fig.patch.set_alpha(0.7)
+    fig.savefig(out_file,
+                bbox_inches='tight',
+                facecolor=fig.get_facecolor(),
+                dpi=300)
+
+    return out_file
+
+
+def plot_img(inps):
+    img_file = os.path.abspath(inps.file)
+    out_file = img_file + '.png'
+    ds = gdal.Open(img_file)
     b = ds.GetRasterBand(inps.band_number)
     data = b.ReadAsArray()
     data = data * inps.scale
     data[data == 0] = np.nan
 
     if inps.rewrap == 'yes':
-        data = rewrap(data, inps.rewarp_range)
+        data = rewrap(data, inps.rewrap_range)
 
     if inps.min is None:
         inps.min = np.nanmin(data)
@@ -175,45 +162,21 @@ def display(inps):
     if inps.max is None:
         inps.max = np.nanmax(data)
 
-    width, length = b.XSize, b.YSize
-
     fig = plt.figure(frameon=False)
-    ax = plt.Axes(
-        fig,
-        [0., 0., 1., 1.],
-    )
+    ax = fig.add_axes([0., 0., 1., 1.])
     ax.set_axis_off()
-    fig.add_axes(ax)
-
     cmap = plt.get_cmap(inps.color_map)
-    if inps.reverse_cmap == 'yes':
-        cmap = reverse_colourmap(cmap)
-    cmap.set_bad(alpha=0.0)
-    try:
-        ax.imshow(data, aspect='auto', vmax=inps.max, vmin=inps.min, cmap=cmap)
-    except:
-        ax.show(data, aspect='auto', cmap=cmap)
-    ax.set_xlim([0, width])
-    ax.set_ylim([length, 0])
 
-    fig_name = file + '.png'
-    plt.savefig(fig_name, pad_inches=0.0, transparent=True, dpi=inps.dpi)
+    ax.imshow(data, aspect='auto', vmax=inps.max, vmin=inps.min, cmap=cmap)
+    ax.set_xlim([0, b.XSize])
+    ax.set_ylim([b.YSize, 0])
+    fig.savefig(out_file,
+                pad_inches=0.0,
+                transparent=True,
+                interpolation='nearest',
+                dpi=inps.dpi)
 
-    pc = plt.figure(figsize=(1.3, 2))
-    axc = pc.add_subplot(111)
-    cmap = mpl.cm.get_cmap(name=inps.color_map)
-    if inps.reverse_cmap == 'yes':
-        cmap = reverse_colourmap(cmap)
-    norm = mpl.colors.Normalize(vmin=inps.min, vmax=inps.max)
-    clb = mpl.colorbar.ColorbarBase(axc,
-                                    cmap=cmap,
-                                    norm=norm,
-                                    orientation='vertical')
-    clb.set_label(inps.unit)
-    pc.subplots_adjust(left=0.25, bottom=0.1, right=0.4, top=0.9)
-    plt.savefig(file + '_colorbar.png', dpi=300)
-
-    return file + '.png', file + '_colorbar.png'
+    return out_file
 
 
 def write_kmz(img, colorbar_img, inps):
@@ -230,14 +193,14 @@ def write_kmz(img, colorbar_img, inps):
 
     legend = KML.ScreenOverlay(
         KML.name('colorbar'),
-        KML.Icon(KML.href(os.path.basename(colorbar_img))),
+        KML.Icon(KML.href(os.path.basename(colorbar_img)),
+                 KML.viewBoundScale(0.75)),
         KML.overlayXY(
             x="0.0",
             y="1",
             xunits="fraction",
             yunits="fraction",
-        ),
-        KML.screenXY(
+        ), KML.screenXY(
             x="0.0",
             y="1",
             xunits="fraction",
@@ -248,14 +211,12 @@ def write_kmz(img, colorbar_img, inps):
             y="1.",
             xunits="fraction",
             yunits="fraction",
-        ),
-        KML.size(
+        ), KML.size(
             x="0",
-            y="0.3",
-            xunits="fraction",
-            yunits="fraction",
-        ),
-    )
+            y="250",
+            xunits="pixel",
+            yunits="pixel",
+        ), KML.visibility(1), KML.open(0))
 
     doc.Folder.append(legend)
 
@@ -268,19 +229,20 @@ def write_kmz(img, colorbar_img, inps):
     with zipfile.ZipFile(kmz_name, 'w') as f:
         os.chdir(os.path.dirname(file))
         f.write(os.path.basename(kml_name))
+        os.remove(os.path.basename(kml_name))
         f.write(os.path.basename(file + '.png'))
+        os.remove(os.path.basename(file + '.png'))
         f.write(os.path.basename(file + '_colorbar.png'))
-
-    # delete files
-    for f in [kml_name, file + '.png', file + '_colorbar.png']:
-        if os.path.isfile(f):
-            os.remove(f)
+        os.remove(os.path.basename(file + '_colorbar.png'))
 
 
 def run_kmz():
     inps = cmdline_parser()
-    img, colorbar = display(inps)
+    print('writing kmz')
+    img = plot_img(inps)
+    colorbar = plot_colorbar(inps)
     write_kmz(img, colorbar, inps)
+    print('done')
 
 
 if __name__ == "__main__":
