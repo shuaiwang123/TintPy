@@ -108,6 +108,7 @@ def plot_colorbar(colorbar, dir_name, dpi):
         yy += 0.5
     ax.text(0.15, 0.5 * len(colorbar.keys()) + 0.2, 'mm/yr', fontsize=30)
     file_path = os.path.join(dir_name, 'colorbar.png')
+    fig.patch.set_alpha(0.7)
     fig.savefig(file_path, dpi=dpi, bbox_inches='tight')
 
 
