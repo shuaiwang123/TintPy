@@ -19,7 +19,12 @@ from pykml.factory import KML_ElementMaker as KML
 mpl.use('Agg')
 
 EXAMPLE = r"""Example:
-  python gdal2kmz.py -h
+  # Windows
+  python gdal2kmz.py -f 20200202_disp
+  python gdal2kmz.py -f 20200202_disp -m -3 -M 3 -c rainnbow -u mm
+  # Ubuntu
+  python3 gdal2kmz.py -f 20200202_disp
+  python3 gdal2kmz.py -f 20200202_disp -c rainnbow -u mm -s 100 -w yes -g 4 
 """
 
 
@@ -47,41 +52,43 @@ def create_parser():
                         dest='dpi',
                         type=int,
                         default=300,
-                        help='dpi of the png image')
+                        help='dpi of the png image (default: 300)')
     parser.add_argument('-c',
                         dest='color_map',
                         type=str,
                         default='jet',
-                        help='masplotlib colormap')
+                        help='masplotlib colormap (default: jet)')
     parser.add_argument('-u',
                         dest='unit',
                         default='',
                         help='unit in whick data is displayed')
-    parser.add_argument('-s',
-                        dest='scale',
-                        type=float,
-                        default=1.0,
-                        help='scale factor to scale the data before display')
+    parser.add_argument(
+        '-s',
+        dest='scale',
+        type=float,
+        default=1.0,
+        help='scale factor to scale the data before display (default: 1.0)')
     parser.add_argument('-r',
                         dest='reverse_cmap',
                         type=str,
                         default='no',
-                        help='reverse color map (default: no)')
+                        help='reverse color map [yes or no] (default: no)')
     parser.add_argument('-w',
                         dest='rewrap',
                         type=str,
                         default='no',
-                        help='rewrap data (default: no)')
+                        help='rewrap data [yes or no] (default: no)')
     parser.add_argument('-g',
                         dest='rewarp_range',
                         default=3.14,
                         type=float,
                         help='range to rewrap data (default: 3.14)')
-    parser.add_argument('-n',
-                        dest='band_number',
-                        type=int,
-                        default=1,
-                        help='band number if multiple bands exist')
+    parser.add_argument(
+        '-n',
+        dest='band_number',
+        type=int,
+        default=1,
+        help='band number if multiple bands exist (default: 1)')
     return parser
 
 
@@ -170,7 +177,6 @@ def display(inps):
 
     width, length = b.XSize, b.YSize
 
-    # fig = plt.figure()
     fig = plt.figure(frameon=False)
     ax = plt.Axes(
         fig,
@@ -261,9 +267,14 @@ def write_kmz(img, colorbar_img, inps):
     kmz_name = file + '.kmz'
     with zipfile.ZipFile(kmz_name, 'w') as f:
         os.chdir(os.path.dirname(file))
-        f.write(kml_name)
-        f.write(file + '.png')
-        f.write(file + '_colorbar.png')
+        f.write(os.path.basename(kml_name))
+        f.write(os.path.basename(file + '.png'))
+        f.write(os.path.basename(file + '_colorbar.png'))
+
+    # delete files
+    for f in [kml_name, file + '.png', file + '_colorbar.png']:
+        if os.path.isfile(f):
+            os.remove(f)
 
 
 def run_kmz():
