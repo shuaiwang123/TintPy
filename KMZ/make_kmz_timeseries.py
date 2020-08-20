@@ -34,7 +34,7 @@ EXAMPLE = r"""Example:
 """
 
 
-def cmdline_parser():
+def create_parser():
     parser = argparse.ArgumentParser(
         description=
         'Display velocity and time-series displacement derived by InSAR in Google Earth.',
@@ -69,6 +69,12 @@ def cmdline_parser():
                         type=float,
                         help='scale of point for displaying (default: 0.5)')
     return parser
+
+
+def cmdline_parser():
+    parser = create_parser()
+    inps = parser.parse_args()
+    return inps
 
 
 def get_cutoff_vel(colorbar):
@@ -241,11 +247,8 @@ def del_files(dir_name):
             os.remove(tmp)
 
 
-def write_kmz(colorbar, symbol_dpi=12, colorbar_dpi=200):
-    """write kml file and unzip files into kmz"""
-    # get inputs
-    parser = cmdline_parser()
-    inps = parser.parse_args()
+def check_inps(inps):
+    """check input data"""
     ts_file = os.path.abspath(inps.ts_file)
     out_file = os.path.abspath(inps.out_file)
     js_file = os.path.abspath(inps.js_file)
@@ -262,7 +265,7 @@ def write_kmz(colorbar, symbol_dpi=12, colorbar_dpi=200):
     # check out_file
     if not out_file.endswith('.kmz'):
         out_file += '.kmz'
-    dir_name = os.path.dirname(os.path.abspath(out_file))
+    dir_name = os.path.dirname(out_file)
     if not os.path.isdir(dir_name):
         print("{} doesn't exist.".format(dir_name))
         sys.exit()
@@ -277,8 +280,21 @@ def write_kmz(colorbar, symbol_dpi=12, colorbar_dpi=200):
         print('scale cannot smaller than 0.')
         sys.exit()
     if scale == 0:
-        print('scale cannot be equal 0.')
+        print('scale cannot be equal to 0.')
         sys.exit()
+
+    return ts_file, out_file, js_file, rate, scale
+
+
+def write_kmz(ts_file,
+              out_file,
+              js_file,
+              rate,
+              scale,
+              colorbar,
+              symbol_dpi=12,
+              colorbar_dpi=200):
+    """write kml file and unzip files into kmz"""
     # get lons, lats, vels, ts, dates
     try:
         nums, lons, lats, vels, ts, dates = load_data(ts_file)
@@ -406,4 +422,13 @@ if __name__ == "__main__":
         '-50~-40': '#FF0000',
         '-60~-50': '#AA0000',
     }
-    write_kmz(colorbar, symbol_dpi=20, colorbar_dpi=200)
+    inps = cmdline_parser()
+    ts_file, out_file, js_file, rate, scale = check_inps(inps)
+    write_kmz(ts_file,
+              out_file,
+              js_file,
+              rate,
+              scale,
+              colorbar,
+              symbol_dpi=20,
+              colorbar_dpi=200)
