@@ -295,6 +295,7 @@ def write_kmz(ts_file,
               symbol_dpi=12,
               colorbar_dpi=200):
     """write kml file and unzip files into kmz"""
+    print('writing kmz')
     # get lons, lats, vels, ts, dates
     try:
         nums, lons, lats, vels, ts, dates = load_data(ts_file)
@@ -369,7 +370,6 @@ def write_kmz(ts_file,
     doc.Document.Folder.append(legend)
     kml_str = etree.tostring(doc, pretty_print=True)
     # write kml file
-    print('writing kmz')
     dir_name = os.path.dirname(out_file)
     kml_file = os.path.join(dir_name, 'doc.kml')
     with open(kml_file, 'wb') as f:
