@@ -130,13 +130,32 @@ def random_downsample(nums, lons, lats, vels, rate):
     return nums[index], lons[index], lats[index], vels[index]
 
 
-def get_description_string(lon, lat, vel, font_size=4):
+def get_description_string(lon, lat, vel):
     """Description information of each data point."""
-    des_str = "<font size={}>".format(font_size)
-    des_str += "Longitude: {} <br /> \n".format(lon)
-    des_str += "Latitude: {} <br /> \n".format(lat)
-    des_str += "Mean LOS velocity [mm/year]: {} <br /> \n".format(vel)
-    des_str += "</font>"
+    # des_str = "<font size={}>".format(font_size)
+    # des_str += "Longitude: {} <br /> \n".format(lon)
+    # des_str += "Latitude: {} <br /> \n".format(lat)
+    # des_str += "Mean LOS velocity [mm/year]: {} <br /> \n".format(vel)
+    # des_str += "</font>"
+    # return des_str
+    des_str = '<html xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:msxsl="urn:schemas-microsoft-com:xslt">'
+    des_str += '<head>'
+    des_str += '<META http-equiv="Content-Type" content="text/html">'
+    des_str += '<meta http-equiv="content-type" content="text/html; charset=UTF-8">'
+    des_str += '<style>td{padding:5px;}</style>'
+    des_str += '</head>'
+    des_str += '<body style="margin:0px 0px 0px 0px;overflow:auto;background:#FFFFFF;">'
+    des_str += '<table style="font-family:Arial,Verdana,Times;font-size:12px;text-align:left;\
+        width:100%;border-spacing:1px;padding:3px 3px 3px 3px;">'
+    des_str += '<tr bgcolor="#F5F5F5"><td>Longitude</td><td>{}</td></tr>'.format(
+        lon)
+    des_str += '<tr bgcolor="#F5F5F5"><td>Latitude</td><td>{}</td></tr>'.format(
+        lat)
+    des_str += '<tr bgcolor="#F5F5F5"><td>Mean LOS velocity</td><td>{}</td></tr>'.format(
+        vel)
+    des_str += '</table>'
+    des_str += '</body>'
+    des_str += '</html>'
     return des_str
 
 
@@ -194,7 +213,7 @@ def write_kmz(vel_file,
               symbol_dpi=12,
               colorbar_dpi=200):
     """write kml file and unzip files into kmz"""
-    print('writing kmz')
+    print('Writing data {}.'.format(out_file))
     # get nums, lons, lats, vels
     try:
         nums, lons, lats, vels = load_data(vel_file)
@@ -227,7 +246,7 @@ def write_kmz(vel_file,
                 id = f"{cutoff_vel[0]}~{cutoff_vel[1]}"
             elif vel > int(cutoff_vel[-1]):
                 id = f"{cutoff_vel[-2]}~{cutoff_vel[-1]}"
-        description = get_description_string(lon, lat, vel, font_size=4)
+        description = get_description_string(lon, lat, vel)
         placemark = KML.Placemark(
             KML.name(str(int(num))), KML.description(description),
             KML.styleUrl(f"#{id}"),
@@ -283,7 +302,7 @@ def write_kmz(vel_file,
             f.write(i + '.png')
     # delete files
     del_files(dir_name)
-    print('done')
+    print('Done, enjoy it!')
 
 
 if __name__ == "__main__":
@@ -307,10 +326,10 @@ if __name__ == "__main__":
         '40~50': '#0000FF',
         '30~40': '#0055FF',
         '20~30': '#00AAFF',
-        '9~20': '#00FFFF',
-        '0~9': '#008B00',
-        '-9~0': '#008B00',
-        '-20~-9': '#FFFF00',
+        '10~20': '#00FFFF',
+        '0~10': '#008B00',
+        '-10~0': '#008B00',
+        '-20~-10': '#FFFF00',
         '-30~-20': '#FFAA00',
         '-40~-30': '#FF5500',
         '-50~-40': '#FF0000',

@@ -22,9 +22,9 @@ EXAMPLE = r"""Example:
   python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js
   python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js -r 0.5 -s 0.7
   # Linux
-  python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz
-  python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js
-  python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js -r 0.5 -s 0.7
+  python3 make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz
+  python3 make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js
+  python3 make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js -r 0.5 -s 0.7
   # data format
     -1   -1   -1    -1       date1       date2       date3 ...
   num1 lon1 lat1  vel1 date1-disp1 date2-disp1 date3-disp1 ...
@@ -144,17 +144,38 @@ def random_downsample(nums, lons, lats, vels, ts, rate):
     return nums[index], lons[index], lats[index], vels[index], ts[index, :]
 
 
-def get_description_string(lon, lat, vel, cum_disp, font_size=4):
+def get_description_string(lon, lat, vel, cum_disp):
     """Description information of each data point."""
-    des_str = "<font size={}>".format(font_size)
-    des_str += "Longitude: {} <br /> \n".format(lon)
-    des_str += "Latitude: {} <br /> \n".format(lat)
-    des_str += " <br /> \n"
-    des_str += "Mean LOS velocity [mm/year]: {} <br /> \n".format(vel)
-    des_str += "Cumulative displacement [mm]: {} <br /> \n".format(cum_disp)
-    des_str += "</font>"
-    des_str += " <br />  <br /> "
-    des_str += "\n\n"
+    # des_str = "<font size=4>"
+    # des_str += "Longitude: {} <br /> \n".format(lon)
+    # des_str += "Latitude: {} <br /> \n".format(lat)
+    # des_str += " <br /> \n"
+    # des_str += "Mean LOS velocity [mm/year]: {} <br /> \n".format(vel)
+    # des_str += "Cumulative displacement [mm]: {} <br /> \n".format(cum_disp)
+    # des_str += "</font>"
+    # des_str += " <br />  <br /> "
+    # des_str += "\n\n"
+    # return des_str
+    des_str = '<html xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:msxsl="urn:schemas-microsoft-com:xslt">'
+    des_str += '<head>'
+    des_str += '<META http-equiv="Content-Type" content="text/html">'
+    des_str += '<meta http-equiv="content-type" content="text/html; charset=UTF-8">'
+    des_str += '<style>td{padding:5px;}</style>'
+    des_str += '</head>'
+    des_str += '<body style="margin:0px 0px 0px 0px;overflow:auto;background:#FFFFFF;">'
+    des_str += '<table style="font-family:Arial,Verdana,Times;font-size:12px;text-align:left;\
+        width:100%;border-spacing:1px;padding:3px 3px 3px 3px;">'
+    des_str += '<tr bgcolor="#F5F5F5"><td>Longitude</td><td>{}</td></tr>'.format(
+        lon)
+    des_str += '<tr bgcolor="#F5F5F5"><td>Latitude</td><td>{}</td></tr>'.format(
+        lat)
+    des_str += '<tr bgcolor="#F5F5F5"><td>Mean LOS velocity</td><td>{}</td></tr>'.format(
+        vel)
+    des_str += '<tr bgcolor="#F5F5F5"><td>Cumulative displacement</td><td>{}</td></tr>'.format(
+        cum_disp)
+    des_str += '</table>'
+    des_str += '</body>'
+    des_str += '</html>'
     return des_str
 
 
@@ -200,9 +221,9 @@ def generate_js_datastring(dates, dygraph_file, ts):
                  },
                  valueFormatter: function (d) {
                      var date = new Date(d)
-                     var dateString = 'Date: ' + ('0' + date.getDate()).slice(-2) + 
+                     var dateString = 'Date: ' + date.getFullYear() + 
                                       '/' + ('0' + (date.getMonth() + 1)).slice(-2) +
-                                      '/' + date.getFullYear()
+                                      '/' + ('0' + date.getDate()).slice(-2)
                      return dateString;
                  },
                  pixelsPerLabel: 90
@@ -295,7 +316,7 @@ def write_kmz(ts_file,
               symbol_dpi=12,
               colorbar_dpi=200):
     """write kml file and unzip files into kmz"""
-    print('writing kmz')
+    print('Writing data to {}.'.format(out_file))
     # get lons, lats, vels, ts, dates
     try:
         nums, lons, lats, vels, ts, dates = load_data(ts_file)
@@ -389,7 +410,7 @@ def write_kmz(ts_file,
         f.write(os.path.basename(js_file))
     # delete files
     del_files(dir_name)
-    print('done')
+    print('Done, enjoy it!')
 
 
 if __name__ == "__main__":
