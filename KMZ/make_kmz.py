@@ -10,6 +10,7 @@ import random
 import sys
 import zipfile
 
+import matplotlib as mpl
 import matplotlib.patches as mpathes
 import matplotlib.pyplot as plt
 import numpy as np
@@ -68,48 +69,48 @@ def cmdline_parser():
     return inps
 
 
-def get_cutoff_vel(colorbar):
-    """get cutoff velocity"""
-    cutoff_vel = []
-    for i in colorbar.keys():
-        cutoff_vel.append(i.split('~')[0])
-        cutoff_vel.append(i.split('~')[1])
-    cutoff_vel = sorted(list(set(cutoff_vel)), key=lambda i: float(i))
-    return cutoff_vel
+def gen_symbol_name(bounds):
+    """generate symbol names"""
+    names = []
+    for i in range(len(bounds) - 1):
+        names.append(f"{bounds[i]}~{bounds[i+1]}")
+    return names
 
 
-def plot_symbol(colorbar, dir_name, dpi):
+def plot_symbol(colors, bounds, dir_name, dpi):
     """plot symbol for displaying points"""
-    for label, color in colorbar.items():
+    symbol_name = gen_symbol_name(bounds)
+    for i in range(len(colors)):
         fig, ax = plt.subplots(figsize=(1, 1))
         ax.set_axis_off()
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
-        circle = mpathes.Circle((0.5, 0.5), 0.49, color=color)
+        circle = mpathes.Circle((0.5, 0.5), 0.49, color=colors[i])
         ax.add_patch(circle)
-        file_path = os.path.join(dir_name, label + '.png')
-        fig.savefig(file_path, transparent=True, dpi=dpi, bbox_inches='tight')
+        symbol_path = os.path.join(dir_name, f"{symbol_name[i]}.png")
+        fig.savefig(symbol_path,
+                    transparent=True,
+                    dpi=dpi,
+                    bbox_inches='tight')
 
 
-def plot_colorbar(colorbar, dir_name, dpi):
+def plot_colorbar(colors, bounds, dir_name, dpi):
     """plot colorbar for display"""
-    fig, ax = plt.subplots(figsize=(4, 12))
-    ax.set_axis_off()
-    ax.set_xlim(0, 1.5)
-    ax.set_ylim(0, len(colorbar.keys()) * 0.5 + 0.5)
-    y = 0.05
-    for color in list(colorbar.values())[::-1]:
-        rect = plt.Rectangle((0, y), 1, 0.45, color=color)
-        y += 0.5
-        ax.add_patch(rect)
-    yy = -0.05
-    for i in get_cutoff_vel(colorbar):
-        ax.text(1.2, yy, i, fontsize=30)
-        yy += 0.5
-    ax.text(0.15, 0.5 * len(colorbar.keys()) + 0.2, 'mm/yr', fontsize=30)
-    file_path = os.path.join(dir_name, 'colorbar.png')
-    fig.patch.set_alpha(0.7)
-    fig.savefig(file_path, dpi=dpi, bbox_inches='tight')
+    fig, ax = plt.subplots(figsize=(1, 8))
+    fig.subplots_adjust(left=0.1, right=0.4)
+
+    cmap = mpl.colors.ListedColormap(colors)
+    norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
+
+    fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
+                 cax=ax,
+                 ticks=bounds,
+                 spacing='uniform',
+                 orientation='vertical',
+                 label='mm/yr')
+    fig.patch.set_alpha(1)
+    colorbar_path = os.path.join(dir_name, 'colorbar.png')
+    fig.savefig(colorbar_path, dpi=dpi, bbox_inches='tight')
 
 
 def load_data(vel_file):
@@ -147,6 +148,7 @@ def get_description_string(lon, lat, vel):
     des_str += '<body style="margin:0px 0px 0px 0px;overflow:auto;background:#FFFFFF;">'
     des_str += '<table style="font-family:Arial,Verdana,Times;font-size:12px;text-align:left;\
         width:100%;border-spacing:1px;padding:3px 3px 3px 3px;">'
+
     des_str += '<tr bgcolor="#F5F5F5"><td>Longitude</td><td>{}</td></tr>'.format(
         lon)
     des_str += '<tr bgcolor="#F5F5F5"><td>Latitude</td><td>{}</td></tr>'.format(
@@ -157,18 +159,6 @@ def get_description_string(lon, lat, vel):
     des_str += '</body>'
     des_str += '</html>'
     return des_str
-
-
-def del_files(dir_name):
-    """delete files(doc.kml symbol colorbar)"""
-    for i in colorbar.keys():
-        tmp = os.path.join(dir_name, i + '.png')
-        if os.path.isfile(tmp):
-            os.remove(tmp)
-    for j in ['colorbar.png', 'doc.kml']:
-        tmp = os.path.join(dir_name, j)
-        if os.path.isfile(tmp):
-            os.remove(tmp)
 
 
 def check_inps(inps):
@@ -209,11 +199,15 @@ def write_kmz(vel_file,
               out_file,
               rate,
               scale,
-              colorbar,
-              symbol_dpi=12,
-              colorbar_dpi=200):
+              colors,
+              bounds,
+              symbol_dpi=30,
+              colorbar_dpi=300):
     """write kml file and unzip files into kmz"""
-    print('Writing data {}.'.format(out_file))
+    if len(colors) != len(bounds) - 1:
+        print('length of colors must be equal to length of bounds.')
+        sys.exit()
+    print('Writing data {}'.format(out_file))
     # get nums, lons, lats, vels
     try:
         nums, lons, lats, vels = load_data(vel_file)
@@ -227,25 +221,26 @@ def write_kmz(vel_file,
     doc = KML.kml(
         KML.Document(KML.Folder(KML.name(os.path.basename(out_file)))))
     # create icon style
-    for label in colorbar.keys():
-        style = KML.Style(KML.IconStyle(KML.Icon(KML.href(label + '.png')),
-                                        KML.scale(str(scale))),
+    symbol_name = gen_symbol_name(bounds)
+    for s in symbol_name:
+        style = KML.Style(KML.IconStyle(
+            KML.Icon(KML.href(s + '.png')),
+            KML.scale(str(scale))),
                           KML.LabelStyle(KML.color('00000000'),
                                          KML.scale('0.000000')),
-                          id=label)
+                          id=s)
         doc.Document.append(style)
     # create placemark
     for num, lon, lat, vel in zip(nums, lons, lats, vels):
-        cutoff_vel = get_cutoff_vel(colorbar)
-        for i in range(len(cutoff_vel) - 1):
-            min_vel = int(cutoff_vel[i])
-            max_vel = int(cutoff_vel[i + 1])
+        for i in range(len(bounds) - 1):
+            min_vel = int(bounds[i])
+            max_vel = int(bounds[i + 1])
             if vel >= min_vel and vel < max_vel:
                 id = f"{min_vel}~{max_vel}"
-            elif vel < int(cutoff_vel[0]):
-                id = f"{cutoff_vel[0]}~{cutoff_vel[1]}"
-            elif vel > int(cutoff_vel[-1]):
-                id = f"{cutoff_vel[-2]}~{cutoff_vel[-1]}"
+            elif vel < int(bounds[0]):
+                id = f"{bounds[0]}~{bounds[1]}"
+            elif vel > int(bounds[-1]):
+                id = f"{bounds[-2]}~{bounds[-1]}"
         description = get_description_string(lon, lat, vel)
         placemark = KML.Placemark(
             KML.name(str(int(num))), KML.description(description),
@@ -276,8 +271,8 @@ def write_kmz(vel_file,
             yunits="fraction",
         ),
         KML.size(
-            x="0",
-            y="0.4",
+            x="0.05",
+            y="0.5",
             xunits="fraction",
             yunits="fraction",
         ),
@@ -290,57 +285,37 @@ def write_kmz(vel_file,
     with open(kml_file, 'wb') as f:
         f.write(kml_str)
     # plot symbol
-    plot_symbol(colorbar, dir_name, dpi=symbol_dpi)
+    plot_symbol(colors, bounds, dir_name, symbol_dpi)
     # plot colorbar
-    plot_colorbar(colorbar, dir_name, dpi=colorbar_dpi)
+    plot_colorbar(colors, bounds, dir_name, colorbar_dpi)
     # unzip kml, symbol, colorbar, dygraph_file
     with zipfile.ZipFile(out_file, 'w') as f:
         os.chdir(dir_name)
         f.write('doc.kml')
+        os.remove('doc.kml')
         f.write('colorbar.png')
-        for i in colorbar.keys():
-            f.write(i + '.png')
-    # delete files
-    del_files(dir_name)
+        os.remove('colorbar.png')
+        for s in symbol_name:
+            f.write(f"{s}.png")
+            os.remove(f"{s}.png")
     print('Done, enjoy it!')
 
 
 if __name__ == "__main__":
-    # colorbar for display points
-    colorbar_r = {
-        '50~60': '#AA0000',
-        '40~50': '#FF0000',
-        '30~40': '#FF5500',
-        '20~30': '#FFAA00',
-        '10~20': '#FFFF00',
-        '0~10': '#008B00',
-        '-10~0': '#008B00',
-        '-20~-10': '#00FFFF',
-        '-30~-20': '#00AAFF',
-        '-40~-30': '#0055FF',
-        '-50~-40': '#0000FF',
-        '-60~-50': '#0000AA',
-    }
-    colorbar = {
-        '50~60': '#0000AA',
-        '40~50': '#0000FF',
-        '30~40': '#0055FF',
-        '20~30': '#00AAFF',
-        '10~20': '#00FFFF',
-        '0~10': '#008B00',
-        '-10~0': '#008B00',
-        '-20~-10': '#FFFF00',
-        '-30~-20': '#FFAA00',
-        '-40~-30': '#FF5500',
-        '-50~-40': '#FF0000',
-        '-60~-50': '#AA0000',
-    }
+
+    colors = [
+        '#AA0000', '#FF0000', '#FF5500', '#FFAA00', '#FFFF00', '#008B00',
+        '#008B00', '#00FFFF', '#00AAFF', '#0055FF', '#0000FF', '#0000AA'
+    ]
+    bounds = sorted([-60, -50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60])
+
     inps = cmdline_parser()
     vel_file, out_file, rate, scale = check_inps(inps)
     write_kmz(vel_file,
               out_file,
               rate,
               scale,
-              colorbar,
+              colors,
+              bounds,
               symbol_dpi=30,
-              colorbar_dpi=200)
+              colorbar_dpi=300)
