@@ -205,7 +205,7 @@ def write_kmz(vel_file,
               colorbar_dpi=300):
     """write kml file and unzip files into kmz"""
     if len(colors) != len(bounds) - 1:
-        print('length of colors must be equal to length of bounds.')
+        print('length of colors must be equal to length of bounds plus one.')
         sys.exit()
     print('Writing data {}'.format(out_file))
     # get nums, lons, lats, vels
