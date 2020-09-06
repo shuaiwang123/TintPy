@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-####################################################################################
-# Display velocity and time-series displacement derived by InSAR in Google Earth   #
-# Author: Yuan Lei, 2020                                                           #
-####################################################################################
+################################################################################################################
+# Display velocity (or cumulative displacement) and time-series displacement derived by InSAR in Google Earth  #
+# Author: Yuan Lei, 2020                                                                                       #
+################################################################################################################
 import argparse
 import os
 import random
@@ -21,11 +21,11 @@ EXAMPLE = r"""Example:
   # Windows
   python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz
   python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js
-  python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js -r 0.5 -s 0.7
+  python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js -s 0.6 -f vel
   # Linux
-  python3 make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz
-  python3 make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js
-  python3 make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js -r 0.5 -s 0.7
+  python3 make_kmz_timeseries.py -t ts.txt -o /home/ly/ts
+  python3 make_kmz_timeseries.py -t ts.txt -o /home/ly/ts -j /home/ly/tsdygraph-combined.js
+  python3 make_kmz_timeseries.py -t ts.txt -o /home/ly/ts -j /home/ly/tsdygraph-combined.js -s 0.6 -f disp
   # data format
     -1   -1   -1    -1       date1       date2       date3 ...
   num1 lon1 lat1  vel1 date1-disp1 date2-disp1 date3-disp1 ...
@@ -38,17 +38,17 @@ EXAMPLE = r"""Example:
 def create_parser():
     parser = argparse.ArgumentParser(
         description=
-        'Display velocity and time-series displacement derived by InSAR in Google Earth.',
+        'Display velocity (or cumulative displacement) and time-series displacement derived by InSAR in Google Earth.',
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=EXAMPLE)
     parser.add_argument('-t',
                         dest='ts_file',
                         required=True,
-                        help='timeseries file for generate KML file')
+                        help='timeseries file for generating KMZ file')
     parser.add_argument('-o',
                         dest='out_file',
                         required=True,
-                        help='output KMZ file (path)')
+                        help='output KMZ file')
     parser.add_argument(
         '-j',
         dest='js_file',
@@ -56,19 +56,19 @@ def create_parser():
         help=
         'javascript file for drawing timeseries graph (default: dygraph-combined.js)'
     )
-    parser.add_argument(
-        '-r',
-        dest='rate',
-        default=1,
-        type=float,
-        help=
-        'rate of keeping points (default: 1, keep all points) [random downsample]'
-    )
     parser.add_argument('-s',
                         dest='scale',
                         default=0.5,
                         type=float,
-                        help='scale of point for displaying (default: 0.5)')
+                        help='scale of point for display (default: 0.5)')
+    parser.add_argument(
+        '-f',
+        dest='flag',
+        default='vel',
+        type=str,
+        help=
+        'basemap of kmz (default: vel) [velocity(vel) or cumulative displacement(disp)]'
+    )
     return parser
 
 
@@ -103,7 +103,7 @@ def plot_symbol(colors, bounds, dir_name, dpi):
                     bbox_inches='tight')
 
 
-def plot_colorbar(colors, bounds, dir_name, dpi):
+def plot_colorbar(colors, bounds, dir_name, dpi, flag):
     """plot colorbar for display"""
     fig, ax = plt.subplots(figsize=(1, 8))
     fig.subplots_adjust(left=0.1, right=0.4)
@@ -111,12 +111,17 @@ def plot_colorbar(colors, bounds, dir_name, dpi):
     cmap = mpl.colors.ListedColormap(colors)
     norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
 
+    if flag == 'vel':
+        label = 'mean LOS velocity [mm/yr]'
+    else:
+        label = 'cumulative LOS displacement [mm]'
+
     fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
                  cax=ax,
                  ticks=bounds,
                  spacing='uniform',
                  orientation='vertical',
-                 label='mm/yr')
+                 label=label)
     fig.patch.set_alpha(1)
     colorbar_path = os.path.join(dir_name, 'colorbar.png')
     fig.savefig(colorbar_path, dpi=dpi, bbox_inches='tight')
@@ -129,34 +134,12 @@ def load_data(ts_file):
     dates = [
         str(d)[0:4] + '-' + str(d)[4:6] + '-' + str(d)[6:8] for d in dates
     ]
-    nums = content[1:, 0]
-    lons = content[1:, 1]
-    lats = content[1:, 2]
-    vels = content[1:, 3]
-    ts = content[1:, 4:]
 
-    return nums, lons, lats, vels, ts, dates
-
-
-def random_downsample(nums, lons, lats, vels, ts, rate):
-    """downsample data"""
-    point_num = lons.shape[0]
-    index = random.sample(range(point_num), int(point_num * rate) + 1)
-    return nums[index], lons[index], lats[index], vels[index], ts[index, :]
+    return content[1:, :], dates
 
 
 def get_description_string(lon, lat, vel, cum_disp):
     """Description information of each data point."""
-    # des_str = "<font size=4>"
-    # des_str += "Longitude: {} <br /> \n".format(lon)
-    # des_str += "Latitude: {} <br /> \n".format(lat)
-    # des_str += " <br /> \n"
-    # des_str += "Mean LOS velocity [mm/year]: {} <br /> \n".format(vel)
-    # des_str += "Cumulative displacement [mm]: {} <br /> \n".format(cum_disp)
-    # des_str += "</font>"
-    # des_str += " <br />  <br /> "
-    # des_str += "\n\n"
-    # return des_str
     des_str = '<html xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:msxsl="urn:schemas-microsoft-com:xslt">'
     des_str += '<head>'
     des_str += '<META http-equiv="Content-Type" content="text/html">'
@@ -232,11 +215,7 @@ def generate_js_datastring(dates, dygraph_file, ts):
              },
              y: {
                  valueFormatter: function(v) {
-                    if(v >= 0){
-                        return (' 000' + v.toFixed(2)).slice(-8)
-                    }else{
-                        return '-'+(' 000' + Math.abs(v).toFixed(2)).slice(-7)
-                    }
+                    return v.toFixed(2)
                  }
              }
          },
@@ -263,66 +242,78 @@ def check_inps(inps):
     ts_file = os.path.abspath(inps.ts_file)
     out_file = os.path.abspath(inps.out_file)
     js_file = os.path.abspath(inps.js_file)
-    rate = inps.rate
     scale = inps.scale
+    flag = inps.flag
     # check ts_file
     if not os.path.isfile(ts_file):
-        print("{} doesn't exist.".format(ts_file))
+        print("{} doesn't exist".format(ts_file))
         sys.exit()
     # check js_file
     if not os.path.isfile(js_file):
-        print("{} doesn't exist.".format(js_file))
+        print("{} doesn't exist".format(js_file))
         sys.exit()
     # check out_file
     if not out_file.endswith('.kmz'):
         out_file += '.kmz'
     dir_name = os.path.dirname(out_file)
     if not os.path.isdir(dir_name):
-        print("{} doesn't exist.".format(dir_name))
+        print("{} doesn't exist".format(dir_name))
         sys.exit()
-    # check rate
-    if rate < 0:
-        print('rate cannot smaller than 0.')
-        sys.exit()
-    if rate > 1:
-        rate = 1
     # check scale
-    if scale < 0:
-        print('scale cannot smaller than 0.')
+    if scale <= 0:
+        print('scale cannot less than or equal to 0')
         sys.exit()
-    if scale == 0:
-        print('scale cannot be equal to 0.')
+    # check flag
+    if flag not in ['vel', 'disp']:
+        print('flag must be vel or disp')
         sys.exit()
 
-    return ts_file, out_file, js_file, rate, scale
+    return ts_file, out_file, js_file, scale, flag
+
+
+def get_id(d, bounds):
+    """get the interval of d"""
+    for i in range(len(bounds) - 1):
+        min_d = bounds[i]
+        max_d = bounds[i + 1]
+        if d >= min_d and d < max_d:
+            id = f"{min_d}~{max_d}"
+        elif d < bounds[0]:
+            id = f"{bounds[0]}~{bounds[1]}"
+        elif d > bounds[-1]:
+            id = f"{bounds[-2]}~{bounds[-1]}"
+
+    return id
 
 
 def write_kmz(ts_file,
               out_file,
               js_file,
-              rate,
               scale,
+              flag,
               colors,
               bounds,
               symbol_dpi=30,
               colorbar_dpi=300):
     """write kml file and unzip files into kmz"""
     if len(colors) != len(bounds) - 1:
-        print('length of colors must be equal to length of bounds plus one.')
+        print('Length of colors plus one must be equal to length of bounds')
         sys.exit()
     print('Writing data to {}'.format(out_file))
     # get lons, lats, vels, ts, dates
     try:
-        nums, lons, lats, vels, ts, dates = load_data(ts_file)
-        if rate < 1:
-            nums, lons, lats, vels, ts = random_downsample(
-                nums, lons, lats, vels, ts, rate)
-    except:
-        print('error format of {}'.format(ts_file))
+        data, dates = load_data(ts_file)
+        nums = data[:, 0]
+        lons = data[:, 1]
+        lats = data[:, 2]
+        vels = data[:, 3]
+        ts = data[:, 4:]
+    except Exception:
+        print('Error format of {}'.format(ts_file))
         sys.exit()
     # create document
     doc = KML.kml(
-        KML.Document(KML.Folder(KML.name(os.path.basename(out_file)))))
+        KML.Document(KML.Folder(KML.name(os.path.basename(out_file[:-4])))))
     # create icon style
     symbol_name = gen_symbol_name(bounds)
     for s in symbol_name:
@@ -335,23 +326,20 @@ def write_kmz(ts_file,
     # create placemark
     for j in range(lons.shape[0]):
         num, lon, lat, vel, disp = nums[j], lons[j], lats[j], vels[j], ts[j, :]
-        for i in range(len(bounds) - 1):
-            min_vel = int(bounds[i])
-            max_vel = int(bounds[i + 1])
-            if vel >= min_vel and vel < max_vel:
-                id = f"{min_vel}~{max_vel}"
-            elif vel < int(bounds[0]):
-                id = f"{bounds[0]}~{bounds[1]}"
-            elif vel > int(bounds[-1]):
-                id = f"{bounds[-2]}~{bounds[-1]}"
         description = get_description_string(
             lon, lat, vel, disp[-1]) + generate_js_datastring(
                 dates, js_file, disp)
+        if flag == 'vel':
+            id = get_id(vel, bounds)
+            height = vel
+        else:
+            id = get_id(disp[-1], bounds)
+            height = disp[-1]
         placemark = KML.Placemark(
             KML.name(str(int(num))), KML.description(description),
             KML.styleUrl(f"#{id}"),
             KML.Point(KML.altitudeMode('clampToGround'),
-                      KML.coordinates(f"{lon},{lat},{vel}")))
+                      KML.coordinates(f"{lon},{lat},{height}")))
         doc.Document.Folder.append(placemark)
     # create legend
     legend = KML.ScreenOverlay(
@@ -392,7 +380,7 @@ def write_kmz(ts_file,
     # plot symbol
     plot_symbol(colors, bounds, dir_name, symbol_dpi)
     # plot colorbar
-    plot_colorbar(colors, bounds, dir_name, colorbar_dpi)
+    plot_colorbar(colors, bounds, dir_name, colorbar_dpi, flag)
     # unzip kml, symbol, colorbar, dygraph_file
     with zipfile.ZipFile(out_file, 'w') as f:
         os.chdir(dir_name)
@@ -413,15 +401,16 @@ if __name__ == "__main__":
         '#AA0000', '#FF0000', '#FF5500', '#FFAA00', '#FFFF00', '#008B00',
         '#008B00', '#00FFFF', '#00AAFF', '#0055FF', '#0000FF', '#0000AA'
     ]
-    bounds = sorted([-60, -50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60])
+    bounds = sorted(
+        [-60, -50, -40, -30, -20, -8.5, 0, 8.5, 20, 30, 40, 50, 60])
 
     inps = cmdline_parser()
-    ts_file, out_file, js_file, rate, scale = check_inps(inps)
+    ts_file, out_file, js_file, scale, flag = check_inps(inps)
     write_kmz(ts_file,
               out_file,
               js_file,
-              rate,
               scale,
+              flag,
               colors,
               bounds,
               symbol_dpi=30,
