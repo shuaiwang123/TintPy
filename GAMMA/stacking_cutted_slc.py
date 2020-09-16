@@ -328,7 +328,7 @@ def main():
 
     # get all date
     tmp_files = os.listdir(slc_dir)
-    slc_date = [i for i in tmp_files if re.match(r'\d{8}', i)]
+    slc_date = [i for i in tmp_files if re.match(r'^\d{8}$', i)]
 
     # generate ifg_pair
     ifg_pairs = gen_ifg_pairs(slc_date, num_connections)
