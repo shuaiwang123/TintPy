@@ -1,4 +1,8 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
+###############################################################################
+# Generate SLC from Sentinel-1 raw data with orbit correction using GAMMA     #
+# Copyright (c) 2020, Lei Yuan                                                #
+###############################################################################
 
 import os
 import re

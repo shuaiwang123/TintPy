@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+########################################################################################################
+# Reformat EORC PALSAR + PALSAR2 level 1.1 CEOS format SLC data and generate the ISP parameter file    #
+# Copyright (c) 2020, Lei Yuan                                                                         #
+########################################################################################################
 import argparse
 import glob
 import os

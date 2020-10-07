@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#######################################################
+# Prepare preprocessed files using GAMMA for MintPy   #
+# Copyright (c) 2020, Lei Yuan                        #
+#######################################################
 
 import os
 import re

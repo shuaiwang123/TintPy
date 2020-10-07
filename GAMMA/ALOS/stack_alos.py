@@ -243,7 +243,7 @@ quad_sub $m_date-$s_date.diff.int.sm.unw $m_date-$s_date.diff.par $m_date-$s_dat
 
 
 def cmd_line_parser():
-    parser = argparse.ArgumentParser(description='Stack processing of Sentinel-1 slc.',\
+    parser = argparse.ArgumentParser(description='Stack processing of ALOS slc.',\
                                      formatter_class=argparse.RawTextHelpFormatter,\
                                      epilog=INTRODUCTION+'\n'+EXAMPLE)
 
@@ -269,7 +269,7 @@ def cmd_line_parser():
 
 INTRODUCTION = '''
 -------------------------------------------------------------------
-   Stack processing of Sentinel-1 slc.
+   Stack processing of ALOS slc.
 '''
 
 EXAMPLE = """Usage:

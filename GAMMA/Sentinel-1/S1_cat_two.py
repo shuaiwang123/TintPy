@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#######################################################
+# Concatenate adjacent Sentinel-1 TOPS SLC images     #
+# Copyright (c) 2020, Lei Yuan                        #
+#######################################################
 
 import os
 import glob
