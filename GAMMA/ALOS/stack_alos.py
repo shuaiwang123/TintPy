@@ -17,12 +17,6 @@ s_slc=$slc_dir/$s_date/$s_date.slc
 m_par=$m_slc.par
 s_par=$s_slc.par
 MS_off=$m_date-$s_date.off
-
-##################################################################################################################
-### create the ISP processing/offset parameter file from MSP processing parameter and sensor files
-##################################################################################################################
-# par_MSP ../$m_date/palsar.par ../$m_date/p$m_par $m_par
-# par_MSP ../$s_date/palsar.par ../$s_date/p$s_par $s_par
 ##################################################################################################################
 ### Supports interactive creation of offset/processing parameter file for generation of interferograms
 ### create_offset reads the SLC parameter files and queries the user for parameters(write into the .off file) required to calculate the offsets 
@@ -36,10 +30,8 @@ MS_off=$m_date-$s_date.off
 ### h. width of SLCsection to processes (width of SLC-1)
 ##################################################################################################################
 echo -ne "$m_date-$s_date\\n 0 0\\n 32 32\\n 64 64\\n 7.0\\n 0\\n\\n" > create_offset
-
 create_offset $m_par $s_par $MS_off 1 1 1 < create_offset
 rm -f create_offset
-
 ##################################################################################################################
 ### first guess of the offsets can be obtained based on orbital information
 ### The position of the initial registration offset estimation can be indicated. As default the SLC-1 image center is used.
@@ -70,7 +62,6 @@ offset_fit $m_date-$s_date.offs $m_date-$s_date.off.snr $MS_off $m_date-$s_date.
 ### determine the bilinear registration offset polynomial using a least squares error method
 ### offset_fit computes range and azimuth registration offset polynomials from offsets estimated by one of the programs offset_pwr
 ##################################################################################################################
-
 cp $m_date-$s_date.offsets offsets_datewr_1
 cp $m_date-$s_date.coffsets coffsets_datewr_1
 #rm -f $m_date-$s_date.offs $m_date-$s_date.off.snr $m_date-$s_date.coffs $m_date-$s_date.coffsets $m_date-$s_date.offsets 
@@ -78,7 +69,6 @@ cp $m_date-$s_date.coffsets coffsets_datewr_1
 ### resample  interf
 ##################################################################################################################
 # interf_SLC $m_slc $s_slc $m_par $s_par $MS_off $m_date-$s_date.pwr1 $m_date-$s_date.pwr2 $m_date-$s_date.int 16 40
-
 SLC_interp $s_slc $m_par $s_par $MS_off $s_date.rslc $s_date.rslc.par
 ##################################################################################################################
 ### Generation of interferogram with multi-look factors rlks * alks
@@ -161,7 +151,6 @@ gc_map_fine lookup $width_map $m_date-$s_date.diff.par lookup_fine 0
 geocode lookup_fine dem_seg $width_map $m_date-$s_date.rdc_hgt $width $line 1 0
 ##################################################################################################################
 rashgt $m_date-$s_date.rdc_hgt $m_date-$s_date.pwr1 $width 1 1 0 1 1 20.0 1. .35 1 $m_date-$s_date.rdc_hgt_pwr.bmp
-
 ##################################################################################################################
 ### Form Differential Interferogram
 ### First method (flag is important)
@@ -174,7 +163,6 @@ phase_sim $m_par $MS_off $m_date-$s_date.base $m_date-$s_date.rdc_hgt $m_date-$s
 sub_phase $m_date-$s_date.int $m_date-$s_date.sim_unw $m_date-$s_date.diff.par $m_date-$s_date.diff.int 1 0
 # base_est_fft $m_date-$s_date.int $m_par $MS_off $m_date-$s_date.baseline
 # base_add $m_date-$s_date.base $m_date-$s_date.baseline $m_date-$s_date.baseout -1
-
 ##################################################################################################################
 ### Form Differential Interferogram
 ### Second method 
@@ -185,7 +173,6 @@ sub_phase $m_date-$s_date.int $m_date-$s_date.sim_unw $m_date-$s_date.diff.par $
 ### Subtractiing the simulated unwrapped phase from the complex interferogram
 ##################################################################################################################
 # sub_phase $m_date-$s_date.flt $m_date-$s_date.sim_unw $m_date-$s_date.diff.par $m_date-$s_date.diff.int 1 0
-
 rasmph_pwr $m_date-$s_date.diff.int $m_date-$s_date.pwr1 $width 1 1 0 1 1 1. 0.35 1 $m_date-$s_date.diff.int.pwr.bmp
 ##################################################################################################################
 ### Filter Differential Interferogram
@@ -195,50 +182,18 @@ adf $m_date-$s_date.diff.int.sm1 $m_date-$s_date.diff.int.sm2 $m_date-$s_date.di
 adf $m_date-$s_date.diff.int.sm2 $m_date-$s_date.diff.int.sm $m_date-$s_date.diff.sm.cc $width 0.3
 rasmph_pwr $m_date-$s_date.diff.int.sm $m_date-$s_date.pwr1 $width 1 1 0 1 1 1. 0.35 1 $m_date-$s_date.diff.sm.pwr.bmp
 ##################################################################################################################
-### Unwrap Differential Flattened Interferogram
+### Unwrap Differential Flattened Interferogram (mcf)
 ##################################################################################################################
-### tree_cc
-# corr_flag $m_date-$s_date.diff.sm.cc $m_date-$s_date.diff.sm.flag $width 0.4
-# neutron $m_date-$s_date.pwr1 $m_date-$s_date.diff.sm.flag $width - - -
-# residue $m_date-$s_date.diff.int.sm $m_date-$s_date.diff.sm.flag $width
-# tree_cc $m_date-$s_date.diff.sm.flag $width 64
-# grasses $m_date-$s_date.diff.int.sm $m_date-$s_date.diff.sm.flag $m_date-$s_date.diff.int.sm.unw $width
-# grasses $m_date-$s_date.diff.int.sm $m_date-$s_date.diff.sm.flag $m_date-$s_date.diff.int.sm.unw $width - - - - range_num azimuth_num 
-# rasrmg  $m_date-$s_date.diff.int.sm.unw $m_date-$s_date.pwr1 $width 1 1 0 1 1 1.0 1. 0.35 .0 1 $m_date-$s_date.diff.int.sm.unw.bmp
-### mcf
-
 # rascc_mask $m_date-$s_date.sm.cc $m_date-$s_date.pwr1 $width 1 1 0 1 1 0.0 0. .1 .9 1. .35 1 $m_date-$s_date.sm.cc_mask.bmp
 rascc_mask $m_date-$s_date.corr $m_date-$s_date.pwr1 $width 1 1 0 1 1 0.0 0. .1 .9 1. .35 1 $m_date-$s_date.sm.cc_mask.bmp
 mcf $m_date-$s_date.diff.int.sm $m_date-$s_date.corr $m_date-$s_date.sm.cc_mask.bmp $m_date-$s_date.diff.int.sm.unw $width 1 0 0 - - 1 1 - - - 0
-
-## Subtractiing linear phase trends if needed #####
+##################################################################################################################
+### Subtractiing linear phase trends if needed
+##################################################################################################################
 quad_fit $m_date-$s_date.diff.int.sm.unw $m_date-$s_date.diff.par 32 32 $m_date-$s_date.sm.cc_mask.bmp $m_date-$s_date.plot 3
 quad_sub $m_date-$s_date.diff.int.sm.unw $m_date-$s_date.diff.par $m_date-$s_date.diff.int.sm.sub.unw 0 0
-
 # rasrmg $m_date-$s_date.diff.int.sm.sub.unw $m_date-$s_date.pwr1 $width 1 1 0 1 1 .6 1. .35 .0 1 $m_date-$s_date.diff.unwandpwr.bmp $m_date-$s_date.sm.cc 1 .2
 # rasrmg $m_date-$s_date.diff.int.sm.sub.unw -  $width 1 1 0 1 1 .5 1. .35 .0 1 $m_date-$s_date.diff.int.unw.bmp $m_date-$s_date.sm.cc 1 .2
-##################################################################################################################
-### geocode the radar coordinates to imulated SAR intensity image
-##################################################################################################################
-# geocode_back $m_date-$s_date.sm.cc $width lookup_fine $m_date-$s_date.utm.cc $width_map $nlines_map 1 0
-# geocode_back $m_date-$s_date.diff.int.sm $width lookup_fine $m_date-$s_date.diff.utm.sm $width_map $nlines_map 1 1
-# geocode_back $m_date-$s_date.diff.int.sm.unw $width lookup_fine $m_date-$s_date.diff.utm.unw $width_map $nlines_map 1 0
-# geocode_back $m_date-$s_date.pwr1 $width lookup_fine $m_date-$s_date.utm.pwr $width_map $nlines_map 1 0
-
-# rascc $m_date-$s_date.utm.cc - $width_map 1 1 0 1 1 .1 .9 1. .35 1 $m_date-$s_date.utm.cc.bmp
-# rascc $m_date-$s_date.utm.cc $m_date-$s_date.utm.pwr $width_map 1 1 0 1 1 .1 .9 1. .35 1 $m_date-$s_date.utm.ccandpwr.bmp
-# rasmph $m_date-$s_date.diff.utm.sm $width_map 1 0 1 1 1. 0.35 1 $m_date-$s_date.diff.utm.sm.bmp
-# rasmph_pwr $m_date-$s_date.diff.utm.sm $m_date-$s_date.utm.pwr $width_map 1 1 0 1 1 1. 0.35 1 $m_date-$s_date.diff.utm.smandpwr.bmp
-# rasrmg $m_date-$s_date.diff.int.sm.unw $m_date-$s_date.pwr1 $width 1 1 0 1 1 .2 1. .35 .0 1 $m_date-$s_date.diff.unwandpwr.bmp $m_date-$s_date.sm.cc 1 .2
-# rasrmg $m_date-$s_date.diff.int.sm.unw -  $width 1 1 0 1 1 .18 1. .35 .0 1 $m_date-$s_date.diff.int.unw.bmp $m_date-$s_date.sm.cc 1 .2
-##################################################################################################################
-### Create Displacement Map
-##################################################################################################################
-# max deformation difference: default=0.028
-# maxdiff=0.2
-# dispmap $m_date-$s_date.diff.int.sm.unw $m_date-$s_date.rdc_hgt $m_par $MS_off $m_date-$s_date.disp 0 0 0
-# geocode_back $m_date-$s_date.disp $width lookup_fine $m_date-$s_date.utm.disp $width_map $nlines_map
-# rashgt $m_date-$s_date.utm.disp $m_date-$s_date.utm.pwr $width_map 1 1 0 1 1 $maxdiff 1 0.35 1 $m_date-$s_date.utm.disp.bmp
 """
 
 
