@@ -139,10 +139,10 @@ def gen_ifg_pairs(slc_date, num_connections):
     for i in range(length):
         if i < length - num_connections:
             for j in range(num_connections):
-                ifg_pairs.append(f"{slc_date[i]}-{slc_date[i + j + 1]}")
+                ifg_pairs.append(f"{slc_date[i]}_{slc_date[i + j + 1]}")
         else:
             for k in range(length - i - 1):
-                ifg_pairs.append(f"{slc_date[i]}-{slc_date[i + k + 1]}")
+                ifg_pairs.append(f"{slc_date[i]}_{slc_date[i + k + 1]}")
     return ifg_pairs
 
 
