@@ -47,8 +47,8 @@ INTRODUCTION = '''
 
 EXAMPLE = """Usage:
   
-   ./cut_all.py ./slc ./cut_slc
-   ./cut_all.py ./slc ./cut_slc --rlks 8 --rlks 2
+   ./cut_all.py ./slc ./cut_slc 1 1000 1 1000
+   ./cut_all.py ./slc ./cut_slc 1 1000 1 1000 --rlks 8 --rlks 2
   
 ------------------------------------------------------------------- 
 """
