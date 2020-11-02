@@ -131,6 +131,23 @@ def read_gamma_par(par_file, keyword):
     return value
 
 
+def get_time_and_direction(par_file):
+    with open(par_file, 'r') as f:
+        for l in f.readlines():
+            if 'start_time' in l:
+                start_time = l.strip().split()[1]
+            if 'heading' in l:
+                heading = l.strip().split()[1]
+    heading = float(heading)
+    start_time = float(start_time)
+    if heading > -180 and heading < -90:
+        direction = 'DES'
+    else:
+        direction = 'ASC'
+
+    return start_time, direction
+
+
 def get_date(slc_dir):
     dates = []
     for i in os.listdir(slc_dir):
@@ -168,9 +185,21 @@ def cat_slc(slc_dir, save_dir, iw_num, rlks, alks):
         call_str = f"cp {slc_par2} {slc_par2 + '-copy'}"
         os.system(call_str)
 
+        # get image start_time and direction
+        start_time1, direction1 = get_time_and_direction(slc_par1)
+        start_time2, direction2 = get_time_and_direction(slc_par2)
+
+        des = (direction1 == 'DES') and (start_time1 > start_time2)
+        asc = (direction1 == 'ASC') and (start_time1 < start_time2)
+        if asc or des:
+            tmp = slc_par1
+            slc_par1 = slc_par2
+            slc_par2 = tmp
+
         # delete repeated vectors
         gen_new_par(slc_par1, slc_par2, slc_par2)
 
+        # write catlist
         os.chdir(cat_dir)
         call_str = f"echo {slc1} {slc_par1} {tops_par1} > catlist1"
         os.system(call_str)
@@ -180,7 +209,7 @@ def cat_slc(slc_dir, save_dir, iw_num, rlks, alks):
         os.system(call_str)
 
         # concatenate adjacent Sentinel-1 TOPS SLC images
-        call_str = f"SLC_cat_S1_TOPS.TOPS catlist1 catlist2 catlist"
+        call_str = "SLC_cat_S1_TOPS.TOPS catlist1 catlist2 catlist"
         os.system(call_str)
 
         # generate amplitude image
