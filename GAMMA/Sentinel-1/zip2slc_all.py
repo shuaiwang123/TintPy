@@ -61,6 +61,19 @@ def get_s1_date(zip_file):
     return date
 
 
+def get_s1_date_and_frequency(zip_files):
+    dates = []
+    date_dict = {}
+    for file in zip_files:
+        name = os.path.basename(file)
+        date = re.findall(r'\d{8}', name)[0]
+        dates.append(date)
+    for d in dates:
+        date_dict[d] = dates.count(d)
+    return date_dict
+
+
+
 def get_satellite(zip_file):
     if 'S1A_IW_SLC_' in os.path.basename(zip_file):
         satellite = 'S1A'
@@ -203,18 +216,25 @@ def main():
     iw_num = inps.iw_num
     rlks = inps.rlks
     alks = inps.alks
-
+    # get all zip
     zip_files = glob.glob(zip_dir + '/S1*_IW_SLC*.zip')
+    s1_date_frequency = get_s1_date_and_frequency(zip_files)
 
     for zip_file in zip_files:
-        orbit_dir = inps.orbit_dir
-        slc_dir = inps.slc_dir
-        iw_num = inps.iw_num
-        rlks = inps.rlks
-        alks = inps.alks
-
         s1_date = get_s1_date(zip_file)
-        slc_path = os.path.join(slc_dir, s1_date)
+        
+        # one date has multi images
+        frequency = s1_date_frequency[s1_date]
+        if frequency == 1:
+            slc_path = os.path.join(slc_dir, s1_date)
+        else:
+            for i in range(1, frequency + 1):
+                date_dir = os.path.join(slc_dir, s1_date + '-' + str(i))
+                tmp = glob.glob(os.path.join(date_dir, '*.slc'))
+                if not tmp:
+                    slc_path = date_dir
+                    break
+
         aux_file = os.path.join(slc_path, s1_date + '_aux')
 
         # check inputs
