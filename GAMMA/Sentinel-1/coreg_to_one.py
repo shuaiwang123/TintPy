@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-################################################################################
-# co-register all of SLCs to a reference SLC using GAMMA for MintPy            #
-# Copyright (c) 2020, Lei Yuan                                                 #
-################################################################################
+###########################################################
+# Co-register all of SLCs to a reference SLC using GAMMA  #
+# Copyright (c) 2020, Lei Yuan                            #
+###########################################################
 
 import os
 import re
@@ -11,17 +11,24 @@ import shutil
 import glob
 import sys
 
+EXAMPLE = """
+  ./coreg_to_one.py /ly/slc /ly/rslc /ly/dem '2'
+  ./coreg_to_one.py /ly/slc /ly/rslc /ly/dem '1 2' --rlks 8 --alks 2 --ref_slc 20201111
+"""
+
 
 def cmd_line_parser():
     parser = argparse.ArgumentParser(description='Co-register all of the Sentinel-1 TOPS SLCs to a reference SLC.',\
                                      formatter_class=argparse.RawTextHelpFormatter,\
-                                     epilog=INTRODUCTION+'\n'+EXAMPLE)
+                                     usage=EXAMPLE)
 
     parser.add_argument('slc_dir', help='directory path of SLCs')
     parser.add_argument('rslc_dir', help='directory path of RSLCs')
     parser.add_argument('dem_dir', help='directory path of dem and dem.par')
     parser.add_argument(
-        'iw_num', help='IW num for co-registration (only support one IW)')
+        'iw_num',
+        type=str,
+        help='IW num for co-registration (only support one IW)')
     parser.add_argument('--rlks',
                         help='range looks (defaults: 20)',
                         default='20')
@@ -34,20 +41,6 @@ def cmd_line_parser():
     inps = parser.parse_args()
 
     return inps
-
-
-INTRODUCTION = '''
--------------------------------------------------------------------------
-   Co-register all of the Sentinel-1 TOPS SLCs to a reference SLC.
-'''
-
-EXAMPLE = """Usage:
-  
-  ./coreg_to_one.py /ly/slc /ly/rslc /ly/dem 2
-  ./coreg_to_one.py /ly/slc /ly/rslc /ly/dem 2 --rlks 8 --alks 2 --ref_slc 20201111
-  
--------------------------------------------------------------------------
-"""
 
 
 def read_gamma_par(par_file, keyword):
@@ -93,6 +86,7 @@ def main():
     rslc_dir = inps.rslc_dir
     dem_dir = inps.dem_dir
     iw_num = inps.iw_num
+    iw_num = iw_num.split()
     rlks = inps.rlks
     alks = inps.alks
     ref_slc = inps.ref_slc
@@ -122,9 +116,10 @@ def main():
             dem_par = dem_par[0]
 
     # check iw_num
-    if not iw_num in ['1', '2', '3']:
-        print('Error IW.')
-        sys.exit(1)
+    for i in iw_num:
+        if i not in ['1', '2', '3']:
+            print('Error IW.')
+            sys.exit(1)
 
     # get all date
     tmp_files = os.listdir(slc_dir)
@@ -254,51 +249,157 @@ def main():
         call_str = f"rdc_trans {m_mli_par} {rdc_dem} {s_mli_par} {lt}"
         os.system(call_str)
 
-        s_iw_slc = os.path.join(s_slc_dir, f"{s_date}.iw{iw_num * 2}.slc")
-        s_iw_slc_par = s_iw_slc + '.par'
-        s_iw_slc_tops_par = s_iw_slc + '.tops_par'
+        if len(iw_num) == 1:
+            s_iw_slc = os.path.join(s_slc_dir,
+                                    f"{s_date}.iw{iw_num[0] * 2}.slc")
+            s_iw_slc_par = s_iw_slc + '.par'
+            s_iw_slc_tops_par = s_iw_slc + '.tops_par'
 
-        m_iw_slc = os.path.join(m_slc_dir, f"{m_date}.iw{iw_num * 2}.slc")
-        m_iw_slc_par = m_iw_slc + '.par'
-        m_iw_slc_tops_par = m_iw_slc + '.tops_par'
+            m_iw_slc = os.path.join(m_slc_dir,
+                                    f"{m_date}.iw{iw_num[0] * 2}.slc")
+            m_iw_slc_par = m_iw_slc + '.par'
+            m_iw_slc_tops_par = m_iw_slc + '.tops_par'
 
-        s_iw_rslc = os.path.join(s_rslc_dir, f"{s_date}.iw{iw_num * 2}.slc")
-        s_iw_rslc_par = s_iw_rslc + '.par'
-        s_iw_rslc_tops_par = s_iw_rslc + '.tops_par'
+            s_iw_rslc = os.path.join(s_rslc_dir,
+                                     f"{s_date}.iw{iw_num[0] * 2}.slc")
+            s_iw_rslc_par = s_iw_rslc + '.par'
+            s_iw_rslc_tops_par = s_iw_rslc + '.tops_par'
 
-        os.chdir(s_rslc_dir)
+            os.chdir(s_rslc_dir)
 
-        call_str = f"echo {s_iw_slc} {s_iw_slc_par} {s_iw_slc_tops_par} > SLC2_tab"
-        os.system(call_str)
+            call_str = f"echo {s_iw_slc} {s_iw_slc_par} {s_iw_slc_tops_par} > SLC2_tab"
+            os.system(call_str)
+            call_str = f"echo {m_iw_slc} {m_iw_slc_par} {m_iw_slc_tops_par} > SLC1_tab"
+            os.system(call_str)
+            call_str = f"echo {s_iw_rslc} {s_iw_rslc_par} {s_iw_rslc_tops_par} > RSLC2_tab"
+            os.system(call_str)
 
-        call_str = f"echo {m_iw_slc} {m_iw_slc_par} {m_iw_slc_tops_par} > SLC1_tab"
-        os.system(call_str)
+        if len(iw_num) == 2:
+            s_iw_slc1 = os.path.join(s_slc_dir,
+                                     f"{s_date}.iw{iw_num[0] * 2}.slc")
+            s_iw_slc_par1 = s_iw_slc1 + '.par'
+            s_iw_slc_tops_par1 = s_iw_slc1 + '.tops_par'
+            s_iw_slc2 = os.path.join(s_slc_dir,
+                                     f"{s_date}.iw{iw_num[1] * 2}.slc")
+            s_iw_slc_par2 = s_iw_slc2 + '.par'
+            s_iw_slc_tops_par2 = s_iw_slc2 + '.tops_par'
 
-        call_str = f"echo {s_iw_rslc} {s_iw_rslc_par} {s_iw_rslc_tops_par} > RSLC2_tab"
-        os.system(call_str)
+            m_iw_slc1 = os.path.join(m_slc_dir,
+                                     f"{m_date}.iw{iw_num[0] * 2}.slc")
+            m_iw_slc_par1 = m_iw_slc1 + '.par'
+            m_iw_slc_tops_par1 = m_iw_slc1 + '.tops_par'
+            m_iw_slc2 = os.path.join(m_slc_dir,
+                                     f"{m_date}.iw{iw_num[1] * 2}.slc")
+            m_iw_slc_par2 = m_iw_slc2 + '.par'
+            m_iw_slc_tops_par2 = m_iw_slc2 + '.tops_par'
+
+            s_iw_rslc1 = os.path.join(s_rslc_dir,
+                                      f"{s_date}.iw{iw_num[0] * 2}.slc")
+            s_iw_rslc_par1 = s_iw_rslc1 + '.par'
+            s_iw_rslc_tops_par1 = s_iw_rslc1 + '.tops_par'
+            s_iw_rslc2 = os.path.join(s_rslc_dir,
+                                      f"{s_date}.iw{iw_num[1] * 2}.slc")
+            s_iw_rslc_par2 = s_iw_rslc2 + '.par'
+            s_iw_rslc_tops_par2 = s_iw_rslc2 + '.tops_par'
+
+            os.chdir(s_rslc_dir)
+
+            call_str = f"echo {s_iw_slc1} {s_iw_slc_par1} {s_iw_slc_tops_par1} > SLC2_tab"
+            os.system(call_str)
+            call_str = f"echo {s_iw_slc2} {s_iw_slc_par2} {s_iw_slc_tops_par2} >> SLC2_tab"
+            os.system(call_str)
+            call_str = f"echo {m_iw_slc1} {m_iw_slc_par1} {m_iw_slc_tops_par1} > SLC1_tab"
+            os.system(call_str)
+            call_str = f"echo {m_iw_slc2} {m_iw_slc_par2} {m_iw_slc_tops_par2} >> SLC1_tab"
+            os.system(call_str)
+            call_str = f"echo {s_iw_rslc1} {s_iw_rslc_par1} {s_iw_rslc_tops_par1} > RSLC2_tab"
+            os.system(call_str)
+            call_str = f"echo {s_iw_rslc2} {s_iw_rslc_par2} {s_iw_rslc_tops_par2} >> RSLC2_tab"
+            os.system(call_str)
+
+        if len(iw_num) == 3:
+            s_iw_slc1 = os.path.join(s_slc_dir,
+                                     f"{s_date}.iw{iw_num[0] * 2}.slc")
+            s_iw_slc_par1 = s_iw_slc1 + '.par'
+            s_iw_slc_tops_par1 = s_iw_slc1 + '.tops_par'
+            s_iw_slc2 = os.path.join(s_slc_dir,
+                                     f"{s_date}.iw{iw_num[1] * 2}.slc")
+            s_iw_slc_par2 = s_iw_slc2 + '.par'
+            s_iw_slc_tops_par2 = s_iw_slc2 + '.tops_par'
+            s_iw_slc3 = os.path.join(s_slc_dir,
+                                     f"{s_date}.iw{iw_num[2] * 2}.slc")
+            s_iw_slc_par3 = s_iw_slc3 + '.par'
+            s_iw_slc_tops_par3 = s_iw_slc3 + '.tops_par'
+
+            m_iw_slc1 = os.path.join(m_slc_dir,
+                                     f"{m_date}.iw{iw_num[0] * 2}.slc")
+            m_iw_slc_par1 = m_iw_slc1 + '.par'
+            m_iw_slc_tops_par1 = m_iw_slc1 + '.tops_par'
+            m_iw_slc2 = os.path.join(m_slc_dir,
+                                     f"{m_date}.iw{iw_num[1] * 2}.slc")
+            m_iw_slc_par2 = m_iw_slc2 + '.par'
+            m_iw_slc_tops_par2 = m_iw_slc2 + '.tops_par'
+            m_iw_slc3 = os.path.join(m_slc_dir,
+                                     f"{m_date}.iw{iw_num[2] * 2}.slc")
+            m_iw_slc_par3 = m_iw_slc3 + '.par'
+            m_iw_slc_tops_par3 = m_iw_slc3 + '.tops_par'
+
+            s_iw_rslc1 = os.path.join(s_rslc_dir,
+                                      f"{s_date}.iw{iw_num[0] * 2}.slc")
+            s_iw_rslc_par1 = s_iw_rslc1 + '.par'
+            s_iw_rslc_tops_par1 = s_iw_rslc1 + '.tops_par'
+            s_iw_rslc2 = os.path.join(s_rslc_dir,
+                                      f"{s_date}.iw{iw_num[1] * 2}.slc")
+            s_iw_rslc_par2 = s_iw_rslc2 + '.par'
+            s_iw_rslc_tops_par2 = s_iw_rslc2 + '.tops_par'
+            s_iw_rslc3 = os.path.join(s_rslc_dir,
+                                      f"{s_date}.iw{iw_num[2] * 2}.slc")
+            s_iw_rslc_par3 = s_iw_rslc3 + '.par'
+            s_iw_rslc_tops_par3 = s_iw_rslc3 + '.tops_par'
+
+            os.chdir(s_rslc_dir)
+
+            call_str = f"echo {s_iw_slc1} {s_iw_slc_par1} {s_iw_slc_tops_par1} > SLC2_tab"
+            os.system(call_str)
+            call_str = f"echo {s_iw_slc2} {s_iw_slc_par2} {s_iw_slc_tops_par2} >> SLC2_tab"
+            os.system(call_str)
+            call_str = f"echo {s_iw_slc3} {s_iw_slc_par3} {s_iw_slc_tops_par3} >> SLC2_tab"
+            os.system(call_str)
+            call_str = f"echo {m_iw_slc1} {m_iw_slc_par1} {m_iw_slc_tops_par1} > SLC1_tab"
+            os.system(call_str)
+            call_str = f"echo {m_iw_slc2} {m_iw_slc_par2} {m_iw_slc_tops_par2} >> SLC1_tab"
+            os.system(call_str)
+            call_str = f"echo {m_iw_slc3} {m_iw_slc_par3} {m_iw_slc_tops_par3} >> SLC1_tab"
+            os.system(call_str)
+            call_str = f"echo {s_iw_rslc1} {s_iw_rslc_par1} {s_iw_rslc_tops_par1} > RSLC2_tab"
+            os.system(call_str)
+            call_str = f"echo {s_iw_rslc2} {s_iw_rslc_par2} {s_iw_rslc_tops_par2} >> RSLC2_tab"
+            os.system(call_str)
+            call_str = f"echo {s_iw_rslc3} {s_iw_rslc_par3} {s_iw_rslc_tops_par3} >> RSLC2_tab"
+            os.system(call_str)
 
         call_str = f"S1_coreg_TOPS SLC1_tab {m_date} SLC2_tab {s_date} RSLC2_tab {rdc_dem} {rlks} {alks} - - 0.8 0.1 0.8 1"
         os.system(call_str)
 
         # delete files
-        # save_files = []
-        # save_files.append(s_date + '.rslc')
-        # save_files.append(s_date + '.rslc.par')
-        # save_files.append(m_date + '_' + s_date + '.coreg_quality')
-        # save_files.append(m_date + '_' + s_date + '.diff.bmp')
+        save_files = []
+        save_files.append(s_date + '.rslc')
+        save_files.append(s_date + '.rslc.par')
+        save_files.append(m_date + '_' + s_date + '.coreg_quality')
+        save_files.append(m_date + '_' + s_date + '.diff.bmp')
 
-        # for f in os.listdir(s_rslc_dir):
-        #     if f not in save_files:
-        #         path = os.path.join(s_rslc_dir, f)
-        #         os.remove(path)
+        for f in os.listdir(s_rslc_dir):
+            if f not in save_files:
+                path = os.path.join(s_rslc_dir, f)
+                os.remove(path)
 
-        # os.rename(s_date + '.rslc', s_date + '.slc')
-        # os.rename(s_date + '.rslc.par', s_date + '.slc.par')
+        os.rename(s_date + '.rslc', s_date + '.slc')
+        os.rename(s_date + '.rslc.par', s_date + '.slc.par')
 
     # generate bmp for rslc
-    # rslc_files = glob.glob(rslc_dir + '/*/*.slc')
-    # for f in rslc_files:
-    #     gen_bmp(f, f + '.par', rlks, alks)
+    rslc_files = glob.glob(rslc_dir + '/*/*.slc')
+    for f in rslc_files:
+        gen_bmp(f, f + '.par', rlks, alks)
 
     # check coreg_quality
     get_coreg_quality(rslc_dir)
