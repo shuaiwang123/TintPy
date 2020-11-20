@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-#####################################################
-# Stack processing using GAMMA for MintPy           #
-# Copyright (c) 2020, Lei Yuan                      #
-#####################################################
+##################################
+# Stack processing using GAMMA   #
+# Copyright (c) 2020, Lei Yuan   #
+##################################
 
 import os
 import re

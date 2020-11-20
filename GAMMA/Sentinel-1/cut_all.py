@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-#####################################################
-# cut all of SLCs using GAMMA for MintPy            #
-# Copyright (c) 2020, Lei Yuan                      #
-#####################################################
+####################################
+# cut all of SLCs using GAMMA      #
+# Copyright (c) 2020, Lei Yuan     #
+####################################
 
 import os
 import re
