@@ -28,7 +28,7 @@ def cmd_line_parser():
     parser.add_argument(
         'iw_num',
         type=str,
-        help='IW num for co-registration (only support one IW)')
+        help='IW num for co-registration')
     parser.add_argument('--rlks',
                         help='range looks (defaults: 20)',
                         default='20')
