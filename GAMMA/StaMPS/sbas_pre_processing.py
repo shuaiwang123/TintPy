@@ -189,7 +189,7 @@ rasrmg $m_date-$s_date.diff.int.sm.unw $m_date-$s_date.pwr1 $width 1 1 0 1 1 .2 
 rasrmg $m_date-$s_date.diff.int.sm.unw -  $width 1 1 0 1 1 .18 1. .35 .0 1 $m_date-$s_date.diff.int.unw.bmp $m_date-$s_date.sm.cc 1 .2
 """
 
-USAGE = """
+EXAMPLE = """Example:
   # calculate baseline
   ./stack_for_stamps.py /ly/slc /ly/stacking /ly/dem 20200202 0 500 0 300
   # calculate baseline and run stacking
@@ -203,7 +203,7 @@ def cmdline_parser():
     parser = argparse.ArgumentParser(
         description='Stack processing using GAMMA for StaMPS SBAS processing.',
         formatter_class=argparse.RawTextHelpFormatter,
-        usage=USAGE)
+        epilog=EXAMPLE)
 
     parser.add_argument('slc_dir', help='path of slc directory')
     parser.add_argument('stacking_dir', help='path of stacking directory')

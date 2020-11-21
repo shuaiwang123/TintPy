@@ -15,7 +15,7 @@ import sys
 def cmd_line_parser():
     parser = argparse.ArgumentParser(description='Cut all of co-registered SLCs.',\
                                      formatter_class=argparse.RawTextHelpFormatter,\
-                                     usage=EXAMPLE)
+                                     epilog=EXAMPLE)
 
     parser.add_argument('slc_dir', help='directory path of SLCs')
     parser.add_argument('save_dir',
@@ -40,7 +40,7 @@ def cmd_line_parser():
     return inps
 
 
-EXAMPLE = """
+EXAMPLE = """Example:
    ./cut_all.py ./slc ./cut_slc 1 1000 1 1000
    ./cut_all.py ./slc ./cut_slc 1 1000 1 1000 --rlks 8 --rlks 2
 """

@@ -174,7 +174,7 @@ def print_oneline_five(print_list, num=5):
             print(dm, end=" ")
 
 
-EXAMPLE = '''
+EXAMPLE = '''Example:
   # get orbit date from zip files
   python download_orbits.py -i . -s .
   python download_orbits.py -i D:\\test -s D:\\test
@@ -187,7 +187,7 @@ def cmdline_parser():
     parser = argparse.ArgumentParser(
         description='Download Sentinel-1 A/B precise orbits.',
         formatter_class=argparse.RawTextHelpFormatter,
-        usage=EXAMPLE)
+        epilog=EXAMPLE)
     parser.add_argument(
         '-i',
         dest='input_path',

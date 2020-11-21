@@ -15,7 +15,7 @@ import sys
 def cmd_line_parser():
     parser = argparse.ArgumentParser(description='Prepare files for MintPy time series processing.',\
                                      formatter_class=argparse.RawTextHelpFormatter,\
-                                     usage=EXAMPLE)
+                                     epilog=EXAMPLE)
 
     parser.add_argument(
         'mintpy_dir', help='directory path for MintPy time series processing.')
@@ -33,7 +33,7 @@ def cmd_line_parser():
     return inps
 
 
-EXAMPLE = """
+EXAMPLE = """Example:
   ./prep_files.py /ly/mintpy /ly/stacking
   ./prep_files.py /ly/mintpy /ly/stacking --rlks 8 --alks 2
 """

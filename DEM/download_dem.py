@@ -287,7 +287,7 @@ def download_dem(url, save_path):
         print(f'{e}')
 
 
-EXAMPLE = '''
+EXAMPLE = '''Example:
   # only get urls of DEM
   python download_dem.py -f srtm30 -b 30 40 100 105
   # get urls of DEM and download them
@@ -301,7 +301,7 @@ def cmdline_parser():
     parser = argparse.ArgumentParser(
         description='Download SRTM (30m[only get download link] or 90m) or ALOS (30m) DEM.',
         formatter_class=argparse.RawTextHelpFormatter,
-        usage=EXAMPLE)
+        epilog=EXAMPLE)
     parser.add_argument('-f',
                         dest='flag',
                         required=True,

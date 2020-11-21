@@ -63,7 +63,7 @@ def get_date_burst(burst_info):
 
 
 
-EXAMPLE = '''
+EXAMPLE = '''Example:
   python copy_rename.py -b D:\\burst.txt -i D:\\xsc -s D:\\slc
 '''
 
@@ -73,7 +73,7 @@ def cmdline_parser():
         description=
         'Copy single burst and rename it for SARscape imported data.',
         formatter_class=argparse.RawTextHelpFormatter,
-        usage=EXAMPLE)
+        epilog=EXAMPLE)
     parser.add_argument('-b',
                         dest='burst_info',
                         required=True,

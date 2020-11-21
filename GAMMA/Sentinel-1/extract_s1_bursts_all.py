@@ -10,7 +10,7 @@ import sys
 import argparse
 import re
 
-EXAMPLE = '''
+EXAMPLE = '''Example:
     # one swath
     python3 extract_s1_bursts.py /ly/slc '1' '1 3'
     (Note: swath1 start_burst: 1 end_burst: 3)
@@ -23,7 +23,7 @@ EXAMPLE = '''
 def cmdLineParse():
     parser = argparse.ArgumentParser(description='Extract bursts for Sentinel-1 TOPS data.',\
                                      formatter_class=argparse.RawTextHelpFormatter,\
-                                     usage=EXAMPLE)
+                                     epilog=EXAMPLE)
 
     parser.add_argument('slc_dir', help='directory path including slc.')
     parser.add_argument('iw_num', help='IW num.', type=str)

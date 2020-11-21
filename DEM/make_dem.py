@@ -202,7 +202,7 @@ def make_dem(processor, tif, out_name, extent, size):
 
 
 
-EXAMPLE = '''
+EXAMPLE = '''Example:
   python3 make_dem.py -p sarscape -t 1.tif -o dem
   python3 make_dem.py -p gamma -t 1.tif 2.tif -o dem
   python3 make_dem.py -p gamma -t D:\\1.tif D:\\2.tif -o D:\\dem
@@ -214,7 +214,7 @@ def cmdline_parser():
         description=
         'Generating DEM used in interferometry both for GAMMA and SARSCAPE processor.',
         formatter_class=argparse.RawTextHelpFormatter,
-        usage=EXAMPLE)
+        epilog=EXAMPLE)
     parser.add_argument('-p',
                         dest='processor',
                         required=True,

@@ -16,7 +16,7 @@ import shutil
 def cmdLineParse():
     parser = argparse.ArgumentParser(description='Generate SLC from Sentinel-1 raw data with orbit correction using GAMMA.',\
                                      formatter_class=argparse.RawTextHelpFormatter,\
-                                     usage=EXAMPLE)
+                                     epilog=EXAMPLE)
 
     parser.add_argument('s1_zip_dir', help='Sentinel-1 zip directory')
     parser.add_argument(
@@ -41,7 +41,7 @@ def cmdLineParse():
     return inps
 
 
-EXAMPLE = """
+EXAMPLE = """Example:
   # for iw1
   ./zip2slc_all.py /ly/zip_dir /ly/orbits /ly/slc 1
   # for iw1 iw2 and iw3

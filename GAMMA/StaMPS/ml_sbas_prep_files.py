@@ -23,7 +23,7 @@ import glob
 import shutil
 import re
 
-USAGE = """
+EXAMPLE = """Example:
   sbas_prep_files.py ./rslc ./stacking 20200202 ./ 
 """
 
@@ -32,7 +32,7 @@ def cmdline_parser():
     parser = argparse.ArgumentParser(
         description=
         'Prepare necessary files processde by GAMMA for StaMPS SBAS processing.',
-        usage=USAGE,
+        epilog=EXAMPLE,
         formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('stacking_dir', help='path of stacking directory')

@@ -246,7 +246,7 @@ mcf $m_date-$s_date.diff.int.sm $m_date-$s_date.corr $m_date-$s_date.sm.cc_mask.
 def cmd_line_parser():
     parser = argparse.ArgumentParser(description='Stack processing using GAMMA for SBAS or phase-stacking processing.',\
                                      formatter_class=argparse.RawTextHelpFormatter,\
-                                     usage=EXAMPLE)
+                                     epilog=EXAMPLE)
 
     parser.add_argument('slc_dir', help='directory path of slc')
     parser.add_argument('stacking_dir', help='directory path of stacking')
@@ -268,7 +268,7 @@ def cmd_line_parser():
     return inps
 
 
-EXAMPLE = """
+EXAMPLE = """Example:
   ./stacking2.py /ly/slc /ly/stacking /ly/dem 4
   ./stacking2.py /ly/slc /ly/stacking /ly/dem 4 --rlks 8 --alks 2
 """

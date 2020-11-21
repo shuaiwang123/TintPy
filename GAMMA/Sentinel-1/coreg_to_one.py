@@ -11,7 +11,7 @@ import shutil
 import glob
 import sys
 
-EXAMPLE = """
+EXAMPLE = """Example:
   ./coreg_to_one.py /ly/slc /ly/rslc /ly/dem '2'
   ./coreg_to_one.py /ly/slc /ly/rslc /ly/dem '1 2' --rlks 8 --alks 2 --ref_slc 20201111
 """
@@ -20,7 +20,7 @@ EXAMPLE = """
 def cmd_line_parser():
     parser = argparse.ArgumentParser(description='Co-register all of the Sentinel-1 TOPS SLCs to a reference SLC.',\
                                      formatter_class=argparse.RawTextHelpFormatter,\
-                                     usage=EXAMPLE)
+                                     epilog=EXAMPLE)
 
     parser.add_argument('slc_dir', help='directory path of SLCs')
     parser.add_argument('rslc_dir', help='directory path of RSLCs')
