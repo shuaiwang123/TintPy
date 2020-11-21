@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
+#################################################################################
+# Download SRTM (30m[only get download link] or 90m) or ALOS (30m) DEM          #
+# Copyright (c) 2020, Lei Yuan                                                  #
+#################################################################################
 import argparse
 import math
 import os
@@ -283,34 +287,21 @@ def download_dem(url, save_path):
         print(f'{e}')
 
 
-INTRODUCTION = '''
-########################################################################################
-    Copy Right(c): 2019-2020, Yuan Lei
-   
-    Download SRTM (30m[only get download link] or 90m) or ALOS (30m) DEM (tif).
-   
-    1) You can download DEM using this script;
-    2) If you don't want to download DEM using this script, you can copy urls of DEM,
-       then download them using other downloaders.
-'''
-
 EXAMPLE = '''
-    Examples:
-        # only get urls of DEM
-        python download_dem.py -f srtm30 -b 30 40 100 105
-        # get urls of DEM and download them
-        python download_dem.py -f srtm90 -b 30 40 100 105 -s .
-        python download_dem.py -f srtm90 -b 30 40 100 105 -s D:\\test
-        python download_dem.py -f alos -b 30 40 100 105 -s D:\\test
-########################################################################################
+  # only get urls of DEM
+  python download_dem.py -f srtm30 -b 30 40 100 105
+  # get urls of DEM and download them
+  python download_dem.py -f srtm90 -b 30 40 100 105 -s .
+  python download_dem.py -f srtm90 -b 30 40 100 105 -s D:\\dem
+  python download_dem.py -f alos -b 30 40 100 105 -s D:\\dem
 '''
 
 
 def cmdline_parser():
     parser = argparse.ArgumentParser(
-        description='Download SRTM (90m) or ALOS (30m) DEM (tif)',
+        description='Download SRTM (30m[only get download link] or 90m) or ALOS (30m) DEM.',
         formatter_class=argparse.RawTextHelpFormatter,
-        epilog=INTRODUCTION + '\n' + EXAMPLE)
+        usage=EXAMPLE)
     parser.add_argument('-f',
                         dest='flag',
                         required=True,

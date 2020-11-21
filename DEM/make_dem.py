@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
+#################################################################################
+# Generating DEM used in interferometry both for GAMMA and SARSCAPE processor   #
+# Copyright (c) 2020, Lei Yuan                                                  #
+#################################################################################
 from osgeo import gdal
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -197,20 +201,11 @@ def make_dem(processor, tif, out_name, extent, size):
         write_saracape_par(out_name, extent, size)
 
 
-INTRODUCTION = '''
-########################################################################################
-    Copy Right(c): 2019-2020, Yuan Lei
-   
-    Generating DEM used in interferometry both for GAMMA and SARSCAPE processor.
-   
-'''
 
 EXAMPLE = '''
-    Examples:
-        python make_dem.py -p sarscape -t 1.tif -o dem
-        python make_dem.py -p gamma -t 1.tif 2.tif -o dem
-        python make_dem.py -p gamma -t D:\\1.tif D:\\2.tif -o D:\\dem
-########################################################################################
+  python3 make_dem.py -p sarscape -t 1.tif -o dem
+  python3 make_dem.py -p gamma -t 1.tif 2.tif -o dem
+  python3 make_dem.py -p gamma -t D:\\1.tif D:\\2.tif -o D:\\dem
 '''
 
 
@@ -219,7 +214,7 @@ def cmdline_parser():
         description=
         'Generating DEM used in interferometry both for GAMMA and SARSCAPE processor.',
         formatter_class=argparse.RawTextHelpFormatter,
-        epilog=INTRODUCTION + '\n' + EXAMPLE)
+        usage=EXAMPLE)
     parser.add_argument('-p',
                         dest='processor',
                         required=True,
@@ -230,7 +225,7 @@ def cmdline_parser():
                         required=True,
                         type=str,
                         nargs='+',
-                        help='tif files for generating DEM')
+                        help='tif(hgt) files for generating DEM')
     parser.add_argument('-o',
                         dest='out',
                         type=str,
