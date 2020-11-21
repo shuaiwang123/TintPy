@@ -245,7 +245,7 @@ mcf $m_date-$s_date.diff.int.sm $m_date-$s_date.corr $m_date-$s_date.sm.cc_mask.
 def cmd_line_parser():
     parser = argparse.ArgumentParser(description='Stack processing of Sentinel-1 slc.',\
                                      formatter_class=argparse.RawTextHelpFormatter,\
-                                     epilog=INTRODUCTION+'\n'+EXAMPLE)
+                                     usage=EXAMPLE)
 
     parser.add_argument('slc_dir', help='directory path of slc')
     parser.add_argument('stacking_dir', help='directory path of stacking')
@@ -267,17 +267,9 @@ def cmd_line_parser():
     return inps
 
 
-INTRODUCTION = '''
--------------------------------------------------------------------
-   Stack processing of Sentinel-1 slc.
-'''
-
-EXAMPLE = """Usage:
-  
+EXAMPLE = """
   ./stacking2.py /ly/slc /ly/stacking /ly/dem 4
-  ./stacking2.py /ly/slc /ly/stacking /ly/dem 4 --rlks 8 --alks 8
-  
-------------------------------------------------------------------- 
+  ./stacking2.py /ly/slc /ly/stacking /ly/dem 4 --rlks 8 --alks 2
 """
 
 

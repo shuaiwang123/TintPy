@@ -15,7 +15,7 @@ import sys
 def cmd_line_parser():
     parser = argparse.ArgumentParser(description='Prepare files for MintPy time series processing.',\
                                      formatter_class=argparse.RawTextHelpFormatter,\
-                                     epilog=INTRODUCTION+'\n'+EXAMPLE)
+                                     usage=EXAMPLE)
 
     parser.add_argument(
         'mintpy_dir', help='directory path for MintPy time series processing.')
@@ -33,16 +33,9 @@ def cmd_line_parser():
     return inps
 
 
-INTRODUCTION = '''
--------------------------------------------------------------------  
-   Prepare files for MintPy time series processing.
-'''
-
-EXAMPLE = """Usage:
-  
-  prep_files.py /ly/mintpy /ly/stacking
-  
-------------------------------------------------------------------- 
+EXAMPLE = """
+  ./prep_files.py /ly/mintpy /ly/stacking
+  ./prep_files.py /ly/mintpy /ly/stacking --rlks 8 --alks 2
 """
 
 
@@ -152,13 +145,13 @@ def main():
         # copy unw in rdc
         unw = ifg + '.diff.int.sm.unw'
         unw_path = os.path.join(ifg_dir, unw)
-        dst_unw = 'diff_' + ifg.replace('-',
-                                             '_') + '_' + rlks + 'rlks.unw'
+        dst_unw = 'diff_' + ifg.replace('-', '_') + '_' + rlks + 'rlks.unw'
         dst_unw_path = os.path.join(dst_ifg_dir, dst_unw)
         copy_file(unw_path, dst_unw_path)
 
     print('\nall done.')
     sys.exit(1)
+
 
 # mintpy.load.processor      = gamma
 # mintpy.load.unwFile        = ./interferograms/*/diff_*rlks.unw

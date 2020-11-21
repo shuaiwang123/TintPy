@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 ####################################
-# cut all of SLCs using GAMMA      #
+# Cut all of SLCs using GAMMA      #
 # Copyright (c) 2020, Lei Yuan     #
 ####################################
 
@@ -13,9 +13,9 @@ import sys
 
 
 def cmd_line_parser():
-    parser = argparse.ArgumentParser(description='cut all of co-registered SLCs.',\
+    parser = argparse.ArgumentParser(description='Cut all of co-registered SLCs.',\
                                      formatter_class=argparse.RawTextHelpFormatter,\
-                                     epilog=INTRODUCTION+'\n'+EXAMPLE)
+                                     usage=EXAMPLE)
 
     parser.add_argument('slc_dir', help='directory path of SLCs')
     parser.add_argument('save_dir',
@@ -40,17 +40,9 @@ def cmd_line_parser():
     return inps
 
 
-INTRODUCTION = '''
--------------------------------------------------------------------  
-   cut all of co-registered SLCs.
-'''
-
-EXAMPLE = """Usage:
-  
+EXAMPLE = """
    ./cut_all.py ./slc ./cut_slc 1 1000 1 1000
    ./cut_all.py ./slc ./cut_slc 1 1000 1 1000 --rlks 8 --rlks 2
-  
-------------------------------------------------------------------- 
 """
 
 
