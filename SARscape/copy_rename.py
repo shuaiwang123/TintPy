@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# -*- coding:utf-8 -*-
+################################################################
+# Copy single burst and rename it for SARscape imported data   #
+# Copyright (c) 2020, Lei Yuan                                 #
+################################################################
 
 import os
 import re
@@ -58,26 +62,18 @@ def get_date_burst(burst_info):
     return date_list, burst_list
 
 
-INTRODUCTION = '''
-########################################################################################
-    Copy Right(c): 2019-2020, Yuan Lei
-   
-    Copy single burst and rename it for SARSCAPE imported data.
-'''
 
 EXAMPLE = '''
-    Examples:
-        python copy_rename.py -b D:\\burst.txt -i D:\\xsc -s D:\\slc
-########################################################################################
+  python copy_rename.py -b D:\\burst.txt -i D:\\xsc -s D:\\slc
 '''
 
 
 def cmdline_parser():
     parser = argparse.ArgumentParser(
         description=
-        'Copy single burst and rename it for SARSCAPE imported data.',
+        'Copy single burst and rename it for SARscape imported data.',
         formatter_class=argparse.RawTextHelpFormatter,
-        epilog=INTRODUCTION + '\n' + EXAMPLE)
+        usage=EXAMPLE)
     parser.add_argument('-b',
                         dest='burst_info',
                         required=True,
@@ -87,7 +83,7 @@ def cmdline_parser():
                         dest='imported_path',
                         required=True,
                         type=str,
-                        help='directory path of SARSCAPE imported data')
+                        help='directory path of SARscape imported data')
     parser.add_argument('-s',
                         dest='save_path',
                         type=str,
