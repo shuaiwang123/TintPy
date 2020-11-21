@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
+###########################################
+# Download Sentinel-1 A/B precise orbits  #
+# Copyright (c) 2020, Lei Yuan            #
+###########################################
 import argparse
 import datetime
 import os
@@ -102,9 +106,9 @@ def get_urls(date_and_mission):
     url_param = urllib.parse.urlencode(url_param)
     url = URL_PREFIX + "?" + url_param
     html = requests.get(url, headers=HEADERS)
-    if html.status_code == 200:  # 请求成功
-        dom = BeautifulSoup(html.text, "html.parser")  # 解析请求到的数据
-        eofs = re.findall(r"http.*EOF", str(dom))  # 查找下载链接
+    if html.status_code == 200:
+        dom = BeautifulSoup(html.text, "html.parser")
+        eofs = re.findall(r"http.*EOF", str(dom))
         if eofs:
             url = eofs[0]
         else:
@@ -170,28 +174,20 @@ def print_oneline_five(print_list, num=5):
             print(dm, end=" ")
 
 
-INTRODUCTION = '''
-########################################################################
-    Copy Right(c): 2019-2020, Yuan Lei
-   
-    Download Sentinel-1 A/B precise orbits.
-
-'''
-
 EXAMPLE = '''
-    Examples:
-        python download_orbits.py -i . -s .
-        python download_orbits.py -i D:\\test -s D:\\test
-        python download_orbits.py -i D:\\test\\test.txt -s D:\\test
-########################################################################
+  # get orbit date from zip files
+  python download_orbits.py -i . -s .
+  python download_orbits.py -i D:\\test -s D:\\test
+  # get orbit date from image names in text file
+  python download_orbits.py -i D:\\test\\test.txt -s D:\\test
 '''
 
 
 def cmdline_parser():
     parser = argparse.ArgumentParser(
-        description='Download Sentinel-1 A/B precise orbits',
+        description='Download Sentinel-1 A/B precise orbits.',
         formatter_class=argparse.RawTextHelpFormatter,
-        epilog=INTRODUCTION + '\n' + EXAMPLE)
+        usage=EXAMPLE)
     parser.add_argument(
         '-i',
         dest='input_path',
