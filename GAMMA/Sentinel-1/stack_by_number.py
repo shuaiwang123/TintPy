@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-##################################
-# Stack processing using GAMMA   #
-# Copyright (c) 2020, Lei Yuan   #
-##################################
+########################################################################
+# Stack processing using GAMMA for SBAS or phase-stacking processing   #
+# [ generating ifg by number of connections ]                          #
+# Copyright (c) 2020, Lei Yuan                                         #
+########################################################################
 
 import os
 import re
@@ -243,7 +244,7 @@ mcf $m_date-$s_date.diff.int.sm $m_date-$s_date.corr $m_date-$s_date.sm.cc_mask.
 
 
 def cmd_line_parser():
-    parser = argparse.ArgumentParser(description='Stack processing of Sentinel-1 slc.',\
+    parser = argparse.ArgumentParser(description='Stack processing using GAMMA for SBAS or phase-stacking processing.',\
                                      formatter_class=argparse.RawTextHelpFormatter,\
                                      usage=EXAMPLE)
 

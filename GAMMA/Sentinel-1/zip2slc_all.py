@@ -16,7 +16,7 @@ import shutil
 def cmdLineParse():
     parser = argparse.ArgumentParser(description='Generate SLC from Sentinel-1 raw data with orbit correction using GAMMA.',\
                                      formatter_class=argparse.RawTextHelpFormatter,\
-                                     epilog=INTRODUCTION+'\n'+EXAMPLE)
+                                     usage=EXAMPLE)
 
     parser.add_argument('s1_zip_dir', help='Sentinel-1 zip directory')
     parser.add_argument(
@@ -41,17 +41,11 @@ def cmdLineParse():
     return inps
 
 
-INTRODUCTION = '''
--------------------------------------------------------------------  
-   Generate SLC from Sentinel-1 raw data with orbit correction using GAMMA.
-'''
-
-EXAMPLE = """Usage:
-  
+EXAMPLE = """
+  # for iw1
   ./zip2slc_all.py /ly/zip_dir /ly/orbits /ly/slc 1
-  ./zip2slc_all.py ./zip ./../orbits ./.. 2
-  
-------------------------------------------------------------------- 
+  # for iw1 iw2 and iw3
+  ./zip2slc_all.py /ly/zip_dir /ly/orbits /ly/slc 1 2 3 --rlks 8 --alks 2
 """
 
 
@@ -71,7 +65,6 @@ def get_s1_date_and_frequency(zip_files):
     for d in dates:
         date_dict[d] = dates.count(d)
     return date_dict
-
 
 
 def get_satellite(zip_file):
@@ -222,7 +215,7 @@ def main():
 
     for zip_file in zip_files:
         s1_date = get_s1_date(zip_file)
-        
+
         # one date has multi images
         frequency = s1_date_frequency[s1_date]
         if frequency == 1:

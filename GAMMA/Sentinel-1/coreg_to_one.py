@@ -24,7 +24,7 @@ def cmd_line_parser():
 
     parser.add_argument('slc_dir', help='directory path of SLCs')
     parser.add_argument('rslc_dir', help='directory path of RSLCs')
-    parser.add_argument('dem_dir', help='directory path of dem and dem.par')
+    parser.add_argument('dem_dir', help='directory path of .dem and .dem.par')
     parser.add_argument(
         'iw_num',
         type=str,
@@ -36,7 +36,7 @@ def cmd_line_parser():
                         help='azimuth looks (defaults: 5)',
                         default='5')
     parser.add_argument('--ref_slc',
-                        help='reference SLC.(default: the first slc)',
+                        help='reference SLC (default: the first slc)',
                         default='0')
     inps = parser.parse_args()
 
