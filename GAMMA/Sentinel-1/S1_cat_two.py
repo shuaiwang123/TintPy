@@ -10,9 +10,17 @@ import argparse
 import re
 
 
+EXAMPLE = """
+[Note:This script only concatenates adjacent SLC processed by zip2slc_all.py]
+./S1_cat_two.py slc 1 slc
+./S1_cat_two.py slc 1 slc --rlks 8 --alks 2
+"""
+
+
+
 def cmdline_parse():
     parser = argparse.ArgumentParser(
-        description='Concatenate adjacent Sentinel-1 TOPS SLC images', formatter_class=argparse.RawTextHelpFormatter)
+        description='Concatenate adjacent Sentinel-1 TOPS SLC images', formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
     parser.add_argument('slc_dir', help='slc need to concatenate')
     parser.add_argument('iw_num', help='number of IW (1 or 2 or 3)', type=int)
     parser.add_argument(
@@ -190,11 +198,19 @@ def cat_slc(slc_dir, save_dir, iw_num, rlks, alks):
         start_time2, direction2 = get_time_and_direction(slc_par2)
 
         des = (direction1 == 'DES') and (start_time1 > start_time2)
-        asc = (direction1 == 'ASC') and (start_time1 < start_time2)
+        asc = (direction1 == 'ASC') and (start_time1 > start_time2)
         if asc or des:
-            tmp = slc_par1
+            tmp1 = slc1
+            slc1 = slc2
+            slc2 = tmp1
+
+            tmp2 = slc_par1
             slc_par1 = slc_par2
-            slc_par2 = tmp
+            slc_par2 = tmp2
+
+            tmp3 = tops_par1
+            tops_par1 = tops_par2
+            tops_par2 = tmp3
 
         # delete repeated vectors
         gen_new_par(slc_par1, slc_par2, slc_par2)
