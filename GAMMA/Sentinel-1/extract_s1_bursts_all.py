@@ -11,12 +11,12 @@ import argparse
 import re
 
 EXAMPLE = '''Example:
-    # one swath
-    python3 extract_s1_bursts.py /ly/slc '1' '1 3'
-    (Note: swath1 start_burst: 1 end_burst: 3)
-    # multi swath
-    python3 extract_s1_bursts.py /ly/slc '1 2' '1 3 2 4' --rlks 8 --alks 2
-    (Note: swath1 start_burst: 1 end_burst: 3, swath2 start_burst: 2 end_burst: 4)
+  # one swath
+  python3 extract_s1_bursts.py /ly/slc /ly/slc_cat '1' '1 3'
+  (Note: swath1 start_burst: 1 end_burst: 3)
+  # multi swath
+  python3 extract_s1_bursts.py /ly/slc /ly/slc_cat '1 2' '1 3 2 4' --rlks 8 --alks 2
+  (Note: swath1 start_burst: 1 end_burst: 3, swath2 start_burst: 2 end_burst: 4)
 '''
 
 
@@ -26,6 +26,8 @@ def cmdLineParse():
                                      epilog=EXAMPLE)
 
     parser.add_argument('slc_dir', help='directory path including slc.')
+    parser.add_argument('out_slc_dir',
+                        help='directory path saving extracted slc.')
     parser.add_argument('iw_num', help='IW num.', type=str)
     parser.add_argument('burst_num', help='burst_num.', type=str)
     parser.add_argument(
@@ -54,17 +56,20 @@ def read_gamma_par(par_file, keyword):
     return value
 
 
-def slc_copy_s1_tops(slc_path, date, iw, start_burst, end_burst, rlks, alks):
+def slc_copy_s1_tops(slc_path, out_slc_path, date, iw, start_burst, end_burst,
+                     rlks, alks):
     # write SLC_tab
-    SLC1_tab = os.path.join(slc_path, 'SLC1_tab')
-    SLC2_tab = os.path.join(slc_path, 'SLC2_tab')
+    SLC1_tab = os.path.join(out_slc_path, 'SLC1_tab')
+    SLC2_tab = os.path.join(out_slc_path, 'SLC2_tab')
     slc = os.path.join(slc_path, date + '.iw' + iw + '.slc')
     slc_par = os.path.join(slc_path, date + '.iw' + iw + '.slc.par')
     tops_par = os.path.join(slc_path, date + '.iw' + iw + '.slc.tops_par')
-    slc0 = os.path.join(slc_path, date + '.iw' + iw * 2 + '.slc')
-    slc_par0 = os.path.join(slc_path, date + '.iw' + iw * 2 + '.slc.par')
-    tops_par0 = os.path.join(slc_path, date + '.iw' + iw * 2 + '.slc.tops_par')
+    slc0 = os.path.join(out_slc_path, date + '.iw' + iw * 2 + '.slc')
+    slc_par0 = os.path.join(out_slc_path, date + '.iw' + iw * 2 + '.slc.par')
+    tops_par0 = os.path.join(out_slc_path,
+                             date + '.iw' + iw * 2 + '.slc.tops_par')
     # SLC_copy_S1_TOPS
+    os.chdir(out_slc_path)
     call_str = f"echo {slc} {slc_par} {tops_par} > {SLC1_tab}"
     os.system(call_str)
     call_str = f"echo {slc0} {slc_par0} {tops_par0} > {SLC2_tab}"
@@ -79,17 +84,19 @@ def slc_copy_s1_tops(slc_path, date, iw, start_burst, end_burst, rlks, alks):
     return slc0, slc_par0, tops_par0
 
 
-def extract_one_swath(slc_path, date, iw, start_burst, end_burst, rlks, alks):
+def extract_one_swath(slc_path, out_slc_path, date, iw, start_burst, end_burst,
+                      rlks, alks):
     # SLC_copy_S1_TOPS
-    slc1, slc_par1, tops_par1 = slc_copy_s1_tops(slc_path, date, iw,
-                                                 start_burst, end_burst, rlks,
-                                                 alks)
+    slc1, slc_par1, tops_par1 = slc_copy_s1_tops(slc_path, out_slc_path, date,
+                                                 iw, start_burst, end_burst,
+                                                 rlks, alks)
     # SLC_mosaic_S1_TOPS
-    mosaiclist = os.path.join(slc_path, 'mosaiclist')
+    os.chdir(out_slc_path)
+    mosaiclist = os.path.join(out_slc_path, 'mosaiclist')
     call_str = f"echo {slc1} {slc_par1} {tops_par1} > {mosaiclist}"
     os.system(call_str)
-    slc_out = os.path.join(slc_path, date + '.slc')
-    slc_par_out = os.path.join(slc_path, date + '.slc.par')
+    slc_out = os.path.join(out_slc_path, date + '.slc')
+    slc_par_out = os.path.join(out_slc_path, date + '.slc.par')
     call_str = f"SLC_mosaic_S1_TOPS {mosaiclist} {slc_out} {slc_par_out} {rlks} {alks}"
     os.system(call_str)
     width = read_gamma_par(slc_par_out, 'range_samples:')
@@ -98,41 +105,8 @@ def extract_one_swath(slc_path, date, iw, start_burst, end_burst, rlks, alks):
         call_str = f"rasSLC {slc_out} {width} 1 0 {rlks} {alks} 1. .35 1 0 0 {bmp}"
         os.system(call_str)
     # delete files
-    SLC1_tab = os.path.join(slc_path, 'SLC1_tab')
-    SLC2_tab = os.path.join(slc_path, 'SLC2_tab')
-    if os.path.isfile(SLC1_tab):
-        os.remove(SLC1_tab)
-    if os.path.isfile(SLC2_tab):
-        os.remove(SLC2_tab)
-
-
-def extract_two_swath(slc_path, date, iws, bursts, rlks, alks):
-    # SLC_copy_S1_TOPS for first swath
-    slc1, slc_par1, tops_par1 = slc_copy_s1_tops(slc_path, date, iws[0],
-                                                 bursts[0], bursts[1], rlks,
-                                                 alks)
-    # SLC_copy_S1_TOPS for second swath
-    slc2, slc_par2, tops_par2 = slc_copy_s1_tops(slc_path, date, iws[1],
-                                                 bursts[2], bursts[3], rlks,
-                                                 alks)
-    # SLC_mosaic_S1_TOPS
-    mosaiclist = os.path.join(slc_path, 'mosaiclist')
-    call_str = f"echo {slc1} {slc_par1} {tops_par1} > {mosaiclist}"
-    os.system(call_str)
-    call_str = f"echo {slc2} {slc_par2} {tops_par2} >> {mosaiclist}"
-    os.system(call_str)
-    slc_out = os.path.join(slc_path, date + '.slc')
-    slc_par_out = os.path.join(slc_path, date + '.slc.par')
-    call_str = f"SLC_mosaic_S1_TOPS {mosaiclist} {slc_out} {slc_par_out} {rlks} {alks}"
-    os.system(call_str)
-    width = read_gamma_par(slc_par_out, 'range_samples:')
-    if width:
-        bmp = slc_out + '.bmp'
-        call_str = f"rasSLC {slc_out} {width} 1 0 {rlks} {alks} 1. .35 1 0 0 {bmp}"
-        os.system(call_str)
-    # delete files
-    SLC1_tab = os.path.join(slc_path, 'SLC1_tab')
-    SLC2_tab = os.path.join(slc_path, 'SLC2_tab')
+    SLC1_tab = os.path.join(out_slc_path, 'SLC1_tab')
+    SLC2_tab = os.path.join(out_slc_path, 'SLC2_tab')
     if os.path.isfile(SLC1_tab):
         os.remove(SLC1_tab)
     if os.path.isfile(SLC2_tab):
@@ -141,29 +115,24 @@ def extract_two_swath(slc_path, date, iws, bursts, rlks, alks):
         os.remove(mosaiclist)
 
 
-def extract_three_swath(slc_path, date, iws, bursts, rlks, alks):
+def extract_two_swath(slc_path, out_slc_path, date, iws, bursts, rlks, alks):
     # SLC_copy_S1_TOPS for first swath
-    slc1, slc_par1, tops_par1 = slc_copy_s1_tops(slc_path, date, iws[0],
-                                                 bursts[0], bursts[1], rlks,
-                                                 alks)
+    slc1, slc_par1, tops_par1 = slc_copy_s1_tops(slc_path, out_slc_path, date,
+                                                 iws[0], bursts[0], bursts[1],
+                                                 rlks, alks)
     # SLC_copy_S1_TOPS for second swath
-    slc2, slc_par2, tops_par2 = slc_copy_s1_tops(slc_path, date, iws[1],
-                                                 bursts[2], bursts[3], rlks,
-                                                 alks)
-    # SLC_copy_S1_TOPS for third swath
-    slc3, slc_par3, tops_par3 = slc_copy_s1_tops(slc_path, date, iws[2],
-                                                 bursts[4], bursts[5], rlks,
-                                                 alks)
+    slc2, slc_par2, tops_par2 = slc_copy_s1_tops(slc_path, out_slc_path, date,
+                                                 iws[1], bursts[2], bursts[3],
+                                                 rlks, alks)
     # SLC_mosaic_S1_TOPS
-    mosaiclist = os.path.join(slc_path, 'mosaiclist')
+    os.chdir(out_slc_path)
+    mosaiclist = os.path.join(out_slc_path, 'mosaiclist')
     call_str = f"echo {slc1} {slc_par1} {tops_par1} > {mosaiclist}"
     os.system(call_str)
     call_str = f"echo {slc2} {slc_par2} {tops_par2} >> {mosaiclist}"
     os.system(call_str)
-    call_str = f"echo {slc3} {slc_par3} {tops_par3} >> {mosaiclist}"
-    os.system(call_str)
-    slc_out = os.path.join(slc_path, date + '.slc')
-    slc_par_out = os.path.join(slc_path, date + '.slc.par')
+    slc_out = os.path.join(out_slc_path, date + '.slc')
+    slc_par_out = os.path.join(out_slc_path, date + '.slc.par')
     call_str = f"SLC_mosaic_S1_TOPS {mosaiclist} {slc_out} {slc_par_out} {rlks} {alks}"
     os.system(call_str)
     width = read_gamma_par(slc_par_out, 'range_samples:')
@@ -172,8 +141,50 @@ def extract_three_swath(slc_path, date, iws, bursts, rlks, alks):
         call_str = f"rasSLC {slc_out} {width} 1 0 {rlks} {alks} 1. .35 1 0 0 {bmp}"
         os.system(call_str)
     # delete files
-    SLC1_tab = os.path.join(slc_path, 'SLC1_tab')
-    SLC2_tab = os.path.join(slc_path, 'SLC2_tab')
+    SLC1_tab = os.path.join(out_slc_path, 'SLC1_tab')
+    SLC2_tab = os.path.join(out_slc_path, 'SLC2_tab')
+    if os.path.isfile(SLC1_tab):
+        os.remove(SLC1_tab)
+    if os.path.isfile(SLC2_tab):
+        os.remove(SLC2_tab)
+    if os.path.isfile(mosaiclist):
+        os.remove(mosaiclist)
+
+
+def extract_three_swath(slc_path, out_slc_path, date, iws, bursts, rlks, alks):
+    # SLC_copy_S1_TOPS for first swath
+    slc1, slc_par1, tops_par1 = slc_copy_s1_tops(slc_path, out_slc_path, date,
+                                                 iws[0], bursts[0], bursts[1],
+                                                 rlks, alks)
+    # SLC_copy_S1_TOPS for second swath
+    slc2, slc_par2, tops_par2 = slc_copy_s1_tops(slc_path, out_slc_path, date,
+                                                 iws[1], bursts[2], bursts[3],
+                                                 rlks, alks)
+    # SLC_copy_S1_TOPS for third swath
+    slc3, slc_par3, tops_par3 = slc_copy_s1_tops(slc_path, out_slc_path, date,
+                                                 iws[2], bursts[4], bursts[5],
+                                                 rlks, alks)
+    # SLC_mosaic_S1_TOPS
+    os.chdir(out_slc_path)
+    mosaiclist = os.path.join(out_slc_path, 'mosaiclist')
+    call_str = f"echo {slc1} {slc_par1} {tops_par1} > {mosaiclist}"
+    os.system(call_str)
+    call_str = f"echo {slc2} {slc_par2} {tops_par2} >> {mosaiclist}"
+    os.system(call_str)
+    call_str = f"echo {slc3} {slc_par3} {tops_par3} >> {mosaiclist}"
+    os.system(call_str)
+    slc_out = os.path.join(out_slc_path, date + '.slc')
+    slc_par_out = os.path.join(out_slc_path, date + '.slc.par')
+    call_str = f"SLC_mosaic_S1_TOPS {mosaiclist} {slc_out} {slc_par_out} {rlks} {alks}"
+    os.system(call_str)
+    width = read_gamma_par(slc_par_out, 'range_samples:')
+    if width:
+        bmp = slc_out + '.bmp'
+        call_str = f"rasSLC {slc_out} {width} 1 0 {rlks} {alks} 1. .35 1 0 0 {bmp}"
+        os.system(call_str)
+    # delete files
+    SLC1_tab = os.path.join(out_slc_path, 'SLC1_tab')
+    SLC2_tab = os.path.join(out_slc_path, 'SLC2_tab')
     if os.path.isfile(SLC1_tab):
         os.remove(SLC1_tab)
     if os.path.isfile(SLC2_tab):
@@ -186,6 +197,8 @@ def main():
     inps = cmdLineParse()
     slc_dir = inps.slc_dir
     slc_dir = os.path.abspath(slc_dir)
+    out_slc_dir = inps.out_slc_dir
+    out_slc_dir = os.path.abspath(out_slc_dir)
     iw_num = inps.iw_num
     iw_num = iw_num.split()
     burst_num = inps.burst_num
@@ -194,10 +207,11 @@ def main():
     alks = inps.alks
 
     # check input
-    slc_dir = os.path.abspath(slc_dir)
-    if not os.path.exists(slc_dir):
+    if not os.path.isdir(slc_dir):
         print('{} not exists.'.format(slc_dir))
         sys.exit(1)
+    if not os.path.isdir(out_slc_dir):
+        os.mkdir(out_slc_dir)
 
     files = os.listdir(slc_dir)
     all_date = []
@@ -208,15 +222,18 @@ def main():
     if all_date:
         for date in all_date:
             slc_path = os.path.join(slc_dir, date)
+            out_slc_path = os.path.join(out_slc_dir, date)
+            if not os.path.isdir(out_slc_path):
+                os.mkdir(out_slc_path)
             if len(iw_num) == 1:
-                extract_one_swath(slc_path, date, iw_num[0], burst_num[0],
-                                  burst_num[1], rlks, alks)
+                extract_one_swath(slc_path, out_slc_path, date, iw_num[0],
+                                  burst_num[0], burst_num[1], rlks, alks)
             if len(iw_num) == 2:
-                extract_two_swath(slc_path, date, iw_num, burst_num, rlks,
-                                  alks)
+                extract_two_swath(slc_path, out_slc_path, date, iw_num,
+                                  burst_num, rlks, alks)
             if len(iw_num) == 3:
-                extract_three_swath(slc_path, date, iw_num, burst_num, rlks,
-                                    alks)
+                extract_three_swath(slc_path, out_slc_path, date, iw_num,
+                                    burst_num, rlks, alks)
     else:
         sys.exit(1)
 
