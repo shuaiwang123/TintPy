@@ -218,6 +218,7 @@ def main():
     for i in files:
         if re.findall(r'^\d{8}$', i):
             all_date.append(i)
+    all_date = sorted(all_date)
 
     if all_date:
         for date in all_date:
@@ -236,6 +237,7 @@ def main():
                                     burst_num, rlks, alks)
     else:
         sys.exit(1)
+    print('\nall done, enjoy it.\n')
 
 
 if __name__ == "__main__":

@@ -251,6 +251,7 @@ def main():
     rlks = inps.rlks
     alks = inps.alks
     cat_slc(slc_dir, save_dir, iw_num, rlks, alks)
+    print('\nall done, enjoy it.\n')
 
 
 if __name__ == "__main__":

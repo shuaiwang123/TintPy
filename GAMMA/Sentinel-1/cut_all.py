@@ -75,7 +75,7 @@ def main():
         os.mkdir(save_dir)
 
     tmp_files = os.listdir(slc_dir)
-    all_date = [i for i in tmp_files if re.findall(r'^\d{8}$', i)]
+    all_date = sorted([i for i in tmp_files if re.findall(r'^\d{8}$', i)])
 
     if len(all_date) < 1:
         print('no slc in {}'.format(slc_dir))
@@ -102,6 +102,7 @@ def main():
             os.system(call_str)
         else:
             print('slc or slc.par for {} not exists.\n'.format(d))
+    print('\nall done, enjoy it.\n')
 
 
 if __name__ == "__main__":
