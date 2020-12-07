@@ -62,7 +62,7 @@ def gen_bmp(slc, slc_par, rlks, alks):
 
 def get_coreg_quality(rslc_dir):
     quality_files = glob.glob(rslc_dir + '/*/*.coreg_quality')
-    print('\ndate\t\tdaz10000\n')
+    print('\n{:>8}{:>10}\n'.format('date', 'daz10000'))
     for file in sorted(quality_files):
         with open(file, 'r') as f:
             for i in f.readlines()[::-1]:
@@ -71,12 +71,13 @@ def get_coreg_quality(rslc_dir):
                     daz = line[1]
                     date = file[-22:-14]
                     daz10000 = float(daz) * 10000
+                    daz10000 = round(daz10000, 2)
                     if daz10000 > 5:
-                        print('%s\t%.4f\t> 5' % (date, daz10000))
+                        print('{:>8}{:>10} >  5'.format(date, daz10000))
                     elif daz10000 < -5:
-                        print('%s\t%.4f\t< -5' % (date, daz10000))
+                        print('{:>8}{:>10} < -5'.format(date, daz10000))
                     else:
-                        print('%s\t%.4f' % (date, daz10000))
+                        print('{:>8}{:>10}'.format(date, daz10000))
                     break
 
 
@@ -379,6 +380,7 @@ def main():
             os.system(call_str)
 
         call_str = f"S1_coreg_TOPS SLC1_tab {m_date} SLC2_tab {s_date} RSLC2_tab {rdc_dem} {rlks} {alks} - - 0.8 0.1 0.8 1"
+        # call_str = f"S1_coreg_TOPS SLC1_tab {m_date} SLC2_tab {s_date} RSLC2_tab {rdc_dem} {rlks} {alks} - - 0.7 0.001 0.7 1"
         os.system(call_str)
 
         # delete files
@@ -404,7 +406,7 @@ def main():
     # check coreg_quality
     get_coreg_quality(rslc_dir)
 
-    print('\nall done.\n')
+    print('\nall done, enjoy it.\n')
     sys.exit(1)
 
 
