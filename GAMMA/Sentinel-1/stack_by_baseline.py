@@ -160,7 +160,6 @@ phase_sim $m_par $MS_off $m_date-$s_date.base $m_date-$s_date.rdc_hgt $m_date-$s
 ### Subtractiing the simulated unwrapped phase from the complex interferogram
 ##################################################################################################################
 sub_phase $m_date-$s_date.int $m_date-$s_date.sim_unw $m_date-$s_date.diff.par $m_date-$s_date.diff.int 1 0
-# multi-look-flag
 ##################################################################################################################
 ### Filter Differential Interferogram
 ##################################################################################################################
@@ -193,10 +192,8 @@ mcf $m_date-$s_date.diff.int.sm $m_date-$s_date.corr $m_date-$s_date.sm.cc_mask.
 USAGE = """Example:
   # calculate baseline
   ./stack_for_stamps.py /ly/slc /ly/stacking /ly/dem 20200202 0 500 0 300
-  # calculate baseline and run stacking (single-look)
-  ./stack_for_stamps.py /ly/slc /ly/stacking /ly/dem 20200202 0 500 0 300 --flag True
-  # calculate baseline and run stacking (multi-look)
-  ./stack_for_stamps.py /ly/slc /ly/stacking /ly/dem 20200202 0 500 0 300 --flag True --rlks 8 --alks 2                                
+  # calculate baseline and run stacking
+  ./stack_for_stamps.py /ly/slc /ly/stacking /ly/dem 20200202 0 500 0 300 --flag True --rlks 8 --alks 2
 """
 
 
@@ -222,12 +219,12 @@ def cmdline_parser():
         default=False,
         type=bool)
     parser.add_argument('--rlks',
-                        help='range looks (defaults: 1)',
-                        default=1,
+                        help='range looks (defaults: 20)',
+                        default=20,
                         type=int)
     parser.add_argument('--alks',
-                        help='azimuth looks (defaults: 1)',
-                        default=1,
+                        help='azimuth looks (defaults: 5)',
+                        default=5,
                         type=int)
 
     inps = parser.parse_args()
@@ -272,7 +269,7 @@ def gen_ifg_pairs(slc_dir, super_master, bperp_min, bperp_max, delta_T_min,
         for line in f.readlines():
             if line:
                 split_list = line.strip().split()
-                ifg_pairs.append(split_list[1] + '-' + split_list[2])
+                ifg_pairs.append(split_list[1] + '_' + split_list[2])
 
     return ifg_pairs
 
@@ -325,8 +322,8 @@ def run():
             if not os.path.isdir(path):
                 os.mkdir(path)
             # write D-InSAR script
-            m_date = i.split('-')[0]
-            s_date = i.split('-')[1]
+            m_date = i[0:8]
+            s_date = i[9:17]
             # write D-InSAR script
             str_m_date = f"m_date={m_date}\n"
             str_s_date = f"s_date={s_date}\n"
@@ -337,12 +334,6 @@ def run():
             str_alks = f"alks={alks}\n"
             out_script = '#!/bin/sh\n\n' + str_m_date + str_s_date + str_slc_dir + \
                 str_dem + str_dem_par + str_rlks + str_alks + dinsar_script
-            if alks == 1 and rlks == 1:
-                pass
-            else:
-                # multi-look (for StaMPS SBAS processing)
-                ml_cmd = 'multi_cpx $m_date-$s_date.diff.int $m_date-$s_date.off $m_date-$s_date.diff $m_date-$s_date.diff.off -$rlks -$alks'
-                out_script = out_script.replace('# multi-look-flag', ml_cmd)
             out_script_path = os.path.join(path, i + '_DInSAR.sh')
             with open(out_script_path, 'w+') as f:
                 f.write(out_script)

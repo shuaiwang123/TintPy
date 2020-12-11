@@ -333,8 +333,8 @@ def main():
             os.mkdir(path)
 
         # write dinsar script
-        m_date = i.split('_')[0]
-        s_date = i.split('_')[1]
+        m_date = i[0:8]
+        s_date = i[9:17]
 
         str_m_date = f"m_date={m_date}\n"
         str_s_date = f"s_date={s_date}\n"
