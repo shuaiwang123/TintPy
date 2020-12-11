@@ -43,9 +43,9 @@ def cmdLineParse():
 
 EXAMPLE = """Example:
   # for iw1
-  ./zip2slc_all.py /ly/zip_dir /ly/orbits /ly/slc 1
+  ./zip2slc.py /ly/zip_dir /ly/orbits /ly/slc 1
   # for iw1 iw2 and iw3
-  ./zip2slc_all.py /ly/zip_dir /ly/orbits /ly/slc 1 2 3 --rlks 8 --alks 2
+  ./zip2slc.py /ly/zip_dir /ly/orbits /ly/slc 1 2 3 --rlks 8 --alks 2
 """
 
 

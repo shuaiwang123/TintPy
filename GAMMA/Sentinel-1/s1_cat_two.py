@@ -12,8 +12,8 @@ import re
 
 EXAMPLE = """
 [Note:This script only concatenates adjacent SLC processed by zip2slc_all.py]
-./S1_cat_two.py slc 1 slc
-./S1_cat_two.py slc 1 slc --rlks 8 --alks 2
+./s1_cat_two.py slc 1 slc
+./s1_cat_two.py slc 1 slc --rlks 8 --alks 2
 """
 
 

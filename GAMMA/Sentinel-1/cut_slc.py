@@ -41,8 +41,8 @@ def cmd_line_parser():
 
 
 EXAMPLE = """Example:
-   ./cut_all.py ./slc ./cut_slc 1 1000 1 1000
-   ./cut_all.py ./slc ./cut_slc 1 1000 1 1000 --rlks 8 --rlks 2
+   ./cut_slc.py ./slc ./cut_slc 1 1000 1 1000
+   ./cut_slc.py ./slc ./cut_slc 1 1000 1 1000 --rlks 8 --rlks 2
 """
 
 
