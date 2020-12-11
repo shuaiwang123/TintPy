@@ -131,7 +131,7 @@ def prep_files(stacking_dir, supermaster, output_dir):
     sm_dir = glob.glob(os.path.join(stacking_dir, '*' + supermaster + '*'))[0]
     # prep slc/*.mli slc/*.mli.par  (single master)
     mli = glob.glob(os.path.join(sm_dir, '*.pwr1'))[0]
-    mli_par = mli + '.par'
+    mli_par = glob.glob(os.path.join(sm_dir, '*.pwr1.par'))[0]
     mli_dst = os.path.join(slc_dir, supermaster + '.mli')
     mli_par_dst = mli_dst + '.par'
     print(bar_msg + 'prep slc/*.mli slc/*.mli.par  (single master)' + bar_msg)
@@ -161,28 +161,29 @@ def prep_files(stacking_dir, supermaster, output_dir):
     for ifg in ifg_pairs:
         # create directory
         ifg_out = ifg.replace('-', '_')
-        ifg_dir = os.path.join(sb_dir, ifg_out)
-        if not os.path.isdir(ifg_dir):
-            os.mkdir(ifg_dir)
+        ifg_in_dir = os.path.join(stacking_dir, ifg)
+        ifg_out_dir = os.path.join(sb_dir, ifg_out)
+        if not os.path.isdir(ifg_out_dir):
+            os.mkdir(ifg_out_dir)
         # .diff
-        diff = os.path.join(stacking_dir, ifg, ifg + '.diff.int')
-        diff_dst = os.path.join(ifg_dir, ifg_out + '.diff')
+        diff = glob.glob(os.path.join(ifg_in_dir, '*.diff.int'))[0]
+        diff_dst = os.path.join(ifg_out_dir, ifg_out + '.diff')
         print(diff_dst)
         shutil.copy(diff, diff_dst)
         # .base
-        baseline = os.path.join(stacking_dir, ifg, ifg + '.base')
-        baseline_dst = os.path.join(ifg_dir, ifg_out + '.base')
+        baseline = glob.glob(os.path.join(ifg_in_dir, '*.base'))[0]
+        baseline_dst = os.path.join(ifg_out_dir, ifg_out + '.base')
         print(baseline_dst)
         shutil.copy(baseline, baseline_dst)
         # .cc
-        cc = os.path.join(stacking_dir, ifg, ifg + '.corr')
-        cc_dst = os.path.join(ifg_dir, ifg_out + '.cc')
+        cc = glob.glob(os.path.join(ifg_in_dir, '*.corr'))[0]
+        cc_dst = os.path.join(ifg_out_dir, ifg_out + '.cc')
         print(cc_dst)
         shutil.copy(cc, cc_dst)
         # .mli
-        mli1 = os.path.join(stacking_dir, ifg, ifg + '.pwr1')
+        mli1 = glob.glob(os.path.join(ifg_in_dir, '*.pwr1'))[0]
         mli1_dst = os.path.join(rslc_dir, ifg[0:8] + '.mli')
-        mli2 = os.path.join(stacking_dir, ifg, ifg + '.pwr2')
+        mli2 = glob.glob(os.path.join(ifg_in_dir, '*.pwr2'))[0]
         mli2_dst = os.path.join(rslc_dir, ifg[9:17] + '.mli')
         if not os.path.isfile(mli1_dst):
             print(mli1_dst)
