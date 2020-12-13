@@ -402,7 +402,7 @@ if __name__ == "__main__":
         '#55FF00', '#21E5FF', '#3B9DFF', '#3358FF', '#1E32FF', '#0808FF'
     ]
     bounds = sorted(
-        [-60, -50, -40, -30, -20, -8.5, 0, 8.5, 20, 30, 40, 50, 60])
+        [-60, -50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60])
 
     inps = cmdline_parser()
     ts_file, out_file, js_file, scale, flag = check_inps(inps)

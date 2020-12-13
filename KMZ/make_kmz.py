@@ -269,7 +269,7 @@ if __name__ == "__main__":
         '#FF2A00', '#FF6600', '#FFA600', '#FFD300', '#FFFF00', '#55FF00',
         '#55FF00', '#21E5FF', '#3B9DFF', '#3358FF', '#1E32FF', '#0808FF'
     ]
-    bounds = sorted([-60, -50, -40, -30, -20, -8.5, 0, 10, 20, 30, 40, 50, 60])
+    bounds = sorted([-60, -50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60])
 
     inps = cmdline_parser()
     vel_file, out_file, scale = check_inps(inps)
