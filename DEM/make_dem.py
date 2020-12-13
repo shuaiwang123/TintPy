@@ -201,7 +201,6 @@ def make_dem(processor, tif, out_name, extent, size):
         write_saracape_par(out_name, extent, size)
 
 
-
 EXAMPLE = '''Example:
   python3 make_dem.py -p sarscape -t 1.tif -o dem
   python3 make_dem.py -p gamma -t 1.tif 2.tif -o dem
@@ -237,15 +236,16 @@ def main():
     # argument parser
     parser = cmdline_parser()
     args = parser.parse_args()
+    tifs = args.tifs
+    processor = args.processor
     # check processor
-    processor = args.processor.upper()
-    if processor not in ['GAMMA', 'ENVI', 'SARSCAPE']:
+    if processor.upper() not in ['GAMMA', 'ENVI', 'SARSCAPE']:
         print(
             "Error processor, please reset it. ['GAMMA', 'ENVI', 'SARSCAPE']")
         sys.exit()
     # check tif files
     not_exist = []
-    for tif in args.tifs:
+    for tif in tifs:
         if not os.path.exists(tif):
             not_exist.append(tif)
     if not_exist:
@@ -259,18 +259,18 @@ def main():
             print(f"'{dir_name}' doesn't exist, please check it.")
     dem_name = os.path.basename(args.out)
     # process tif (mosaic read plot)
-    if len(args.tifs) > 1:
+    if len(tifs) > 1:
         # mosaic tif
         print('Mosaic tifs.')
         mosaiced_tif = dem_name + '.tif'
-        mosaic_tifs(args.tifs, mosaiced_tif)
+        mosaic_tifs(tifs, mosaiced_tif)
         if os.path.exists(mosaiced_tif):
             # read tif
             print('Read tif.')
             data, extent, size = load_data(mosaiced_tif)
             # make dem
-            print(f"Make {args.processor} dem.")
-            make_dem(args.processor, mosaiced_tif, args.out, extent, size)
+            print(f"Make {processor} dem.")
+            make_dem(processor, mosaiced_tif, args.out, extent, size)
             # plot tif
             print('Plot tif.')
             plot_data(data, extent)
@@ -279,10 +279,16 @@ def main():
     else:
         # read tif
         print('Read tif.')
-        data, extent, size = load_data(args.tifs[0])
-        # make dem
-        print(f"Make {args.processor} dem.")
-        make_dem(args.processor, args.tifs[0], args.out, extent, size)
+        data, extent, size = load_data(tifs[0])
+        print(f"Make {processor} dem.")
+        # make dem for one hgt file
+        if tifs[0].endswith('.hgt'):
+            out_tif = tifs[0] + '.tif'
+            gdal.Translate(out_tif, tifs[0])
+            make_dem(processor, out_tif, args.out, extent, size)
+        else:
+            # make dem for one tif file
+            make_dem(processor, tifs[0], args.out, extent, size)
         # plot tif
         print('Plot tif.')
         plot_data(data, extent)
