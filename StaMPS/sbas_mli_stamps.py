@@ -25,7 +25,7 @@ import shutil
 import re
 
 EXAMPLE = """Example:
-  ./stamps_sbas_mli.py ./stacking 20200202 ./
+  ./sbas_mli_stamps.py ./stacking 20200202 ./
 """
 
 
@@ -81,10 +81,10 @@ def gen_lon_lat(stacking_dir, supermaster, sm_dir, geo_dir):
     cmd = f"gmt grdmath -R{lon}/{lon1}/{lat1}/{lat} -I{width_dem}+/{length_dem}+ X = geo.grd"
     os.system(cmd)
     # take lons
-    cmd = f"gmt grd2xyz geo.grd -ZTLf > geo.raw"
+    cmd = "gmt grd2xyz geo.grd -ZTLf > geo.raw"
     os.system(cmd)
     # set lons to 4-byte floats
-    cmd = f"swap_bytes geo.raw geolon.raw 4"
+    cmd = "swap_bytes geo.raw geolon.raw 4"
     os.system(cmd)
     # geocode
     cmd = f"geocode {lt_fine} geolon.raw {width_dem} {supermaster + '.lon'} {width} {length} 2 0"
@@ -94,17 +94,17 @@ def gen_lon_lat(stacking_dir, supermaster, sm_dir, geo_dir):
     cmd = f"gmt grdmath -R{lon}/{lon1}/{lat1}/{lat} -I{width_dem}+/{length_dem}+ Y = geo.grd"
     os.system(cmd)
     # take lats
-    cmd = f"gmt grd2xyz geo.grd -ZTLf > geo.raw"
+    cmd = "gmt grd2xyz geo.grd -ZTLf > geo.raw"
     os.system(cmd)
     # set lats to 4-byte floats
-    cmd = f"swap_bytes geo.raw geolat.raw 4"
+    cmd = "swap_bytes geo.raw geolat.raw 4"
     os.system(cmd)
     # geocode
     cmd = f"geocode {lt_fine} geolat.raw {width_dem} {supermaster + '.lat'} {width} {length} 2 0"
     os.system(cmd)
 
     # cleaning
-    cmd = f"rm -rf geo.raw geolon.raw geolat.raw geo.grd gmt.history"
+    cmd = "rm -rf geo.raw geolon.raw geolat.raw geo.grd gmt.history"
     os.system(cmd)
 
 
@@ -116,19 +116,20 @@ def prep_sb_dir(stacking_dir, supermaster, sm_dir, insar_dir):
     # get width
     diff_par = glob.glob(os.path.join(sm_dir, '*.diff.par'))[0]
     # get content of mli.par and modify it
-    mli_par = glob.glob(os.path.join(sm_dir, '*' + supermaster + '*pwr*.par'))[0]
+    mli_par = glob.glob(os.path.join(sm_dir,
+                                     '*' + supermaster + '*pwr*.par'))[0]
     with open(mli_par, 'r') as f:
-        mli_par_content=f.read()
+        mli_par_content = f.read()
         mli_par_content = mli_par_content.replace('FLOAT', 'FCOMPLEX')
     width = read_gamma_par(diff_par, 'range_samples')
     # get ifg_pairs
     files = os.listdir(stacking_dir)
-    ifg_pairs = sorted([i for i in files if re.match('^\d{8}[-_]\d{8}$', i)])
+    ifg_pairs = sorted([i for i in files if re.match(r'^\d{8}[-_]\d{8}$', i)])
     for ifg in ifg_pairs:
-        ifg_out = ifg.replace('-', '_')
+        ifg_out = ifg.replace('_', '-')
         ifg_in_dir = os.path.join(stacking_dir, ifg)
         # mkdir
-        ifg_out_dir = os.path.join(sb_dir, ifg_out)
+        ifg_out_dir = os.path.join(sb_dir, ifg.replace('-', '_'))
         if not os.path.isdir(ifg_out_dir):
             os.mkdir(ifg_out_dir)
         # prep .diff
@@ -180,6 +181,16 @@ def prep_geo_dir(stacking_dir, supermaster, sm_dir, insar_dir):
     print('\n')
 
 
+def prep_dem_dir(stacking_dir, supermaster, sm_dir, insar_dir):
+    # mkdir
+    dem_dir = os.path.join(insar_dir, 'dem')
+    if not os.path.isdir(dem_dir):
+        os.mkdir(dem_dir)
+    # dem/*_seg.par
+    seg_par = os.path.join(sm_dir, 'dem_seg.par')
+    seg_par_dst = os.path.join(dem_dir, supermaster + '_seg.par')
+    shutil.copy(seg_par, seg_par_dst)
+
 
 def prep_files(stacking_dir, supermaster, output_dir):
     # mkdir
@@ -192,11 +203,10 @@ def prep_files(stacking_dir, supermaster, output_dir):
     prep_sb_dir(stacking_dir, supermaster, sm_dir, insar_dir)
     # geo
     prep_geo_dir(stacking_dir, supermaster, sm_dir, insar_dir)
-    print('\nAll done, now you can run command mt_prep_gamma in terminal, enjoy it.')
-
-
-def check_supermaster(supermaster):
-    pass
+    # dem
+    prep_dem_dir(stacking_dir, supermaster, sm_dir, insar_dir)
+    print(
+        '\nAll done, you can run command mt_prep_gamma in terminal, enjoy it.')
 
 
 def run():

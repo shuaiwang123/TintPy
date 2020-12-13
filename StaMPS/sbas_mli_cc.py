@@ -82,10 +82,10 @@ def gen_lon_lat(stacking_dir, supermaster, geo_dir):
     cmd = f"gmt grdmath -R{lon}/{lon1}/{lat1}/{lat} -I{width_dem}+/{length_dem}+ X = geo.grd"
     os.system(cmd)
     # take lons
-    cmd = f"gmt grd2xyz geo.grd -ZTLf > geo.raw"
+    cmd = "gmt grd2xyz geo.grd -ZTLf > geo.raw"
     os.system(cmd)
     # set lons to 4-byte floats
-    cmd = f"swap_bytes geo.raw geolon.raw 4"
+    cmd = "swap_bytes geo.raw geolon.raw 4"
     os.system(cmd)
     # geocode
     cmd = f"geocode {lt_fine} geolon.raw {width_dem} {supermaster + '.lon'} {width} {length} 2 0"
@@ -95,17 +95,17 @@ def gen_lon_lat(stacking_dir, supermaster, geo_dir):
     cmd = f"gmt grdmath -R{lon}/{lon1}/{lat1}/{lat} -I{width_dem}+/{length_dem}+ Y = geo.grd"
     os.system(cmd)
     # take lats
-    cmd = f"gmt grd2xyz geo.grd -ZTLf > geo.raw"
+    cmd = "gmt grd2xyz geo.grd -ZTLf > geo.raw"
     os.system(cmd)
     # set lats to 4-byte floats
-    cmd = f"swap_bytes geo.raw geolat.raw 4"
+    cmd = "swap_bytes geo.raw geolat.raw 4"
     os.system(cmd)
     # geocode
     cmd = f"geocode {lt_fine} geolat.raw {width_dem} {supermaster + '.lat'} {width} {length} 2 0"
     os.system(cmd)
 
     # cleaning
-    cmd = f"rm -rf geo.raw geolon.raw geolat.raw geo.grd gmt.history"
+    cmd = "rm -rf geo.raw geolon.raw geolat.raw geo.grd gmt.history"
     os.system(cmd)
 
 
@@ -155,7 +155,7 @@ def prep_files(stacking_dir, supermaster, output_dir):
 
     # get ifg_pairs
     files = os.listdir(stacking_dir)
-    ifg_pairs = [i for i in files if re.match('^\d{8}[-_]\d{8}$', i)]
+    ifg_pairs = [i for i in files if re.match(r'^\d{8}[-_]\d{8}$', i)]
     print(bar_msg + 'prep .diff .base .rlsc .rslc.par' + bar_msg)
     # prep .diff .base .cc .mli(single master slaves)
     for ifg in ifg_pairs:
@@ -191,7 +191,7 @@ def prep_files(stacking_dir, supermaster, output_dir):
         if not os.path.isfile(mli2_dst):
             print(mli2_dst)
             shutil.copy(mli2, mli2_dst)
-    print('\nAll done, now you can run command mt_ml_select_gamma in matlab, enjoy it.')
+    print('\nAll done, you can run command mt_ml_select_gamma in matlab, enjoy it.')
 
 
 def run():
