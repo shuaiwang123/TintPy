@@ -37,9 +37,14 @@ def save_vel_ts(ts_mat, vel_mat, out_ts_file, out_vel_file):
     master_index = all_dates.index(master_date[0])
     master_disp = np.zeros((ts.shape[0], 1))
     # add master_disp to ts
-    ts_before = ts[:, 0:master_index].reshape((-1, master_index))
-    ts_after = ts[:, master_index:].reshape((ts.shape[0], -1))
-    ts = np.hstack((ts_before, master_disp, ts_after))
+    if master_index == 0:
+        ts = np.hstack((master_index, ts))
+    elif master_index == len(all_dates) - 1:
+        ts = np.hstack((ts, master_index))
+    else:
+        ts_before = ts[:, 0:master_index].reshape((-1, master_index))
+        ts_after = ts[:, master_index:].reshape((ts.shape[0], -1))
+        ts = np.hstack((ts_before, master_disp, ts_after))
 
     ts = ts - ts[:, 0].reshape((-1, 1))
     # save vel file
@@ -56,4 +61,4 @@ def save_vel_ts(ts_mat, vel_mat, out_ts_file, out_vel_file):
 
 
 os.chdir('/media/ly/file/StaMPS/HY/stamps_oneyear_ps/INSAR_20170619')
-save_vel_ts('ps_plot_ts_v-do', 'ps_plot_v-do', './../ts1.txt', './../vel1.txt')
+save_vel_ts('ps_plot_ts_v-do', 'ps_plot_v-do', './../ts.txt', './../vel.txt')
