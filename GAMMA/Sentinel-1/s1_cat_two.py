@@ -156,18 +156,18 @@ def get_time_and_direction(par_file):
     return start_time, direction
 
 
-def get_date(slc_dir):
+def get_date_for_cat(slc_dir):
     dates = []
     for i in os.listdir(slc_dir):
-        if re.search(r'\d{8}-', i):
-            if i[0:8] not in dates:
-                dates.append(i[0:8])
-    return sorted(dates)
+        if re.search(r'^\d{8}-\d{1}$', i):
+            dates.append(i[0:8])
+    dates = set(j for j in dates if dates.count(j) == 2)
+    return sorted(list(dates))
 
 
 def cat_slc(slc_dir, save_dir, iw_num, rlks, alks):
     iw = str(iw_num)
-    dates = get_date(slc_dir)
+    dates = get_date_for_cat(slc_dir)
     for date in dates:
         cat_dir = os.path.join(save_dir, date)
         if not os.path.isdir(cat_dir):
