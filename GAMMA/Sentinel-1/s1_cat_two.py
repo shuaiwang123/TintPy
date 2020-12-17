@@ -248,6 +248,8 @@ def main():
     iw_num = inps.iw_num
     save_dir = inps.save_dir
     save_dir = os.path.abspath(save_dir)
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
     rlks = inps.rlks
     alks = inps.alks
     cat_slc(slc_dir, save_dir, iw_num, rlks, alks)
