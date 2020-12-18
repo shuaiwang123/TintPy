@@ -36,6 +36,11 @@ def cmdLineParse():
         help='azimuth looks for generating amplitude image (default: 5)',
         type=int,
         default=5)
+    parser.add_argument(
+        '--flag',
+        help='flag for deleting original Sentinel-1 zip data (default: False)',
+        type=bool,
+        default=False)
     inps = parser.parse_args()
 
     return inps
@@ -105,17 +110,17 @@ def read_gamma_par(par_file, keyword):
     return value
 
 
-def check_inputs(zip_file, orbit_dir, slc_dir, iw_num):
-    # check zip file
-    if not os.path.exists(zip_file):
-        print('cannot find {}.'.format(zip_file))
+def check_inputs(zip_dir, orbit_dir, slc_dir, iw_num):
+    # check zip directory
+    if not os.path.isdir(zip_dir):
+        print('{} not exists.'.format(zip_dir))
         sys.exit(1)
     # check orbit directory
-    if not os.path.exists(orbit_dir):
+    if not os.path.isdir(orbit_dir):
         print('{} not exists.'.format(orbit_dir))
         sys.exit(1)
     # check slc directory
-    if not os.path.exists(slc_dir):
+    if not os.path.isdir(slc_dir):
         os.mkdir(slc_dir)
     # check iw number
     for i in iw_num:
@@ -124,15 +129,15 @@ def check_inputs(zip_file, orbit_dir, slc_dir, iw_num):
             sys.exit(1)
 
 
-def unzip_file(safe_dir, zip_file, zip_file_dir, aux_file):
+def unzip_file(safe_dir, zip_file, zip_file_dir, log_file):
     if not os.path.isdir(safe_dir):
-        call_str = 'unzip ' + zip_file + ' -d ' + zip_file_dir + ' > ' + aux_file
+        call_str = 'unzip ' + zip_file + ' -d ' + zip_file_dir + ' > ' + log_file
         print('\nunzip {}......'.format(zip_file))
         os.system(call_str)
         print('done.\n')
 
 
-def generate_slc(safe_dir, slc_path, s1_date, iw_num, aux_file):
+def generate_slc(safe_dir, slc_path, s1_date, iw_num, log_file):
     measurement_dir = safe_dir + '/measurement'
     annotation_dir = safe_dir + '/annotation'
     calibration_dir = safe_dir + '/annotation/calibration'
@@ -158,17 +163,17 @@ def generate_slc(safe_dir, slc_path, s1_date, iw_num, aux_file):
         if not NOISE:
             call_str = 'par_S1_SLC ' + MEASUREMENT[0] + ' ' + ANNOTATION[
                 0] + ' ' + CALIBRATION[
-                    0] + ' - ' + slc_par + ' ' + slc + ' ' + tops_par + ' >> ' + aux_file
+                    0] + ' - ' + slc_par + ' ' + slc + ' ' + tops_par + ' >> ' + log_file
         else:
             call_str = 'par_S1_SLC ' + MEASUREMENT[0] + ' ' + ANNOTATION[
                 0] + ' ' + CALIBRATION[0] + ' ' + NOISE[
-                    0] + ' ' + slc_par + ' ' + slc + ' ' + tops_par + ' >> ' + aux_file
+                    0] + ' ' + slc_par + ' ' + slc + ' ' + tops_par + ' >> ' + log_file
         print('generate SLC parameter and image files......')
         os.system(call_str)
         print('done.\n')
 
 
-def orbit_correction(s1_date, orbit_dir, slc_path, aux_file, zip_file):
+def orbit_correction(s1_date, orbit_dir, slc_path, log_file, zip_file):
     orbit_file_name = get_orbit_file_name(s1_date, orbit_dir, zip_file)
     if orbit_file_name:
         orbit_file_path = os.path.join(orbit_dir, orbit_file_name)
@@ -180,13 +185,13 @@ def orbit_correction(s1_date, orbit_dir, slc_path, aux_file, zip_file):
     for i in range(len(slc_pars)):
         if orbit_file_path:
             call_str = 'S1_OPOD_vec.vec' + ' ' + slc_pars[
-                i] + ' ' + orbit_file_path + ' >> ' + aux_file
+                i] + ' ' + orbit_file_path + ' >> ' + log_file
             print('orbit correction......')
             os.system(call_str)
             print('done.\n')
 
 
-def generate_amp(slc_path, aux_file, rlks, alks):
+def generate_amp(slc_path, log_file, rlks, alks):
     slcs = glob.glob(slc_path + '/*.iw*.slc')
     for slc in slcs:
         slc_par = slc + '.par'
@@ -194,13 +199,14 @@ def generate_amp(slc_path, aux_file, rlks, alks):
         width = read_gamma_par(slc_par, 'range_samples:')
         call_str = 'rasSLC ' + slc + ' ' + width + ' 1 0 ' + str(
             rlks) + ' ' + str(
-                alks) + ' 1. .35 1 0 0 ' + bmp + ' >> ' + aux_file
+                alks) + ' 1. .35 1 0 0 ' + bmp + ' >> ' + log_file
         print('generate amplitude file......')
         os.system(call_str)
         print('done.\n')
 
 
 def main():
+    # parse args
     inps = cmdLineParse()
     # get inputs
     zip_dir = inps.s1_zip_dir
@@ -209,13 +215,16 @@ def main():
     iw_num = inps.iw_num
     rlks = inps.rlks
     alks = inps.alks
+    del_flag = inps.flag
+    # check inputs
+    check_inputs(zip_dir, orbit_dir, slc_dir, iw_num)
     # get all zip
     zip_files = glob.glob(zip_dir + '/S1*_IW_SLC*.zip')
     s1_date_frequency = get_s1_date_and_frequency(zip_files)
-
+    # zip to slc for all dates
     for zip_file in zip_files:
+        # get image date
         s1_date = get_s1_date(zip_file)
-
         # one date has multi images
         frequency = s1_date_frequency[s1_date]
         if frequency == 1:
@@ -227,33 +236,30 @@ def main():
                 if not tmp:
                     slc_path = date_dir
                     break
-
-        aux_file = os.path.join(slc_path, s1_date + '_aux')
-
-        # check inputs
-        check_inputs(zip_file, orbit_dir, slc_dir, iw_num)
-
-        if not os.path.exists(slc_path):
+        # log file
+        log_file = os.path.join(slc_path, s1_date + '.log')
+        # create date directory
+        if not os.path.isdir(slc_path):
             os.mkdir(slc_path)
-
+        # get parent directory
         if len(os.path.dirname(zip_file)) == 0:
             zip_file_dir = sys.path[0]
         else:
             zip_file_dir = os.path.dirname(zip_file)
-
+        # get safe directory
         safe_dir = zip_file.replace('.zip', '.SAFE')
 
         # unzip
-        unzip_file(safe_dir, zip_file, zip_file_dir, aux_file)
+        unzip_file(safe_dir, zip_file, zip_file_dir, log_file)
 
         # generate slc
-        generate_slc(safe_dir, slc_path, s1_date, iw_num, aux_file)
+        generate_slc(safe_dir, slc_path, s1_date, iw_num, log_file)
 
-        # orbit_correction
-        orbit_correction(s1_date, orbit_dir, slc_path, aux_file, zip_file)
+        # orbit correction
+        orbit_correction(s1_date, orbit_dir, slc_path, log_file, zip_file)
 
-        # generate amplitude file
-        generate_amp(slc_path, aux_file, rlks, alks)
+        # generate amplitude file for quickview
+        generate_amp(slc_path, log_file, rlks, alks)
 
         # delete safe directory and slc_tab
         if os.path.isdir(safe_dir):
@@ -262,8 +268,11 @@ def main():
         if os.path.isfile(slc_tab):
             os.remove(slc_tab)
 
-        print("ZIP to SLC for %s is done!\n" % s1_date)
-    sys.exit(1)
+        # delete zip data
+        if del_flag:
+            os.remove(zip_file)
+
+        print("zip to slc for %s is done!\n" % s1_date)
 
 
 if __name__ == "__main__":
