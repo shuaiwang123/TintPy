@@ -14,8 +14,8 @@ import shutil
 
 
 def cmdLineParse():
-    parser = argparse.ArgumentParser(description='Generate SLC from Sentinel-1 raw data with orbit correction using GAMMA.',\
-                                     formatter_class=argparse.RawTextHelpFormatter,\
+    parser = argparse.ArgumentParser(description='Generate SLC from Sentinel-1 raw data with orbit correction using GAMMA.',
+                                     formatter_class=argparse.RawTextHelpFormatter,
                                      epilog=EXAMPLE)
 
     parser.add_argument('s1_zip_dir', help='Sentinel-1 zip directory')
@@ -132,7 +132,7 @@ def check_inputs(zip_dir, orbit_dir, slc_dir, iw_num):
 def unzip_file(safe_dir, zip_file, zip_file_dir, log_file):
     if not os.path.isdir(safe_dir):
         call_str = 'unzip ' + zip_file + ' -d ' + zip_file_dir + ' > ' + log_file
-        print('\nunzip {}......'.format(zip_file))
+        print('\nunzip {}......'.format(os.path.basename(zip_file)))
         os.system(call_str)
         print('done.\n')
 
@@ -168,7 +168,7 @@ def generate_slc(safe_dir, slc_path, s1_date, iw_num, log_file):
             call_str = 'par_S1_SLC ' + MEASUREMENT[0] + ' ' + ANNOTATION[
                 0] + ' ' + CALIBRATION[0] + ' ' + NOISE[
                     0] + ' ' + slc_par + ' ' + slc + ' ' + tops_par + ' >> ' + log_file
-        print('generate SLC parameter and image files......')
+        print('generate SLC image and parameter files......')
         os.system(call_str)
         print('done.\n')
 
@@ -178,7 +178,7 @@ def orbit_correction(s1_date, orbit_dir, slc_path, log_file, zip_file):
     if orbit_file_name:
         orbit_file_path = os.path.join(orbit_dir, orbit_file_name)
     else:
-        print('cannot find precisce orbit.')
+        print('cannot find precisce orbit for {}.'.format(s1_date))
         orbit_file_path = ''
     # orbit correction
     slc_pars = glob.glob(slc_path + '/*.iw*.slc.par')
@@ -272,7 +272,7 @@ def main():
         if del_flag:
             os.remove(zip_file)
 
-        print("zip to slc for %s is done!\n" % s1_date)
+        print("{} zip2slc for {} is done {}\n".format('>'*10, s1_date, '<'*10))
 
 
 if __name__ == "__main__":

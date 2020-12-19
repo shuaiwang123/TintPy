@@ -235,9 +235,9 @@ def main():
             if len(iw_num) == 3:
                 extract_three_swath(slc_path, out_slc_path, date, iw_num,
                                     burst_num, rlks, alks)
+        print('\nall done, enjoy it.\n')
     else:
-        sys.exit(1)
-    print('\nall done, enjoy it.\n')
+        print('\ncannot find any data.\n')
 
 
 if __name__ == "__main__":

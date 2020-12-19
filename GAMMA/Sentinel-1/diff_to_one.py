@@ -248,7 +248,7 @@ def main():
         # run dinsar script
         os.chdir(ifg_dir)
         call_str = 'sh ' + ifg + '_DInSAR.sh'
-        # os.system(call_str)
+        os.system(call_str)
 
 
 if __name__ == "__main__":

@@ -407,7 +407,6 @@ def main():
     get_coreg_quality(rslc_dir)
 
     print('\nall done, enjoy it.\n')
-    sys.exit(1)
 
 
 if __name__ == "__main__":

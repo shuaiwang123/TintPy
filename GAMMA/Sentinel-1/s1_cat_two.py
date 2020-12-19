@@ -11,17 +11,16 @@ import re
 
 
 EXAMPLE = """
-[Note:This script only concatenates adjacent SLC processed by zip2slc_all.py]
+[Note:This script only concatenates adjacent SLC processed by zip2slc.py]
 ./s1_cat_two.py slc 1 slc
 ./s1_cat_two.py slc 1 slc --rlks 8 --alks 2
 """
 
 
-
 def cmdline_parse():
     parser = argparse.ArgumentParser(
         description='Concatenate adjacent Sentinel-1 TOPS SLC images', formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
-    parser.add_argument('slc_dir', help='slc need to concatenate')
+    parser.add_argument('slc_dir', help='slc need to be concatenated')
     parser.add_argument('iw_num', help='number of IW (1 or 2 or 3)', type=int)
     parser.add_argument(
         'save_dir', help='directory of saving concatenated slc')
@@ -40,9 +39,7 @@ def cmdline_parse():
 
 
 def get_state_vector(file_path):
-    '''
-    get all state_vectors from .par file
-    '''
+    """get all state_vectors from .par file"""
     state_vector = []
     temp = []
     with open(file_path) as f:
@@ -57,9 +54,7 @@ def get_state_vector(file_path):
 
 
 def get_nonrepeated_state_vector(state_vector_1, state_vector_2):
-    '''
-    compare two state_vectors, get nonrepeated state_vectors
-    '''
+    """compare two state_vectors, get nonrepeated state_vectors"""
     nonrepeated_state_vector = []
     index = 1
     for sv in state_vector_2:
@@ -72,9 +67,7 @@ def get_nonrepeated_state_vector(state_vector_1, state_vector_2):
 
 
 def get_time_of_first_state_vector(file_path):
-    '''
-    get time_of_first_state_vector from .par file
-    '''
+    """get time_of_first_state_vector from .par file"""
     time_of_first_state_vector = ''
     with open(file_path) as f:
         for line in f:
@@ -84,9 +77,7 @@ def get_time_of_first_state_vector(file_path):
 
 
 def get_content(file_path):
-    '''
-    get content before the line of 'number_of_state_vectors'
-    '''
+    """get content before the line of 'number_of_state_vectors'"""
     content = ''
     with open(file_path) as f:
         for line in f:
@@ -98,6 +89,7 @@ def get_content(file_path):
 
 
 def gen_new_par(par1, par2, new_par):
+    """compare two .par file, write non-repeated .par file"""
     state_vector_1 = get_state_vector(par1)
     state_vector_2 = get_state_vector(par2)
     nonrepeated_state_vector, index = get_nonrepeated_state_vector(
@@ -130,6 +122,7 @@ def gen_new_par(par1, par2, new_par):
 
 
 def read_gamma_par(par_file, keyword):
+    """give a keyword, then get the value"""
     value = ''
     with open(par_file, 'r') as f:
         for l in f.readlines():
@@ -140,6 +133,7 @@ def read_gamma_par(par_file, keyword):
 
 
 def get_time_and_direction(par_file):
+    """get time and orbit direction form .par file"""
     with open(par_file, 'r') as f:
         for l in f.readlines():
             if 'start_time' in l:
@@ -157,6 +151,7 @@ def get_time_and_direction(par_file):
 
 
 def get_date_for_cat(slc_dir):
+    """get the date which has two images"""
     dates = []
     for i in os.listdir(slc_dir):
         if re.search(r'^\d{8}-\d{1}$', i):
@@ -166,6 +161,7 @@ def get_date_for_cat(slc_dir):
 
 
 def cat_slc(slc_dir, save_dir, iw_num, rlks, alks):
+    """concatenate adjacent SLC"""
     iw = str(iw_num)
     dates = get_date_for_cat(slc_dir)
     for date in dates:
@@ -173,6 +169,7 @@ def cat_slc(slc_dir, save_dir, iw_num, rlks, alks):
         if not os.path.isdir(cat_dir):
             os.mkdir(cat_dir)
 
+        # get path of slc slc.par slc.tops_par
         slc1 = os.path.join(slc_dir, date + '-1', date + '.iw' + iw + '.slc')
         slc_par1 = os.path.join(slc_dir, date + '-1',
                                 date + '.iw' + iw + '.slc.par')
@@ -197,20 +194,16 @@ def cat_slc(slc_dir, save_dir, iw_num, rlks, alks):
         start_time1, direction1 = get_time_and_direction(slc_par1)
         start_time2, direction2 = get_time_and_direction(slc_par2)
 
+        if direction1 != direction2:
+            continue
+
+        # exchange values for the following cases
         des = (direction1 == 'DES') and (start_time1 > start_time2)
         asc = (direction1 == 'ASC') and (start_time1 > start_time2)
         if asc or des:
-            tmp1 = slc1
-            slc1 = slc2
-            slc2 = tmp1
-
-            tmp2 = slc_par1
-            slc_par1 = slc_par2
-            slc_par2 = tmp2
-
-            tmp3 = tops_par1
-            tops_par1 = tops_par2
-            tops_par2 = tmp3
+            slc1, slc2 = slc2, slc1
+            slc_par1, slc_par2 = slc_par2, slc_par1
+            tops_par1, tops_par2 = tops_par2, tops_par1
 
         # delete repeated vectors
         gen_new_par(slc_par1, slc_par2, slc_par2)
@@ -236,9 +229,9 @@ def cat_slc(slc_dir, save_dir, iw_num, rlks, alks):
             os.system(call_str)
 
         # delete catlist, catlist1, catlist2
-        os.remove('catlist')
-        os.remove('catlist1')
-        os.remove('catlist2')
+        for file in ['catlist', 'catlist1', 'catlist2']:
+            if os.path.isfile(file):
+                os.remove(file)
 
 
 def main():

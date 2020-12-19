@@ -150,7 +150,6 @@ def main():
         copy_file(unw_path, dst_unw_path)
 
     print('\nall done.')
-    sys.exit(1)
 
 
 # mintpy.load.processor      = gamma
