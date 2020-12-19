@@ -40,6 +40,11 @@ def cmdLineParse():
         help='azimuth looks for SLC_mosaic_S1_TOPS (default: 5)',
         type=int,
         default=5)
+    parser.add_argument(
+        '--slc_num',
+        help='number of slc used to extract bursts (default: -1, for all slcs)',
+        type=int,
+        default=-1)
 
     inps = parser.parse_args()
 
@@ -205,6 +210,7 @@ def main():
     burst_num = burst_num.split()
     rlks = inps.rlks
     alks = inps.alks
+    slc_num = inps.slc_num
 
     # check input
     if not os.path.isdir(slc_dir):
@@ -212,6 +218,10 @@ def main():
         sys.exit(1)
     if not os.path.isdir(out_slc_dir):
         os.mkdir(out_slc_dir)
+    
+    if slc_num < -1:
+        print('slc_num must bigger than -1')
+        sys.exit(1)
 
     files = os.listdir(slc_dir)
     all_date = []
@@ -221,7 +231,13 @@ def main():
     all_date = sorted(all_date)
 
     if all_date:
-        for date in all_date:
+        if slc_num == -1:
+            length = len(all_date)
+        elif slc_num <= len(all_date):
+            length = slc_num
+        else:
+            length = len(all_date)
+        for date in all_date[0:length]:
             slc_path = os.path.join(slc_dir, date)
             out_slc_path = os.path.join(out_slc_dir, date)
             if not os.path.isdir(out_slc_path):
