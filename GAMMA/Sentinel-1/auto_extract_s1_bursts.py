@@ -15,6 +15,7 @@ except ImportError:
     print(
         'cannot find model named cv2, you can install it using command pip install opencv-python'
     )
+    sys.exit(1)
 
 EXAMPLE = '''Example:
   # one swath
@@ -269,6 +270,7 @@ def main():
     iw_num = inps.iw_num
     extracted_burst_num = inps.burst_num
     start_burst_image = inps.start_burst_image
+    start_burst_image = [os.path.abspath(i) for i in start_burst_image]
     rlks = inps.rlks
     alks = inps.alks
     # check slc_dir
