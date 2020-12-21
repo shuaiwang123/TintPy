@@ -19,11 +19,11 @@ except ImportError:
 
 EXAMPLE = '''Example:
   # one swath
-  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 -bn 3 -bi iw1.png
+  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 -bn 3 -bl 1 -bi iw1.png
   # two swath
-  p./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 2 -bn 3 4 -bi iw1.png iw2.png
+  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 2 -bn 3 4 -bl 1 2 -bi iw1.png iw2.png
   # three swath
-  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 2 3 -bn 3 4 3 -bi iw1.png iw2.png iw3.png
+  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 2 3 -bn 3 4 3 -bl 1 2 1 -bi iw1.png iw2.png iw3.png
 '''
 
 
@@ -45,7 +45,7 @@ def cmdLineParse():
                         required=True)
     parser.add_argument('-in',
                         dest='iw_num',
-                        help='IW num.(1 or 2 or 3)',
+                        help='IW num (from 1 2 3).',
                         type=int,
                         nargs='+',
                         required=True)
@@ -56,19 +56,25 @@ def cmdLineParse():
                         nargs='+',
                         required=True)
     parser.add_argument('-bi',
-                        dest='start_burst_image',
-                        help='image of first burst for finding location',
+                        dest='burst_image',
+                        help='single burst image for finding relative location in bursts image (characteristic image is recommended).',
                         type=str,
+                        nargs='+',
+                        required=True)
+    parser.add_argument('-bl',
+                        dest='burst_location',
+                        help='location of provided single burst in extracted slc (bigger than 0).',
+                        type=int,
                         nargs='+',
                         required=True)
     parser.add_argument(
         '--rlks',
-        help='range looks for SLC_mosaic_S1_TOPS (default: 20)',
+        help='range looks for SLC_mosaic_S1_TOPS (default: 20).',
         type=int,
         default=20)
     parser.add_argument(
         '--alks',
-        help='azimuth looks for SLC_mosaic_S1_TOPS (default: 5)',
+        help='azimuth looks for SLC_mosaic_S1_TOPS (default: 5).',
         type=int,
         default=5)
 
@@ -245,15 +251,16 @@ def match_burst(dest_burst, src_burst, burst_num):
     _, _, _, max_loc = cv2.minMaxLoc(res)
     top_left = max_loc
     # get start burst
-    start_burst = round(top_left[1] / h_burst) + 1
-    return start_burst
+    matched_burst_loc = round(top_left[1] / h_burst) + 1
+    return matched_burst_loc
 
 
 def get_start_end_burst(dest_burst, src_burst, tops_par_file,
-                        extracted_burst_num):
+                        extracted_burst_num, burst_loc):
     """get start burst and end burst"""
     all_burst_num = int(read_gamma_par(tops_par_file, 'number_of_bursts:'))
-    start_burst = match_burst(dest_burst, src_burst, all_burst_num)
+    matched_burst_loc = match_burst(dest_burst, src_burst, all_burst_num)
+    start_burst = matched_burst_loc - burst_loc + 1
     end_burst = start_burst + extracted_burst_num - 1
     if end_burst > all_burst_num:
         end_burst = all_burst_num
@@ -269,8 +276,9 @@ def main():
     out_slc_dir = os.path.abspath(out_slc_dir)
     iw_num = inps.iw_num
     extracted_burst_num = inps.burst_num
-    start_burst_image = inps.start_burst_image
-    start_burst_image = [os.path.abspath(i) for i in start_burst_image]
+    burst_image = inps.burst_image
+    burst_image = [os.path.abspath(i) for i in burst_image]
+    burst_locs = inps.burst_location
     rlks = inps.rlks
     alks = inps.alks
     # check slc_dir
@@ -280,8 +288,8 @@ def main():
     # check out_slc_dir
     if not os.path.isdir(out_slc_dir):
         os.mkdir(out_slc_dir)
-    # check start_burst_image
-    for i in start_burst_image:
+    # check burst_image
+    for i in burst_image:
         if not os.path.isfile(i):
             print('{} does not exist.'.format(i))
             sys.exit(1)
@@ -323,8 +331,8 @@ def main():
                 slc_bmp = os.path.join(
                     slc_path, date + '.iw' + str(iw_num[0]) + '.slc.bmp')
                 start_burst, end_burst = get_start_end_burst(
-                    start_burst_image[0], slc_bmp, tops_par_file,
-                    extracted_burst_num[0])
+                    burst_image[0], slc_bmp, tops_par_file,
+                    extracted_burst_num[0], burst_locs[0])
                 extract_one_swath(slc_path, out_slc_path, date, iw_num[0],
                                   start_burst, end_burst, rlks, alks)
             if len(iw_num) == 2 or len(iw_num) == 3:
@@ -336,8 +344,8 @@ def main():
                                            date + '.iw' + str(i) + '.slc.bmp')
                     index = iw_num.index(i)
                     start_burst, end_burst = get_start_end_burst(
-                        start_burst_image[index], slc_bmp, tops_par_file,
-                        extracted_burst_num[index])
+                        burst_image[index], slc_bmp, tops_par_file,
+                        extracted_burst_num[index], burst_locs[index])
                     burst_num.append(start_burst)
                     burst_num.append(end_burst)
                 if len(iw_num) == 2:
