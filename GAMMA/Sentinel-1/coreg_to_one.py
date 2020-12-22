@@ -137,7 +137,7 @@ def main():
                 print('no slc for {}.'.format(ref_slc))
                 sys.exit(1)
         else:
-            print('error date.')
+            print('error date for ref_slc.')
             sys.exit(1)
 
     m_date = ref_slc
@@ -220,6 +220,7 @@ def main():
     call_str = f"rashgt {rdc_dem} {m_mli} {width_mli} 1 1 0 1 1 160.0 1. .35 1 {rdc_dem_bmp}"
     os.system(call_str)
 
+    # get slave date
     s_dates = all_date
     s_dates.remove(m_date)
 
@@ -227,8 +228,12 @@ def main():
     m_rslc_dir = os.path.join(rslc_dir, m_date)
     if not os.path.isdir(m_rslc_dir):
         os.mkdir(m_rslc_dir)
-    shutil.copy(m_slc, m_rslc_dir)
-    shutil.copy(m_slc_par, m_rslc_dir)
+    m_rslc = os.path.join(m_rslc_dir, m_date + '.slc')
+    m_rslc_par = m_rslc + '.par'
+    if not os.path.isfile(m_rslc):
+        shutil.copy(m_slc, m_rslc_dir)
+    if not os.path.isfile(m_rslc_par):
+        shutil.copy(m_slc_par, m_rslc_dir)
 
     for s_date in s_dates:
         s_slc_dir = os.path.join(slc_dir, s_date)
@@ -378,8 +383,8 @@ def main():
             call_str = f"echo {s_iw_rslc3} {s_iw_rslc_par3} {s_iw_rslc_tops_par3} >> RSLC2_tab"
             os.system(call_str)
 
-        call_str = f"S1_coreg_TOPS SLC1_tab {m_date} SLC2_tab {s_date} RSLC2_tab {rdc_dem} {rlks} {alks} - - 0.8 0.1 0.8 1"
-        # call_str = f"S1_coreg_TOPS SLC1_tab {m_date} SLC2_tab {s_date} RSLC2_tab {rdc_dem} {rlks} {alks} - - 0.7 0.001 0.7 1"
+        # call_str = f"S1_coreg_TOPS SLC1_tab {m_date} SLC2_tab {s_date} RSLC2_tab {rdc_dem} {rlks} {alks} - - 0.8 0.1 0.8 1"
+        call_str = f"S1_coreg_TOPS SLC1_tab {m_date} SLC2_tab {s_date} RSLC2_tab {rdc_dem} {rlks} {alks} - - 0.7 0.001 0.7 1"
         os.system(call_str)
 
         # delete files
