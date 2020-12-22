@@ -19,11 +19,11 @@ except ImportError:
 
 EXAMPLE = '''Example:
   # one swath
-  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 -bn 3 -bl 1 -bi iw1.png
+  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 -bn 3 -bi iw1.png
   # two swath
-  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 2 -bn 3 4 -bl 1 2 -bi iw1.png iw2.png
+  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 2 -bn 3 4 -bi iw1.png iw2.png
   # three swath
-  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 2 3 -bn 3 4 3 -bl 1 2 1 -bi iw1.png iw2.png iw3.png
+  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 2 3 -bn 3 4 3 -bi iw1.png iw2.png iw3.png
 '''
 
 
@@ -55,18 +55,14 @@ def cmdLineParse():
                         type=int,
                         nargs='+',
                         required=True)
-    parser.add_argument('-bi',
-                        dest='burst_image',
-                        help='single burst image for finding relative location in bursts image (characteristic image is recommended).',
-                        type=str,
-                        nargs='+',
-                        required=True)
-    parser.add_argument('-bl',
-                        dest='burst_location',
-                        help='location of provided single burst in extracted slc (bigger than 0).',
-                        type=int,
-                        nargs='+',
-                        required=True)
+    parser.add_argument(
+        '-bi',
+        dest='burst_image',
+        help=
+        'image of extracted bursts for finding relative location in original slc bursts image.',
+        type=str,
+        nargs='+',
+        required=True)
     parser.add_argument(
         '--rlks',
         help='range looks for SLC_mosaic_S1_TOPS (default: 20).',
@@ -94,8 +90,8 @@ def read_gamma_par(par_file, keyword):
     return value
 
 
-def slc_copy_s1_tops(slc_path, out_slc_path, date, iw, start_burst, end_burst,
-                     rlks, alks):
+def slc_copy_s1_tops(slc_path, out_slc_path, date, iw, start_burst_loc,
+                     end_burst_loc, rlks, alks):
     """copy SLCs"""
     # write SLC_tab
     iw = str(iw)
@@ -114,7 +110,7 @@ def slc_copy_s1_tops(slc_path, out_slc_path, date, iw, start_burst, end_burst,
     os.system(call_str)
     call_str = f"echo {slc0} {slc_par0} {tops_par0} > {SLC2_tab}"
     os.system(call_str)
-    call_str = f"SLC_copy_S1_TOPS {SLC1_tab} {SLC2_tab} 1 {start_burst} 1 {end_burst}"
+    call_str = f"SLC_copy_S1_TOPS {SLC1_tab} {SLC2_tab} 1 {start_burst_loc} 1 {end_burst_loc}"
     os.system(call_str)
     width = read_gamma_par(slc_par0, 'range_samples:')
     if width:
@@ -124,13 +120,13 @@ def slc_copy_s1_tops(slc_path, out_slc_path, date, iw, start_burst, end_burst,
     return slc0, slc_par0, tops_par0
 
 
-def extract_one_swath(slc_path, out_slc_path, date, iw, start_burst, end_burst,
-                      rlks, alks):
+def extract_one_swath(slc_path, out_slc_path, date, iw, start_burst_loc,
+                      end_burst_loc, rlks, alks):
     """copy and mosaic SLCs for one swath"""
     # SLC_copy_S1_TOPS
     slc1, slc_par1, tops_par1 = slc_copy_s1_tops(slc_path, out_slc_path, date,
-                                                 iw, start_burst, end_burst,
-                                                 rlks, alks)
+                                                 iw, start_burst_loc,
+                                                 end_burst_loc, rlks, alks)
     # SLC_mosaic_S1_TOPS
     os.chdir(out_slc_path)
     mosaiclist = os.path.join(out_slc_path, 'mosaiclist')
@@ -236,35 +232,35 @@ def extract_three_swath(slc_path, out_slc_path, date, iws, bursts, rlks, alks):
         os.remove(mosaiclist)
 
 
-def match_burst(dest_burst, src_burst, burst_num):
-    """get number of start burst using image of start burst"""
+def match_burst(temp_burst, temp_burst_num, orig_burst, orig_burst_num):
+    """get location of start burst in original bursts image"""
     # read image
-    img_target = cv2.imread(dest_burst, 0)
-    img_src = cv2.imread(src_burst, 0)
-    w_src, h_src = img_src.shape[::-1]
-    h_burst = round(h_src / burst_num)
-    w_burst = w_src
-    # resize dest_burst
-    img_target = cv2.resize(img_target, (w_burst, h_burst))
+    img_temp = cv2.imread(temp_burst, 0)
+    img_orig = cv2.imread(orig_burst, 0)
+    w_orig, h_orig = img_orig.shape[::-1]
+    h_single_burst = round(h_orig / orig_burst_num)
+    h_temp = h_single_burst * temp_burst_num
+    w_temp = w_orig
+    # resize temp_burst
+    img_temp = cv2.resize(img_temp, (w_temp, h_temp))
     # match image
-    res = cv2.matchTemplate(img_src, img_target, cv2.TM_CCOEFF_NORMED)
+    res = cv2.matchTemplate(img_orig, img_temp, cv2.TM_CCOEFF_NORMED)
     _, _, _, max_loc = cv2.minMaxLoc(res)
     top_left = max_loc
-    # get start burst
-    matched_burst_loc = round(top_left[1] / h_burst) + 1
-    return matched_burst_loc
+    # get start burst location
+    start_burst_loc = round(top_left[1] / h_single_burst) + 1
+    return start_burst_loc
 
 
-def get_start_end_burst(dest_burst, src_burst, tops_par_file,
-                        extracted_burst_num, burst_loc):
-    """get start burst and end burst"""
-    all_burst_num = int(read_gamma_par(tops_par_file, 'number_of_bursts:'))
-    matched_burst_loc = match_burst(dest_burst, src_burst, all_burst_num)
-    start_burst = matched_burst_loc - burst_loc + 1
-    end_burst = start_burst + extracted_burst_num - 1
-    if end_burst > all_burst_num:
-        end_burst = all_burst_num
-    return start_burst, end_burst
+def get_start_end_burst(temp_burst, temp_burst_num, orig_burst, tops_par_file):
+    """get location of start burst and end burst"""
+    orig_burst_num = int(read_gamma_par(tops_par_file, 'number_of_bursts:'))
+    start_burst_loc = match_burst(temp_burst, temp_burst_num, orig_burst,
+                                  orig_burst_num)
+    end_burst_loc = start_burst_loc + temp_burst_num - 1
+    if end_burst_loc > orig_burst_num:
+        end_burst_loc = orig_burst_num
+    return start_burst_loc, end_burst_loc
 
 
 def main():
@@ -275,10 +271,9 @@ def main():
     out_slc_dir = inps.out_slc_dir
     out_slc_dir = os.path.abspath(out_slc_dir)
     iw_num = inps.iw_num
-    extracted_burst_num = inps.burst_num
-    burst_image = inps.burst_image
-    burst_image = [os.path.abspath(i) for i in burst_image]
-    burst_locs = inps.burst_location
+    temp_burst_num = inps.burst_num
+    temp_burst = inps.burst_image
+    temp_burst = [os.path.abspath(i) for i in temp_burst]
     rlks = inps.rlks
     alks = inps.alks
     # check slc_dir
@@ -288,13 +283,13 @@ def main():
     # check out_slc_dir
     if not os.path.isdir(out_slc_dir):
         os.mkdir(out_slc_dir)
-    # check burst_image
-    for i in burst_image:
+    # check temp_burst
+    for i in temp_burst:
         if not os.path.isfile(i):
             print('{} does not exist.'.format(i))
             sys.exit(1)
     # check iw_num
-    if len(iw_num) != len(extracted_burst_num):
+    if len(iw_num) != len(temp_burst_num):
         print('length of iw_num must be equal to burst_num.')
         sys.exit(1)
     if len(iw_num) == 1:
@@ -328,26 +323,26 @@ def main():
             if len(iw_num) == 1:
                 tops_par_file = os.path.join(
                     slc_path, date + '.iw' + str(iw_num[0]) + '.slc.tops_par')
-                slc_bmp = os.path.join(
+                orig_burst = os.path.join(
                     slc_path, date + '.iw' + str(iw_num[0]) + '.slc.bmp')
-                start_burst, end_burst = get_start_end_burst(
-                    burst_image[0], slc_bmp, tops_par_file,
-                    extracted_burst_num[0], burst_locs[0])
+                start_burst_loc, end_burst_loc = get_start_end_burst(
+                    temp_burst[0], temp_burst_num[0], orig_burst,
+                    tops_par_file)
                 extract_one_swath(slc_path, out_slc_path, date, iw_num[0],
-                                  start_burst, end_burst, rlks, alks)
+                                  start_burst_loc, end_burst_loc, rlks, alks)
             if len(iw_num) == 2 or len(iw_num) == 3:
                 burst_num = []
                 for i in iw_num:
                     tops_par_file = os.path.join(
                         slc_path, date + '.iw' + str(i) + '.slc.tops_par')
-                    slc_bmp = os.path.join(slc_path,
-                                           date + '.iw' + str(i) + '.slc.bmp')
+                    orig_burst = os.path.join(
+                        slc_path, date + '.iw' + str(i) + '.slc.bmp')
                     index = iw_num.index(i)
-                    start_burst, end_burst = get_start_end_burst(
-                        burst_image[index], slc_bmp, tops_par_file,
-                        extracted_burst_num[index], burst_locs[index])
-                    burst_num.append(start_burst)
-                    burst_num.append(end_burst)
+                    start_burst_loc, end_burst_loc = get_start_end_burst(
+                        temp_burst[index], temp_burst_num[index], orig_burst,
+                        tops_par_file)
+                    burst_num.append(start_burst_loc)
+                    burst_num.append(end_burst_loc)
                 if len(iw_num) == 2:
                     extract_two_swath(slc_path, out_slc_path, date, iw_num,
                                       burst_num, rlks, alks)
