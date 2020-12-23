@@ -19,11 +19,11 @@ except ImportError:
 
 EXAMPLE = '''Example:
   # one swath
-  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 -bn 3 -bi iw1.png
+  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_extract -i 1 -t iw1.png -n 3
   # two swath
-  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 2 -bn 3 4 -bi iw1.png iw2.png
+  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_extract -i 1 2 -t iw1.png iw2.png -n 3 4
   # three swath
-  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_cat -in 1 2 3 -bn 3 4 3 -bi iw1.png iw2.png iw3.png
+  ./extract_s1_bursts.py -s /ly/slc -o /ly/slc_extract -i 1 2 3 -t iw1.png iw2.png iw3.png -n 3 4 3
 '''
 
 
@@ -35,7 +35,7 @@ def cmdLineParse():
 
     parser.add_argument('-s',
                         dest='slc_dir',
-                        help='directory path including slc.',
+                        help='directory path including original slc.',
                         type=str,
                         required=True)
     parser.add_argument('-o',
@@ -43,34 +43,35 @@ def cmdLineParse():
                         help='directory path saving extracted slc.',
                         type=str,
                         required=True)
-    parser.add_argument('-in',
+    parser.add_argument('-i',
                         dest='iw_num',
                         help='IW num (from 1 2 3).',
                         type=int,
                         nargs='+',
+                        choices=[1, 2, 3],
                         required=True)
-    parser.add_argument('-bn',
+    parser.add_argument(
+        '-t',
+        dest='template_burst',
+        help=
+        'template bursts image for finding relative location in original slc bursts image.',
+        type=str,
+        nargs='+',
+        required=True)
+    parser.add_argument('-n',
                         dest='burst_num',
-                        help='number of extracted bursts.',
+                        help='burst number in template image.',
                         type=int,
                         nargs='+',
                         required=True)
     parser.add_argument(
-        '-bi',
-        dest='burst_image',
-        help=
-        'image of extracted bursts for finding relative location in original slc bursts image.',
-        type=str,
-        nargs='+',
-        required=True)
-    parser.add_argument(
         '--rlks',
-        help='range looks for SLC_mosaic_S1_TOPS (default: 20).',
+        help='range looks (default: 20).',
         type=int,
         default=20)
     parser.add_argument(
         '--alks',
-        help='azimuth looks for SLC_mosaic_S1_TOPS (default: 5).',
+        help='azimuth looks (default: 5).',
         type=int,
         default=5)
 
@@ -272,7 +273,7 @@ def main():
     out_slc_dir = os.path.abspath(out_slc_dir)
     iw_num = inps.iw_num
     temp_burst_num = inps.burst_num
-    temp_burst = inps.burst_image
+    temp_burst = inps.template_burst
     temp_burst = [os.path.abspath(i) for i in temp_burst]
     rlks = inps.rlks
     alks = inps.alks
