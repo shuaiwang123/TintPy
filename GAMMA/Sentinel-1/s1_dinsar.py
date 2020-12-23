@@ -97,18 +97,13 @@ rasrmg ${m_date}_${s_date}.diff_filt.unw $m_date.mli $width  - - - - - - - - - -
 #########################
 ## 5. geocode data     ##
 #########################
-geocode_back $Mfile-$Sfile.diff.sm1.cc $width lookup_table_fine $Mfile-$Sfile.utm.cc $width_dem_seg - 2 0
-geocode_back $Mfile-$Sfile.corr $width lookup_table_fine $Mfile-$Sfile.utm.corr $width_dem_seg - 2 0
-geocode_back $Mfile-$Sfile.diff.sm1 $width lookup_table_fine $Mfile-$Sfile.diff.utm.sm $width_dem_seg - 2 0
-geocode_back $Mfile-$Sfile.diff.int.sm.unw $width lookup_table_fine $Mfile-$Sfile.diff.utm.unw $width_dem_seg - 1 0
-geocode_back $Mfile.mli $width lookup_table_fine $Mfile-$Sfile.utm.pwr $width_dem_seg - 2 0
+geocode_back ${m_date}_${s_date}.diff_filt.cor $width lookup_table_fine geo_${m_date}_${s_date}.diff_filt.cor $width_dem_seg - 2 0
+geocode_back ${m_date}_${s_date}.diff_filt $width lookup_table_fine geo_${m_date}_${s_date}.diff_filt $width_dem_seg - 2 0
+geocode_back ${m_date}_${s_date}.diff_filt.unw $width lookup_table_fine geo_${m_date}_${s_date}.diff_filt.unw $width_dem_seg - 1 0
 
-rascc $Mfile-$Sfile.utm.corr - $width_dem_seg 1 1 0 1 1 .1 .9 1. .35 1 $Mfile-$Sfile.utm.corr.bmp
-rascc $Mfile-$Sfile.utm.cc - $width_dem_seg 1 1 0 1 1 .1 .9 1. .35 1 $Mfile-$Sfile.utm.cc.bmp
-rascc $Mfile-$Sfile.diff.utm.unw - $width_dem_seg 1 1 0 1 1 .1 .9 1. .35 1 $Mfile-$Sfile.diff.utm.unw.bmp
-rasmph_pwr $Mfile-$Sfile.diff.utm.sm $Mfile-$Sfile.utm.pwr $width_dem_seg 1 1 0 1 1 1. 0.35 1 $Mfile-$Sfile.diff.utm.smandpwr.bmp
-rasmph_pwr $Mfile-$Sfile.diff.int.sm.unw $Mfile-$Sfile.utm.pwr $width_dem_seg 1 1 0 1 1 1. 0.35 1 $Mfile-$Sfile.diff.int.sm.unwandpwr.bmp
-rasrmg $Mfile-$Sfile.diff.int.sm.unw $Mfile.mli $width 1 1 0 1 1 .2 1. .35 .0 1 $Mfile-$Sfile.diff.int.sm.unw.bmp $Mfile-$Sfile.diff.sm1.cc 1 .2
+rascc geo_${m_date}_${s_date}.diff_filt.cor - $width_dem_seg 1 1 0 1 1 .1 .9 1. .35 1 geo_${m_date}_${s_date}.diff_filt.cor.bmp
+rascc geo_${m_date}_${s_date}.diff_filt.unw - $width_dem_seg 1 1 0 1 1 .1 .9 1. .35 1 geo_${m_date}_${s_date}.diff_filt.unw.bmp
+rasmph_pwr geo_${m_date}_${s_date}.diff_filt geo_$m_date.mli $width_dem_seg 1 1 0 1 1 1. 0.35 1 geo_${m_date}_${s_date}.diff_filt.pwr.bmp
 """
 
 DATA_STRUCTURE = """Data structure:
