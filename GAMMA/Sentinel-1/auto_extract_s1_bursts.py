@@ -74,6 +74,11 @@ def cmdLineParse():
         help='azimuth looks (default: 5).',
         type=int,
         default=5)
+    parser.add_argument(
+        '--slc_num',
+        help='number of slc used to extract bursts (default: -1, for all slcs)',
+        type=int,
+        default=-1)
 
     inps = parser.parse_args()
 
@@ -277,6 +282,7 @@ def main():
     temp_burst = [os.path.abspath(i) for i in temp_burst]
     rlks = inps.rlks
     alks = inps.alks
+    slc_num = inps.slc_num
     # check slc_dir
     if not os.path.isdir(slc_dir):
         print('{} does not exist.'.format(slc_dir))
@@ -293,10 +299,9 @@ def main():
     if len(iw_num) != len(temp_burst_num):
         print('length of iw_num must be equal to burst_num.')
         sys.exit(1)
-    if len(iw_num) == 1:
-        if iw_num[0] not in [1, 2, 3]:
-            print('Error iw_num for one IW, must be 1 or 2 or 3.')
-            sys.exit(1)
+    if len(iw_num) != len(temp_burst):
+        print('length of iw_num must be equal to template_burst.')
+        sys.exit(1)
     if len(iw_num) == 2:
         if iw_num == [1, 2] and [2, 3]:
             pass
@@ -307,6 +312,10 @@ def main():
         if iw_num != [1, 2, 3]:
             print('Error iw_num for three IWs, must be 1 2 3.')
             sys.exit(1)
+    # check slc_num
+    if slc_num < -1:
+        print('slc_num must bigger than -1.')
+        sys.exit(1)
     # get all date
     files = os.listdir(slc_dir)
     all_date = []
@@ -316,7 +325,11 @@ def main():
     all_date = sorted(all_date)
     # copy and mosaic slcs
     if all_date:
-        for date in all_date:
+        if slc_num == -1 or slc_num >= len(all_date):
+            length = len(all_date)
+        else:
+            length = slc_num
+        for date in all_date[0:length]:
             slc_path = os.path.join(slc_dir, date)
             out_slc_path = os.path.join(out_slc_dir, date)
             if not os.path.isdir(out_slc_path):

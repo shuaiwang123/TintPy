@@ -34,6 +34,11 @@ def cmd_line_parser():
                         help='azimuth looks for generating bmp',
                         type=int,
                         default=5)
+    parser.add_argument(
+        '--slc_num',
+        help='number of cutted slc (default: -1, for all slcs)',
+        type=int,
+        default=-1)
 
     inps = parser.parse_args()
 
@@ -66,6 +71,7 @@ def main():
     nl = inps.nl
     rlks = inps.rlks
     alks = inps.alks
+    slc_num = inps.slc_num
 
     if not os.path.isdir(slc_dir):
         print('{} not exists.'.format(slc_dir))
@@ -80,8 +86,17 @@ def main():
     if len(all_date) < 1:
         print('no slc in {}'.format(slc_dir))
         sys.exit(1)
+    
+    if slc_num < -1:
+        print('slc_num must bigger than -1.')
+        sys.exit(1)
 
-    for d in all_date:
+    if slc_num == -1 or slc_num >= len(all_date):
+        length = len(all_date)
+    else:
+        length = slc_num
+
+    for d in all_date[0:length]:
         slc = os.path.join(slc_dir, d, d + '.slc')
         slc_par = slc + '.par'
 
