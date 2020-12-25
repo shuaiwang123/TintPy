@@ -168,7 +168,7 @@ rasmph_pwr $m_date-$s_date.diff.int.sm $m_date-$s_date.pwr1 $width 1 1 0 1 1 1. 
 rascc_mask $m_date-$s_date.corr $m_date-$s_date.pwr1 $width 1 1 0 1 1 0.0 0. .1 .9 1. .35 1 $m_date-$s_date.sm.cc_mask.bmp
 mcf $m_date-$s_date.diff.int.sm $m_date-$s_date.corr $m_date-$s_date.sm.cc_mask.bmp $m_date-$s_date.diff.int.sm.unw $width 1 0 0 - - 1 1 - - - 0
 rasrmg $m_date-$s_date.diff.int.sm.unw $m_date-$s_date.pwr1 $width 1 1 0 1 1 .6 1. .35 .0 1 $m_date-$s_date.diff.int.sm.unw.unwandpwr.bmp $m_date-$s_date.sm.cc 1 .2
-rasrmg $m_date-$s_date.diff.int.sm.unw - $width 1 1 0 1 1 .5 1. .35 .0 1 $m_date-$s_date.diff.diff.int.sm.unw.bmp $m_date-$s_date.sm.cc 1 .2
+rasrmg $m_date-$s_date.diff.int.sm.unw - $width 1 1 0 1 1 .5 1. .35 .0 1 $m_date-$s_date.diff.int.sm.unw.bmp $m_date-$s_date.sm.cc 1 .2
 
 ##################################################################################################################
 ### Subtractiing linear phase trends if needed 
