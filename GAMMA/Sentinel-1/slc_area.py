@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-#######################################
-# Geocode SLC with DEM to check area  #
-# Copyright (c) 2020, Lei Yuan        #
-#######################################
+##################################
+# Get the coverage of SLC        #
+# Copyright (c) 2020, Lei Yuan   #
+##################################
 
 import argparse
 import os
@@ -17,7 +17,7 @@ EXAMPLE = """Example:
 
 def cmdline_parser():
     parser = argparse.ArgumentParser(
-        description="Geocode SLC with DEM to check area.",
+        description="Get the coverage of SLC.",
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=EXAMPLE)
     parser.add_argument('slc_dir',
@@ -64,8 +64,11 @@ def main():
     rlks = inps.rlks
     alks = inps.alks
     # check slc_dir
-    slc = glob.glob(os.path.join(slc_dir, r'\d{8}.slc'))
-    slc_par = glob.glob(os.path.join(slc_dir, r'\d{8}.slc.par'))
+    slc = glob.glob(
+        os.path.join(slc_dir, '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].slc'))
+    slc_par = glob.glob(
+        os.path.join(slc_dir,
+                     '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].slc.par'))
     if slc and slc_par:
         pass
     else:
