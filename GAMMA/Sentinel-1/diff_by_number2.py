@@ -53,32 +53,15 @@ init_offset $m_slc $s_slc $m_par $s_par $MS_off 9 10
 init_offset $m_slc $s_slc $m_par $s_par $MS_off 1 1
 
 ##################################################################################################################
-### the first time offset_pwr and offset_fit, Estimation of offsets 
-### first time with larger windowsize
-### offset_pwr estimates the range and azimuth registration offset fields using correlation optimization of the detected SLC data
-### determine the bilinear registration offset polynomial using a least squares error method
-### offset_fit computes range and azimuth registration offset polynomials from offsets estimated by one of the programs offset_pwr
-##################################################################################################################
-offset_pwr $m_slc $s_slc $m_par $s_par $MS_off $m_date-$s_date.offs $m_date-$s_date.off.snr 256 256 $m_date-$s_date.offsets 1 500 500 7.0 2
-offset_fit $m_date-$s_date.offs $m_date-$s_date.off.snr $MS_off $m_date-$s_date.coffs $m_date-$s_date.coffsets 9 4 0
-cp $m_date-$s_date.offsets offsets_datewr_1
-cp $m_date-$s_date.coffsets coffsets_datewr_1
-
-##################################################################################################################
-### resample  slc
-##################################################################################################################
-SLC_interp $s_slc $m_par $s_par $MS_off $s_date.rslc $s_date.rslc.par
-
-##################################################################################################################
 ### Generation of interferogram with multi-look factors rlks * alks
 ##################################################################################################################
-SLC_intf $m_slc $s_date.rslc $m_par $s_date.rslc.par $MS_off $m_date-$s_date.int $rlks $alks - - 1 1
+SLC_intf $m_slc $s_slc $m_par $s_par $MS_off $m_date-$s_date.int $rlks $alks - - 1 1
 
 ##################################################################################################################
 ### Generation of multi-look SARintensity image of reference SLC
 ##################################################################################################################
 multi_look $m_slc $m_par  $m_date-$s_date.pwr1 $m_date.pwr1.par $rlks $alks
-multi_look $s_date.rslc $s_date.rslc.par $m_date-$s_date.pwr2 $s_date.pwr2.par $rlks $alks
+multi_look $s_slc $s_par $m_date-$s_date.pwr2 $s_date.pwr2.par $rlks $alks
 width=$(awk '$1 == "interferogram_width:" {print $2}' $MS_off)
 line=$(awk '$1 == "interferogram_azimuth_lines:" {print $2}' $MS_off)
 rasmph_pwr $m_date-$s_date.int $m_date-$s_date.pwr1 $width 1 1 0 1 1 1. 0.35 1 $m_date-$s_date.intandpwr.bmp
@@ -93,7 +76,7 @@ base_perp $m_date-$s_date.base $m_par $MS_off > $m_date-$s_date.base.perp
 ##################################################################################################################
 ph_slope_base $m_date-$s_date.int $m_par $MS_off $m_date-$s_date.base $m_date-$s_date.flt 1 0
 rasmph_pwr $m_date-$s_date.flt $m_date-$s_date.pwr1 $width 1 1 0 1 1 1. 0.35 1 $m_date-$s_date.fltandpwr.bmp
-cc_wave $m_date-$s_date.int $m_par $s_date.rslc.par $m_date-$s_date.corr $width - - 3
+cc_wave $m_date-$s_date.int $m_par $s_par $m_date-$s_date.corr $width - - 3
 
 ##################################################################################################################
 ### filter flattened interferogram
@@ -226,8 +209,8 @@ def cmd_line_parser():
 
 
 EXAMPLE = """Example:
-  ./diff_by_number.py /ly/slc /ly/stacking /ly/dem 4
-  ./diff_by_number.py /ly/slc /ly/stacking /ly/dem 4 --rlks 8 --alks 2
+  ./diff_by_number2.py /ly/slc /ly/stacking /ly/dem 4
+  ./diff_by_number2.py /ly/slc /ly/stacking /ly/dem 4 --rlks 8 --alks 2
 """
 
 
