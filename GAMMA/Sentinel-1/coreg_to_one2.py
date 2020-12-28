@@ -448,11 +448,16 @@ def main():
         call_str = f"rasmph {diff} {width_mli} 1 0 1 1 1. .35 1 {diff_bmp}"
         os.system(call_str)
 
+        diff_pwr_bmp = diff + '.pwr.bmp'
+        call_str = f"rasmph_pwr {diff} {m_mli} {width_mli} 1 1 0 1 1 1. .35 1 {diff_pwr_bmp}"
+        os.system(call_str)
+
         # delete files
         save_files = []
         save_files.append(s_date + '.rslc')
         save_files.append(s_date + '.rslc.par')
         save_files.append(m_date + '-' + s_date + '.diff.bmp')
+        save_files.append(m_date + '-' + s_date + '.diff.pwr.bmp')
 
         for f in os.listdir(s_rslc_dir):
             if f not in save_files:
