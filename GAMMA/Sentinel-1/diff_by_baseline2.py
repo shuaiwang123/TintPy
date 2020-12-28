@@ -135,6 +135,8 @@ phase_sim $m_par $MS_off $m_date-$s_date.base $m_date-$s_date.rdc_hgt $m_date-$s
 ### Subtractiing the simulated unwrapped phase from the complex interferogram
 ##################################################################################################################
 sub_phase $m_date-$s_date.int $m_date-$s_date.sim_unw $m_date-$s_date.diff.par $m_date-$s_date.diff.int 1 0
+rasmph $m_date-$s_date.diff.int $width 1 0 1 1 1. 0.35 1 $m_date-$s_date.diff.int.bmp
+rasmph_pwr $m_date-$s_date.diff.int $m_date-$s_date.pwr1 $width 1 1 0 1 1 1. 0.35 1 $m_date-$s_date.diff.int.pwr.bmp
 
 ##################################################################################################################
 ### Filter Differential Interferogram
@@ -142,7 +144,8 @@ sub_phase $m_date-$s_date.int $m_date-$s_date.sim_unw $m_date-$s_date.diff.par $
 adf $m_date-$s_date.diff.int $m_date-$s_date.diff.int.sm1 $m_date-$s_date.diff.sm.cc1 $width 0.3 128
 adf $m_date-$s_date.diff.int.sm1 $m_date-$s_date.diff.int.sm2 $m_date-$s_date.diff.sm.cc2 $width 0.3 64
 adf $m_date-$s_date.diff.int.sm2 $m_date-$s_date.diff.int.sm $m_date-$s_date.diff.sm.cc $width 0.3
-rasmph_pwr $m_date-$s_date.diff.int.sm $m_date-$s_date.pwr1 $width 1 1 0 1 1 1. 0.35 1 $m_date-$s_date.diff.sm.pwr.bmp
+rasmph $m_date-$s_date.diff.int.sm $width 1 0 1 1 1. 0.35 1 $m_date-$s_date.diff.int.sm.bmp
+rasmph_pwr $m_date-$s_date.diff.int.sm $m_date-$s_date.pwr1 $width 1 1 0 1 1 1. 0.35 1 $m_date-$s_date.diff.int.sm.pwr.bmp
 
 ##################################################################################################################
 ### Unwrap Differential Flattened Interferogram
@@ -150,7 +153,7 @@ rasmph_pwr $m_date-$s_date.diff.int.sm $m_date-$s_date.pwr1 $width 1 1 0 1 1 1. 
 # rascc_mask $m_date-$s_date.sm.cc $m_date-$s_date.pwr1 $width 1 1 0 1 1 0.0 0. .1 .9 1. .35 1 $m_date-$s_date.sm.cc_mask.bmp
 rascc_mask $m_date-$s_date.corr $m_date-$s_date.pwr1 $width 1 1 0 1 1 0.0 0. .1 .9 1. .35 1 $m_date-$s_date.sm.cc_mask.bmp
 mcf $m_date-$s_date.diff.int.sm $m_date-$s_date.corr $m_date-$s_date.sm.cc_mask.bmp $m_date-$s_date.diff.int.sm.unw $width 1 0 0 - - 1 1 - - - 0
-rasrmg $m_date-$s_date.diff.int.sm.unw $m_date-$s_date.pwr1 $width 1 1 0 1 1 .6 1. .35 .0 1 $m_date-$s_date.diff.int.sm.unw.unwandpwr.bmp $m_date-$s_date.sm.cc 1 .2
+rasrmg $m_date-$s_date.diff.int.sm.unw $m_date-$s_date.pwr1 $width 1 1 0 1 1 .6 1. .35 .0 1 $m_date-$s_date.diff.int.sm.unw.pwr.bmp $m_date-$s_date.sm.cc 1 .2
 rasrmg $m_date-$s_date.diff.int.sm.unw - $width 1 1 0 1 1 .5 1. .35 .0 1 $m_date-$s_date.diff.int.sm.unw.bmp $m_date-$s_date.sm.cc 1 .2
 
 ##################################################################################################################
@@ -158,7 +161,7 @@ rasrmg $m_date-$s_date.diff.int.sm.unw - $width 1 1 0 1 1 .5 1. .35 .0 1 $m_date
 ##################################################################################################################
 quad_fit $m_date-$s_date.diff.int.sm.unw $m_date-$s_date.diff.par 32 32 $m_date-$s_date.sm.cc_mask.bmp $m_date-$s_date.plot 3
 quad_sub $m_date-$s_date.diff.int.sm.unw $m_date-$s_date.diff.par $m_date-$s_date.diff.int.sm.sub.unw 0 0
-rasrmg $m_date-$s_date.diff.int.sm.sub.unw $m_date-$s_date.pwr1 $width 1 1 0 1 1 .6 1. .35 .0 1 $m_date-$s_date.diff.int.sm.sub.unwandpwr.bmp $m_date-$s_date.sm.cc 1 .2
+rasrmg $m_date-$s_date.diff.int.sm.sub.unw $m_date-$s_date.pwr1 $width 1 1 0 1 1 .6 1. .35 .0 1 $m_date-$s_date.diff.int.sm.sub.unw.pwr.bmp $m_date-$s_date.sm.cc 1 .2
 rasrmg $m_date-$s_date.diff.int.sm.sub.unw -  $width 1 1 0 1 1 .5 1. .35 .0 1 $m_date-$s_date.diff.int.sm.sub.unw.bmp $m_date-$s_date.sm.cc 1 .2
 
 ##################################################################################################################
