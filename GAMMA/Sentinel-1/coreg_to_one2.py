@@ -59,27 +59,6 @@ def gen_bmp(slc, slc_par, rlks, alks):
     os.system(call_str)
 
 
-def get_coreg_quality(rslc_dir):
-    quality_files = glob.glob(rslc_dir + '/*/*.coreg_quality')
-    print('\n{:>8}{:>10}\n'.format('date', 'daz10000'))
-    for file in sorted(quality_files):
-        with open(file, 'r') as f:
-            for i in f.readlines()[::-1]:
-                if i.startswith('azimuth_pixel_offset'):
-                    line = i.split()
-                    daz = line[1]
-                    date = file[-22:-14]
-                    daz10000 = float(daz) * 10000
-                    daz10000 = round(daz10000, 2)
-                    if daz10000 > 5:
-                        print('{:>8}{:>10} >  5'.format(date, daz10000))
-                    elif daz10000 < -5:
-                        print('{:>8}{:>10} < -5'.format(date, daz10000))
-                    else:
-                        print('{:>8}{:>10}'.format(date, daz10000))
-                    break
-
-
 def main():
     inps = cmd_line_parser()
     slc_dir = inps.slc_dir
@@ -227,8 +206,12 @@ def main():
     m_rslc_dir = os.path.join(rslc_dir, m_date)
     if not os.path.isdir(m_rslc_dir):
         os.mkdir(m_rslc_dir)
-    shutil.copy(m_slc, m_rslc_dir)
-    shutil.copy(m_slc_par, m_rslc_dir)
+    m_rslc = os.path.join(m_rslc_dir, m_date + '.slc')
+    m_rslc_par = m_rslc + '.par'
+    if not os.path.isfile(m_rslc):
+        shutil.copy(m_slc, m_rslc_dir)
+    if not os.path.isfile(m_rslc_par):
+        shutil.copy(m_slc_par, m_rslc_dir)
 
     for s_date in s_dates:
         s_slc_dir = os.path.join(slc_dir, s_date)
@@ -422,6 +405,7 @@ def main():
 
         off_total_file = os.path.join(s_rslc_dir, f"{m_date}-{s_date}.off.total")
         call_str = f"offset_add {off_file} {off1_file} {off_total_file}"
+        os.system(call_str)
 
         call_str = f"SLC_interp_lt_S1_TOPS SLC2_tab {s_slc_par} SLC1_tab {m_slc_par} {lt} {m_mli_par} {s_mli_par} {off_total_file} RSLC2_tab {s_rslc} {s_rslc_par}"
         os.system(call_str)
@@ -468,7 +452,6 @@ def main():
         save_files = []
         save_files.append(s_date + '.rslc')
         save_files.append(s_date + '.rslc.par')
-        save_files.append(m_date + '_' + s_date + '.coreg_quality')
         save_files.append(m_date + '-' + s_date + '.diff.bmp')
 
         for f in os.listdir(s_rslc_dir):
@@ -483,9 +466,6 @@ def main():
     rslc_files = glob.glob(rslc_dir + '/*/*.slc')
     for f in rslc_files:
         gen_bmp(f, f + '.par', rlks, alks)
-
-    # check coreg_quality
-    get_coreg_quality(rslc_dir)
 
     print('\nall done, enjoy it.\n')
 
