@@ -108,15 +108,15 @@ def main():
     # geocoding of data
     ph_rate_name = os.path.basename(ph_rate)
     geo_ph_rate = os.path.join(out_dir, 'geo_' + ph_rate_name)
-    geocode(ph_rate, geo_ph_rate, width_rdr, width, nlines)
+    geocode(ph_rate, lookup, geo_ph_rate, width_rdr, width, nlines)
 
     pwr_name = os.path.basename(pwr)
     geo_pwr = os.path.join(out_dir, 'geo_' + pwr_name)
-    geocode(pwr, geo_pwr, width_rdr, width, nlines)
+    geocode(pwr, lookup, geo_pwr, width_rdr, width, nlines)
 
     cc_name = os.path.basename(cc)
     geo_cc = os.path.join(out_dir, 'geo_' + cc_name)
-    geocode(cc, geo_cc, width_rdr, width, nlines)
+    geocode(cc, lookup, geo_cc, width_rdr, width, nlines)
 
     # generate raster graphics image of phase + intensity data
     bmp = geo_ph_rate + '_' + str(cycle) + '.bmp'
@@ -124,16 +124,20 @@ def main():
     os.system(call_str)
 
     # create kml XML file with link to image
-    kml = geo_ph_rate + '_' + str(cycle) + '.kml'
-    call_str = f"kml_map {bmp} {dem_seg_par} {kml}"
+    geo_ph_rate_name = os.path.basename(geo_ph_rate)
+    kml_name = geo_ph_rate_name + '_' + str(cycle) + '.kml'
+    bmp_name = os.path.basename(bmp)
+    os.chdir(out_dir)
+    call_str = f"kml_map {bmp_name} {dem_seg_par} {kml_name}"
     os.system(call_str)
 
     # unzip bmp and kml
-    kmz =  geo_ph_rate + '_' + str(cycle) + '.kmz'
-    with zipfile.ZipFile(kmz, 'w') as f:
-        os.chdir(out_dir)
-        f.write(kml)
-        f.write(bmp)
+    kmz_name =  geo_ph_rate_name + '_' + str(cycle) + '.kmz'
+    with zipfile.ZipFile(kmz_name, 'w') as f:
+        f.write(kml_name)
+        os.remove(kml_name)
+        f.write(bmp_name)
+        os.remove(bmp_name)
 
     print('All done, enjoy it!')
 
