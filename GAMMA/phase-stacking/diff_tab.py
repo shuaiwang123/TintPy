@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 #####################################################
-# write diff_tab for stacking using GAMMA           #
+# Write diff_tab for Stacking using GAMMA           #
 # Author: Yuan Lei, 2020                            #
 #####################################################
 import os
@@ -28,5 +28,5 @@ def write_diff_tab(ifg_dir, diff_tab_path):
 
 
 ifg_dir = '/media/ly/文件/gamma_stack/gamma_stack/interferograms'
-diff_tab_path = '/media/ly/文件/gamma_stack/diff_tab'
+diff_tab_path = 'diff_tab'
 write_diff_tab(ifg_dir, diff_tab_path)
