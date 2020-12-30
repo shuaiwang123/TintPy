@@ -217,6 +217,8 @@ def run():
     supermaster = inps.supermaster
     output_dir = inps.output_dir
     output_dir = os.path.abspath(output_dir)
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir)
     # run
     prep_files(stacking_dir, supermaster, output_dir)
 

@@ -72,7 +72,7 @@ def main():
         os.mkdir(interferograms_dir)
 
     tmp_files = os.listdir(stacking_dir)
-    ifg_pairs = [i for i in tmp_files if re.match(r'\d{8}-\d{8}', i)]
+    ifg_pairs = [i for i in tmp_files if re.match(r'\d{8}_\d{8}', i)]
     if len(ifg_pairs) < 1:
         print('no ifg_pair in {}.'.format(stacking_dir))
         sys.exit(1)
@@ -87,6 +87,8 @@ def main():
         if not os.path.isdir(dst_ifg_dir):
             os.mkdir(dst_ifg_dir)
 
+        ifg_in = ifg.replace('_', '-')
+
         if flag:
             # just copy once
             UTM_TO_RDC_path = os.path.join(ifg_dir, 'lookup_fine')
@@ -94,13 +96,13 @@ def main():
             dst_UTM_TO_RDC_path = os.path.join(geom_master_dir, dst_UTM_TO_RDC)
             copy_file(UTM_TO_RDC_path, dst_UTM_TO_RDC_path)
 
-            diff_par = ifg + '.diff.par'
+            diff_par = ifg_in + '.diff.par'
             diff_par_path = os.path.join(ifg_dir, diff_par)
             dst_diff_par = 'sim_' + ifg[0:8] + '_' + rlks + 'rlks.diff_par'
             dst_diff_par_path = os.path.join(geom_master_dir, dst_diff_par)
             copy_file(diff_par_path, dst_diff_par_path)
 
-            rdc_dem = ifg + '.rdc_hgt'
+            rdc_dem = ifg_in + '.rdc_hgt'
             rdc_dem_path = os.path.join(ifg_dir, rdc_dem)
             dst_rdc_dem = 'sim_' + ifg[0:8] + '_' + rlks + 'rlks.rdc.dem'
             dst_rdc_dem_path = os.path.join(geom_master_dir, dst_rdc_dem)
@@ -119,9 +121,9 @@ def main():
 
             flag = False
 
-        off = ifg + '.off'
+        off = ifg_in + '.off'
         off_path = os.path.join(ifg_dir, off)
-        dst_off = ifg.replace('-', '_') + '_' + rlks + 'rlks.off'
+        dst_off = ifg + '_' + rlks + 'rlks.off'
         dst_off_path = os.path.join(dst_ifg_dir, dst_off)
         copy_file(off_path, dst_off_path)
 
@@ -137,19 +139,19 @@ def main():
         dst_s_amp_par_path = os.path.join(dst_ifg_dir, dst_s_amp_par)
         copy_file(s_amp_par_path, dst_s_amp_par_path)
         # copy cor in rdc
-        cor = ifg + '.diff.sm.cc'
+        cor = ifg_in + '.diff.sm.cc'
         cor_path = os.path.join(ifg_dir, cor)
         dst_cor = 'filt_' + ifg.replace('-', '_') + '_' + rlks + 'rlks.cor'
         dst_cor_path = os.path.join(dst_ifg_dir, dst_cor)
         copy_file(cor_path, dst_cor_path)
         # copy unw in rdc
-        unw = ifg + '.diff.int.sm.unw'
+        unw = ifg_in + '.diff.int.sm.sub.unw'
         unw_path = os.path.join(ifg_dir, unw)
         dst_unw = 'diff_' + ifg.replace('-', '_') + '_' + rlks + 'rlks.unw'
         dst_unw_path = os.path.join(dst_ifg_dir, dst_unw)
         copy_file(unw_path, dst_unw_path)
 
-    print('\nall done.')
+    print('\nAll done, enjoy it.')
 
 
 # mintpy.load.processor      = gamma
