@@ -14,9 +14,11 @@ import shutil
 
 
 def cmdLineParse():
-    parser = argparse.ArgumentParser(description='Generate SLC from Sentinel-1 raw data with orbit correction using GAMMA.',
-                                     formatter_class=argparse.RawTextHelpFormatter,
-                                     epilog=EXAMPLE)
+    parser = argparse.ArgumentParser(
+        description=
+        'Generate SLC from Sentinel-1 raw data with orbit correction using GAMMA.',
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=EXAMPLE)
 
     parser.add_argument('s1_zip_dir', help='Sentinel-1 zip directory')
     parser.add_argument(
@@ -272,7 +274,8 @@ def main():
         if del_flag:
             os.remove(zip_file)
 
-        print("{} zip2slc for {} is done {}\n".format('>'*10, s1_date, '<'*10))
+        print("[{}] {} zip2slc for {} is done {}\n".format(
+            zip_files.index(zip_file) + 1, '>' * 10, s1_date, '<' * 10))
 
 
 if __name__ == "__main__":
