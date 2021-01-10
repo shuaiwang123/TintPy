@@ -52,10 +52,9 @@ def create_parser():
     parser.add_argument(
         '-n',
         dest='number_flag',
-        default=True,
-        type=bool,
+        default='t',
         help=
-        'First column of data is point number [True] or not [False] (default: True)'
+        'First column of data is point number [t] or not [f] (default: t)'
     )
     parser.add_argument(
         '-l',
@@ -119,7 +118,7 @@ def plot_colorbar(colors, bounds, dir_name, dpi):
     fig.savefig(colorbar_path, dpi=dpi, bbox_inches='tight')
 
 
-def filte_data(lon_data, lat_data, lonlat):
+def filter_data(lon_data, lat_data, lonlat):
     lon_min, lon_max, lat_min, lat_max = lonlat
     lon_index = ((lon_data > lon_min) == (lon_data < lon_max))
     lat_index = ((lat_data > lat_min) == (lat_data < lat_max))
@@ -131,13 +130,13 @@ def filte_data(lon_data, lat_data, lonlat):
 def load_data(vel_file, number_flag, lonlat):
     """load velocity data"""
     data = np.loadtxt(vel_file, np.float64)
-    if not number_flag:
+    if number_flag == 'f':
         number = np.arange(0, data.shape[0])
         data = np.hstack((number.reshape(-1, 1), data))
     # filte data
     lon_data = data[:, 1]
     lat_data = data[:, 2]
-    index = filte_data(lon_data, lat_data, lonlat)
+    index = filter_data(lon_data, lat_data, lonlat)
     filted_data = data[index, :]
 
     return filted_data
@@ -172,7 +171,7 @@ def check_inps(inps):
     vel_file = os.path.abspath(inps.vel_file)
     out_file = os.path.abspath(inps.out_file)
     scale = inps.scale
-    number_flag = inps.number_flag
+    number_flag = inps.number_flag.lower()
     lonlat = inps.lonlat
     # check vel_file
     if not os.path.isfile(vel_file):
@@ -188,6 +187,12 @@ def check_inps(inps):
     # check scale
     if scale <= 0:
         print('scale cannot less than or equal to 0')
+        sys.exit()
+    # check number_flag
+    if number_flag not in ['t', 'f']:
+        print(
+            "Error number_flag, first column of data is point number [t] or not [f] (default: t)"
+        )
         sys.exit()
     # check lonlat
     lon_min, lon_max, lat_min, lat_max = lonlat

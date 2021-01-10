@@ -71,10 +71,8 @@ def create_parser():
     parser.add_argument(
         '-n',
         dest='number_flag',
-        default=True,
-        type=bool,
-        help=
-        'First column of data is point number [True] or not [False] (default: True)'
+        default='t',
+        help='first column of data is point number [t] or not [f] (default: t)'
     )
     parser.add_argument(
         '-l',
@@ -143,7 +141,7 @@ def plot_colorbar(colors, bounds, dir_name, dpi, display_flag):
     fig.savefig(colorbar_path, dpi=dpi, bbox_inches='tight')
 
 
-def filte_data(lon_data, lat_data, lonlat):
+def filter_data(lon_data, lat_data, lonlat):
     lon_min, lon_max, lat_min, lat_max = lonlat
     lon_index = ((lon_data > lon_min) == (lon_data < lon_max))
     lat_index = ((lat_data > lat_min) == (lat_data < lat_max))
@@ -156,7 +154,7 @@ def load_data(ts_file, number_flag, lonlat):
     """load timeseries data"""
     content = np.loadtxt(ts_file, np.float64)
     # add points number
-    if not bool(number_flag):
+    if number_flag == 'f':
         number = np.arange(-1, content.shape[0] - 1)
         content = np.hstack((number.reshape(-1, 1), content))
     # get dates
@@ -167,7 +165,7 @@ def load_data(ts_file, number_flag, lonlat):
     # filte data
     lon_data = content[1:, 1]
     lat_data = content[1:, 2]
-    index = filte_data(lon_data, lat_data, lonlat)
+    index = filter_data(lon_data, lat_data, lonlat)
     filted_data = content[1:, :][index, :]
 
     return filted_data, dates
@@ -279,7 +277,7 @@ def check_inps(inps):
     js_file = os.path.abspath(inps.js_file)
     scale = inps.scale
     display_flag = inps.display_flag
-    number_flag = inps.number_flag
+    number_flag = inps.number_flag.lower()
     lonlat = inps.lonlat
     # check ts_file
     if not os.path.isfile(ts_file):
@@ -303,6 +301,12 @@ def check_inps(inps):
     # check display_flag
     if display_flag not in ['vel', 'disp']:
         print('display_flag must be vel or disp')
+        sys.exit()
+    # check number_flag
+    if number_flag not in ['t', 'f']:
+        print(
+            "Error number_flag, first column of data is point number [t] or not [f] (default: t)"
+        )
         sys.exit()
     # check lonlat
     lon_min, lon_max, lat_min, lat_max = lonlat
