@@ -199,6 +199,11 @@ rasrmg $m_date-$s_date.diff.int.sm.sub.unw -  $width 1 1 0 1 1 .5 1. .35 .0 1 $m
 # rasmph $m_date-$s_date.diff.utm.sm $width_map 1 0 1 1 1. 0.35 1 $m_date-$s_date.diff.utm.sm.bmp
 # rasmph_pwr $m_date-$s_date.diff.utm.sm $m_date-$s_date.utm.pwr $width_map 1 1 0 1 1 1. 0.35 1 $m_date-$s_date.diff.utm.smandpwr.bmp
 # rasrmg $m_date-$s_date.diff.int.sm.unw -  $width 1 1 0 1 1 .18 1. .35 .0 1 $m_date-$s_date.diff.int.unw.bmp $m_date-$s_date.sm.cc 1 .2
+
+##################################################################################################################
+### delete files to release storage
+##################################################################################################################
+rm -rf $s_date.rslc
 """
 
 

@@ -31,11 +31,13 @@ MS_off=$m_date-$s_date.off
 echo -ne "$m_date-$s_date\\n 0 0\\n 32 32\\n 64 64\\n 7.0\\n 0\\n\\n" > create_offset
 create_offset $m_par $s_par $MS_off 1 1 1 < create_offset
 rm -f create_offset
+
 ##################################################################################################################
 ### first guess of the offsets can be obtained based on orbital information
 ### The position of the initial registration offset estimation can be indicated. As default the SLC-1 image center is used.
 ##################################################################################################################
 init_offset_orbit $m_par $s_par $MS_off
+
 ##################################################################################################################
 ### improve the first guess, determines the initial offsets based on the cross-correlation function of the image intensities
 ### In order to avoid ambiguity problems and achieve an accutare estimates init_offset first be run with multi-looking
@@ -43,49 +45,42 @@ init_offset_orbit $m_par $s_par $MS_off
 ##################################################################################################################
 init_offset $m_slc $s_slc $m_par $s_par $MS_off 9 10
 init_offset $m_slc $s_slc $m_par $s_par $MS_off 1 1
+
 ##################################################################################################################
 ### the first time offset_pwr and offset_fit, Estimation of offsets 
 ### first time with larger windowsize
 ### offset_pwr estimates the range and azimuth registration offset fields using correlation optimization of the detected SLC data
-##################################################################################################################
-offset_pwr $m_slc $s_slc $m_par $s_par $MS_off $m_date-$s_date.offs $m_date-$s_date.off.snr 256 256 $m_date-$s_date.offsets 1 100 100 7.0 2
-offset_fit $m_date-$s_date.offs $m_date-$s_date.off.snr $MS_off $m_date-$s_date.coffs $m_date-$s_date.coffsets 9 4 0
-offset_pwr $m_slc $s_slc $m_par $s_par $MS_off $m_date-$s_date.offs $m_date-$s_date.off.snr 128 128 $m_date-$s_date.offsets 1 300 300 9.0 2
-offset_fit $m_date-$s_date.offs $m_date-$s_date.off.snr $MS_off $m_date-$s_date.coffs $m_date-$s_date.coffsets 10 4 0
-offset_pwr $m_slc $s_slc $m_par $s_par $MS_off $m_date-$s_date.offs $m_date-$s_date.off.snr 64 64 $m_date-$s_date.offsets 1 600 600 10.0 2
-offset_fit $m_date-$s_date.offs $m_date-$s_date.off.snr $MS_off $m_date-$s_date.coffs $m_date-$s_date.coffsets 11 4 0
-offset_pwr $m_slc $s_slc $m_par $s_par $MS_off $m_date-$s_date.offs $m_date-$s_date.off.snr 32 32 $m_date-$s_date.offsets 1 1000 1000 10.0 2
-offset_fit $m_date-$s_date.offs $m_date-$s_date.off.snr $MS_off $m_date-$s_date.coffs $m_date-$s_date.coffsets 10 4 0
-##################################################################################################################
 ### determine the bilinear registration offset polynomial using a least squares error method
 ### offset_fit computes range and azimuth registration offset polynomials from offsets estimated by one of the programs offset_pwr
 ##################################################################################################################
+offset_pwr $m_slc $s_slc $m_par $s_par $MS_off $m_date-$s_date.offs $m_date-$s_date.off.snr 256 256 $m_date-$s_date.offsets 1 100 100 7.0 2
+offset_fit $m_date-$s_date.offs $m_date-$s_date.off.snr $MS_off $m_date-$s_date.coffs $m_date-$s_date.coffsets 9 4 0
 cp $m_date-$s_date.offsets offsets_datewr_1
 cp $m_date-$s_date.coffsets coffsets_datewr_1
+
 ##################################################################################################################
-### resample  interf
+### resample  slc
 ##################################################################################################################
 SLC_interp $s_slc $m_par $s_par $MS_off $s_date.rslc $s_date.rslc.par
+
 ##################################################################################################################
 ### Generation of interferogram with multi-look factors rlks * alks
 ##################################################################################################################
 SLC_intf $m_slc $s_date.rslc $m_par $s_date.rslc.par $MS_off $m_date-$s_date.int $rlks $alks - - 1 1
+
 ##################################################################################################################
 ### Generation of multi-look SARintensity image of reference SLC
 ##################################################################################################################
 multi_look $m_slc $m_par  $m_date-$s_date.pwr1 $m_date.pwr1.par $rlks $alks
 multi_look $s_date.rslc $s_date.rslc.par $m_date-$s_date.pwr2 $s_date.pwr2.par $rlks $alks
-
 width=$(awk '$1 == "interferogram_width:" {print $2}' $MS_off)
 line=$(awk '$1 == "interferogram_azimuth_lines:" {print $2}' $MS_off)
-
 rasmph_pwr $m_date-$s_date.int $m_date-$s_date.pwr1 $width 1 1 0 1 1 1. 0.35 1 $m_date-$s_date.intandpwr.bmp
-
 raspwr $m_date-$s_date.pwr1 $width 1 0 1 1 1. 0.35 1 $m_date-$s_date.pwr1.bmp
 raspwr $m_date-$s_date.pwr2 $width 1 0 1 1 1. 0.35 1 $m_date-$s_date.pwr2.bmp
-
 base_init $m_par $s_par $MS_off $m_date-$s_date.int $m_date-$s_date.base 0 1024 1024
 base_perp $m_date-$s_date.base $m_par $MS_off > $m_date-$s_date.base.perp
+
 ##################################################################################################################
 ### Curved Earth phase trend removal("flattening")
 ### ph_slop_base Subtract/add interferogram flat-Earth phase trend as estimated from initial baseline
@@ -93,13 +88,14 @@ base_perp $m_date-$s_date.base $m_par $MS_off > $m_date-$s_date.base.perp
 ph_slope_base $m_date-$s_date.int $m_par $MS_off $m_date-$s_date.base $m_date-$s_date.flt 1 0
 rasmph_pwr $m_date-$s_date.flt $m_date-$s_date.pwr1 $width 1 1 0 1 1 1. 0.35 1 $m_date-$s_date.fltandpwr.bmp
 cc_wave $m_date-$s_date.int $m_par $s_date.rslc.par $m_date-$s_date.corr $width - - 3
-##################################################################################################################
+
 gc_map $m_par $MS_off $dem_par $dem dem_seg.par dem_seg lookup 1 1 sim_sar - - - - - - 8 1
 width_map=$(awk '$1 == "width:" {print $2}' dem_seg.par)
 nlines_map=$(awk '$1 == "nlines:" {print $2}' dem_seg.par)
 col_post=$(awk '$1 == "post_lat:" {print $2}' dem_seg.par)
 row_post=$(awk '$1 == "post_lon:" {print $2}' dem_seg.par)
 rasshd dem_seg $width_map $col_post $row_post 1 0 1 1 45. 135. 1 dem_seg.bmp
+
 ##################################################################################################################
 ### geocode the simulated SAR intensity image to radar coordinate
 ### when gc_map computes the lookup table it can also compute a simulated SAR image in the map coordinate system
@@ -109,6 +105,7 @@ rasshd dem_seg $width_map $col_post $row_post 1 0 1 1 45. 135. 1 dem_seg.bmp
 ##################################################################################################################
 geocode lookup sim_sar $width_map sim_sar_rdc $width $line 1 0
 raspwr sim_sar_rdc $width 1 0 1 1 1. .35 1 sim_sar_rdc.bmp
+
 ##################################################################################################################
 ### create a parameter file including the differential interferogram parameters
 ### create_diff_par: reads two parameter files(.off,.slc.par,.mli.par,.dem_datear)and creates a DIFF parameter file used for 
@@ -117,6 +114,7 @@ raspwr sim_sar_rdc $width 1 0 1 1 1. .35 1 sim_sar_rdc.bmp
 echo -ne "$m_date-$s_date\\n 0 0\\n 64 64\\n 256 256\\n 7.0\\n" > create_diff_parin
 create_diff_par $MS_off - $m_date-$s_date.diff.par 0 < create_diff_parin
 rm -f create_diff_parin
+
 ##################################################################################################################
 ### compute offset of simulated SAR image to slc(mli) image
 ### init_offsetm: initial registration offset estimation for multilook intensity images
@@ -128,20 +126,21 @@ offset_pwrm $m_date-$s_date.pwr1 sim_sar_rdc $m_date-$s_date.diff.par offs snr 2
 offset_fitm offs snr $m_date-$s_date.diff.par coffs coffsets 8.0 6
 offset_pwrm $m_date-$s_date.pwr1 sim_sar_rdc $m_date-$s_date.diff.par offs snr 64 64 offsets 2 300 300 9.0 2
 offset_fitm offs snr $m_date-$s_date.diff.par coffs coffsets 10.0 6
+
 ##################################################################################################################
 ### gc_map_fine applies the fine registration function to the input lookup table to create the refined output lookup table 
 ### This is done by addition of the fine registration offsets to the lookup vectors
 ##################################################################################################################
 gc_map_fine lookup $width_map $m_date-$s_date.diff.par lookup_fine 0
 geocode lookup_fine dem_seg $width_map $m_date-$s_date.rdc_hgt $width $line 1 0
-##################################################################################################################
 rashgt $m_date-$s_date.rdc_hgt $m_date-$s_date.pwr1 $width 1 1 0 1 1 20.0 1. .35 1 $m_date-$s_date.rdc_hgt_pwr.bmp
+
 ##################################################################################################################
-### Form Differential Interferogram
-### First method (flag is important)
+### Form Differential Interferogram (flag is important)
 ##################################################################################################################
 # simulation of unwrapped topographic phase
 phase_sim $m_par $MS_off $m_date-$s_date.base $m_date-$s_date.rdc_hgt $m_date-$s_date.sim_unw 0 0 - -
+
 ##################################################################################################################
 ### Subtractiing the simulated unwrapped phase from the complex interferogram
 ##################################################################################################################

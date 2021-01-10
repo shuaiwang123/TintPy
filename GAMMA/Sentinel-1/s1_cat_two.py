@@ -8,22 +8,28 @@ import os
 import glob
 import argparse
 import re
-
+import sys
 
 EXAMPLE = """
 [Note:This script only concatenates adjacent SLC processed by zip2slc.py]
-./s1_cat_two.py slc 1 slc_cat
-./s1_cat_two.py slc 1 slc_cat --rlks 8 --alks 2
+./s1_cat_two.py slc slc_cat 1
+./s1_cat_two.py slc slc_cat 1 --rlks 8 --alks 2
+./s1_cat_two.py slc slc_cat 1 2 3 --rlks 8 --alks 2
 """
 
 
 def cmdline_parse():
     parser = argparse.ArgumentParser(
-        description='Concatenate adjacent Sentinel-1 TOPS SLC images', formatter_class=argparse.RawTextHelpFormatter, epilog=EXAMPLE)
+        description='Concatenate adjacent Sentinel-1 TOPS SLC images',
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=EXAMPLE)
     parser.add_argument('slc_dir', help='slc need to be concatenated')
-    parser.add_argument('iw_num', help='number of IW (1 or 2 or 3)', type=int)
-    parser.add_argument(
-        'save_dir', help='directory of saving concatenated slc')
+    parser.add_argument('save_dir',
+                        help='directory of saving concatenated slc')
+    parser.add_argument('iw_num',
+                        help='IW number. e.g., 1 or 1 2 or 1 2 3',
+                        type=int,
+                        nargs='+')
     parser.add_argument(
         '--rlks',
         help='range looks for generating amplitude image (default: 20)',
@@ -94,13 +100,13 @@ def gen_new_par(par1, par2, new_par):
     state_vector_2 = get_state_vector(par2)
     nonrepeated_state_vector, index = get_nonrepeated_state_vector(
         state_vector_1, state_vector_2)
-    number_of_state_vectors = int(len(nonrepeated_state_vector)/2)
+    number_of_state_vectors = int(len(nonrepeated_state_vector) / 2)
 
     # calculate the new time_of_first_state_vector
     time_of_first_state_vector = get_time_of_first_state_vector(par2)
     time_of_first_state_vector = float(
-        time_of_first_state_vector) + index/2*10
-    time_of_first_state_vector = str(time_of_first_state_vector)+'00000'
+        time_of_first_state_vector) + index / 2 * 10
+    time_of_first_state_vector = str(time_of_first_state_vector) + '00000'
 
     # get content before 'number_of_state_vectors'
     content = get_content(par2)
@@ -109,16 +115,20 @@ def gen_new_par(par1, par2, new_par):
     with open(new_par, 'w+') as f:
         f.write(content)
         f.write('number_of_state_vectors:' +
-                str(int(len(nonrepeated_state_vector)/2)).rjust(21, ' ')+'\n')
+                str(int(len(nonrepeated_state_vector) / 2)).rjust(21, ' ') +
+                '\n')
         f.write('time_of_first_state_vector:' +
-                time_of_first_state_vector.rjust(18, ' ')+'   s'+'\n')
-        f.write('state_vector_interval:              10.000000   s'+'\n')
+                time_of_first_state_vector.rjust(18, ' ') + '   s' + '\n')
+        f.write('state_vector_interval:              10.000000   s' + '\n')
         nr = nonrepeated_state_vector
         for i in range(number_of_state_vectors):
-            f.write('state_vector_position_'+str(i+1)+':'+nr[i*2][0].rjust(
-                15, ' ')+nr[i*2][1].rjust(16, ' ')+nr[i * 2][2].rjust(16, ' ')+'   m   m   m'+'\n')
-            f.write('state_vector_velocity_'+str(i+1)+':'+nr[i*2+1][0].rjust(
-                15, ' ')+nr[i*2+1][1].rjust(16, ' ')+nr[i*2+1][2].rjust(16, ' ')+'   m/s m/s m/s'+'\n')
+            f.write('state_vector_position_' + str(i + 1) + ':' +
+                    nr[i * 2][0].rjust(15, ' ') + nr[i * 2][1].rjust(16, ' ') +
+                    nr[i * 2][2].rjust(16, ' ') + '   m   m   m' + '\n')
+            f.write('state_vector_velocity_' + str(i + 1) + ':' +
+                    nr[i * 2 + 1][0].rjust(15, ' ') +
+                    nr[i * 2 + 1][1].rjust(16, ' ') +
+                    nr[i * 2 + 1][2].rjust(16, ' ') + '   m/s m/s m/s' + '\n')
 
 
 def read_gamma_par(par_file, keyword):
@@ -236,16 +246,27 @@ def cat_slc(slc_dir, save_dir, iw_num, rlks, alks):
 
 def main():
     inps = cmdline_parse()
+
     slc_dir = inps.slc_dir
     slc_dir = os.path.abspath(slc_dir)
+
     iw_num = inps.iw_num
+    for i in iw_num:
+        if not i in [1, 2, 3]:
+            print('IW{} not exists.'.format(i))
+            sys.exit(1)
+
     save_dir = inps.save_dir
     save_dir = os.path.abspath(save_dir)
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
+
     rlks = inps.rlks
     alks = inps.alks
-    cat_slc(slc_dir, save_dir, iw_num, rlks, alks)
+
+    for i in iw_num:
+        cat_slc(slc_dir, save_dir, i, rlks, alks)
+
     print('\nall done, enjoy it.\n')
 
 

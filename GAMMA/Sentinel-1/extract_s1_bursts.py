@@ -12,10 +12,10 @@ import re
 
 EXAMPLE = '''Example:
   # one swath
-  python3 extract_s1_bursts.py /ly/slc /ly/slc_cat '1' '1 3'
+  python3 extract_s1_bursts.py /ly/slc /ly/slc_extract '1' '1 3'
   (Note: swath1 start_burst: 1 end_burst: 3)
   # multi swath
-  python3 extract_s1_bursts.py /ly/slc /ly/slc_cat '1 2' '1 3 2 4' --rlks 8 --alks 2
+  python3 extract_s1_bursts.py /ly/slc /ly/slc_extract '1 2' '1 3 2 4' --rlks 8 --alks 2
   (Note: swath1 start_burst: 1 end_burst: 3, swath2 start_burst: 2 end_burst: 4)
 '''
 
