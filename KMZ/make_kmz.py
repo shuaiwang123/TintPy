@@ -19,10 +19,10 @@ from pykml.factory import KML_ElementMaker as KML
 EXAMPLE = r"""Example:
   # Windows
   python make_kmz.py -v vels.txt -o D:\kmz\vels.kmz
-  python make_kmz.py -v vels.txt -o D:\kmz\vels.kmz -s 0.6
+  python make_kmz.py -v vels.txt -o D:\kmz\vels.kmz -s 0.6 -n False -l 100 101 31 32
   # Linux
   python3 make_kmz.py -v vels.txt -o /home/ly/vels
-  python3 make_kmz.py -v vels.txt -o /home/ly/vels -s 0.6
+  python3 make_kmz.py -v vels.txt -o /home/ly/vels -s 0.6 -n False -l 100 101 31 32
   # data format
   num1 lon1 lat1 vel1
   num2 lon2 lat2 vel2
@@ -49,6 +49,23 @@ def create_parser():
                         default=0.5,
                         type=float,
                         help='scale of point for display (default: 0.5)')
+    parser.add_argument(
+        '-n',
+        dest='number_flag',
+        default=True,
+        type=bool,
+        help=
+        'First column of data is point number [True] or not [False] (default: True)'
+    )
+    parser.add_argument(
+        '-l',
+        dest='lonlat',
+        default=(-180, 180, -90, 90),
+        type=float,
+        nargs=4,
+        help=
+        'longitude and latitude (W E S N) of points for display [default: all points]'
+    )
     return parser
 
 
@@ -102,11 +119,28 @@ def plot_colorbar(colors, bounds, dir_name, dpi):
     fig.savefig(colorbar_path, dpi=dpi, bbox_inches='tight')
 
 
-def load_data(vel_file):
+def filte_data(lon_data, lat_data, lonlat):
+    lon_min, lon_max, lat_min, lat_max = lonlat
+    lon_index = ((lon_data > lon_min) == (lon_data < lon_max))
+    lat_index = ((lat_data > lat_min) == (lat_data < lat_max))
+    index = (lon_index & lat_index)
+
+    return index
+
+
+def load_data(vel_file, number_flag, lonlat):
     """load velocity data"""
     data = np.loadtxt(vel_file, np.float64)
+    if not number_flag:
+        number = np.arange(0, data.shape[0])
+        data = np.hstack((number.reshape(-1, 1), data))
+    # filte data
+    lon_data = data[:, 1]
+    lat_data = data[:, 2]
+    index = filte_data(lon_data, lat_data, lonlat)
+    filted_data = data[index, :]
 
-    return data
+    return filted_data
 
 
 def get_description_string(lon, lat, vel):
@@ -138,6 +172,8 @@ def check_inps(inps):
     vel_file = os.path.abspath(inps.vel_file)
     out_file = os.path.abspath(inps.out_file)
     scale = inps.scale
+    number_flag = inps.number_flag
+    lonlat = inps.lonlat
     # check vel_file
     if not os.path.isfile(vel_file):
         print("{} doesn't exist.".format(vel_file))
@@ -153,13 +189,23 @@ def check_inps(inps):
     if scale <= 0:
         print('scale cannot less than or equal to 0')
         sys.exit()
+    # check lonlat
+    lon_min, lon_max, lat_min, lat_max = lonlat
+    if lon_min >= lon_max:
+        print('Error lonlat, {} {}'.format(lon_min, lon_max))
+        sys.exit(1)
+    if lat_min >= lat_max:
+        print('Error lonlat, {} {}'.format(lat_min, lat_max))
+        sys.exit(1)
 
-    return vel_file, out_file, scale
+    return vel_file, out_file, scale, number_flag, lonlat
 
 
 def write_kmz(vel_file,
               out_file,
               scale,
+              number_flag,
+              lonlat,
               colors,
               bounds,
               symbol_dpi=30,
@@ -171,7 +217,7 @@ def write_kmz(vel_file,
     print('Writing data {}'.format(out_file))
     # get nums, lons, lats, vels
     try:
-        data = load_data(vel_file)
+        data = load_data(vel_file, number_flag, lonlat)
         nums = data[:, 0]
         lons = data[:, 1]
         lats = data[:, 2]
@@ -271,10 +317,12 @@ if __name__ == "__main__":
     bounds = sorted([-60, -50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60])
 
     inps = cmdline_parser()
-    vel_file, out_file, scale = check_inps(inps)
+    vel_file, out_file, scale, number_flag, lonlat = check_inps(inps)
     write_kmz(vel_file,
               out_file,
               scale,
+              number_flag,
+              lonlat,
               colors,
               bounds,
               symbol_dpi=30,

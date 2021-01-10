@@ -20,11 +20,11 @@ EXAMPLE = r"""Example:
   # Windows
   python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz
   python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js
-  python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js -s 0.6 -f vel
+  python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js -s 0.6 -f vel -n False -l 100 101 31 32
   # Linux
   python3 make_kmz_timeseries.py -t ts.txt -o /home/ly/ts
   python3 make_kmz_timeseries.py -t ts.txt -o /home/ly/ts -j /home/ly/tsdygraph-combined.js
-  python3 make_kmz_timeseries.py -t ts.txt -o /home/ly/ts -j /home/ly/tsdygraph-combined.js -s 0.6 -f disp
+  python3 make_kmz_timeseries.py -t ts.txt -o /home/ly/ts -j /home/ly/tsdygraph-combined.js -s 0.6 -f disp -n False -l 100 101 31 32
   # data format
     -1   -1   -1    -1       date1       date2       date3 ...
   num1 lon1 lat1  vel1 date1-disp1 date2-disp1 date3-disp1 ...
@@ -62,11 +62,28 @@ def create_parser():
                         help='scale of point for display (default: 0.5)')
     parser.add_argument(
         '-f',
-        dest='flag',
+        dest='display_flag',
         default='vel',
         type=str,
         help=
         'basemap of kmz (default: vel) [velocity(vel) or cumulative displacement(disp)]'
+    )
+    parser.add_argument(
+        '-n',
+        dest='number_flag',
+        default=True,
+        type=bool,
+        help=
+        'First column of data is point number [True] or not [False] (default: True)'
+    )
+    parser.add_argument(
+        '-l',
+        dest='lonlat',
+        default=(-180, 180, -90, 90),
+        type=float,
+        nargs=4,
+        help=
+        'longitude and latitude (W E S N) of points for display [default: all points]'
     )
     return parser
 
@@ -102,7 +119,7 @@ def plot_symbol(colors, bounds, dir_name, dpi):
                     bbox_inches='tight')
 
 
-def plot_colorbar(colors, bounds, dir_name, dpi, flag):
+def plot_colorbar(colors, bounds, dir_name, dpi, display_flag):
     """plot colorbar for display"""
     fig, ax = plt.subplots(figsize=(1, 8))
     fig.subplots_adjust(left=0.1, right=0.4)
@@ -110,7 +127,7 @@ def plot_colorbar(colors, bounds, dir_name, dpi, flag):
     cmap = mpl.colors.ListedColormap(colors)
     norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
 
-    if flag == 'vel':
+    if display_flag == 'vel':
         label = 'mean LOS velocity [mm/yr]'
     else:
         label = 'cumulative LOS displacement [mm]'
@@ -126,15 +143,34 @@ def plot_colorbar(colors, bounds, dir_name, dpi, flag):
     fig.savefig(colorbar_path, dpi=dpi, bbox_inches='tight')
 
 
-def load_data(ts_file):
+def filte_data(lon_data, lat_data, lonlat):
+    lon_min, lon_max, lat_min, lat_max = lonlat
+    lon_index = ((lon_data > lon_min) == (lon_data < lon_max))
+    lat_index = ((lat_data > lat_min) == (lat_data < lat_max))
+    index = (lon_index & lat_index)
+
+    return index
+
+
+def load_data(ts_file, number_flag, lonlat):
     """load timeseries data"""
     content = np.loadtxt(ts_file, np.float64)
+    # add points number
+    if not bool(number_flag):
+        number = np.arange(-1, content.shape[0] - 1)
+        content = np.hstack((number.reshape(-1, 1), content))
+    # get dates
     dates = np.asarray(content[0, 4:], np.int64)
     dates = [
         str(d)[0:4] + '-' + str(d)[4:6] + '-' + str(d)[6:8] for d in dates
     ]
+    # filte data
+    lon_data = content[1:, 1]
+    lat_data = content[1:, 2]
+    index = filte_data(lon_data, lat_data, lonlat)
+    filted_data = content[1:, :][index, :]
 
-    return content[1:, :], dates
+    return filted_data, dates
 
 
 def get_description_string(lon, lat, vel, cum_disp):
@@ -242,7 +278,9 @@ def check_inps(inps):
     out_file = os.path.abspath(inps.out_file)
     js_file = os.path.abspath(inps.js_file)
     scale = inps.scale
-    flag = inps.flag
+    display_flag = inps.display_flag
+    number_flag = inps.number_flag
+    lonlat = inps.lonlat
     # check ts_file
     if not os.path.isfile(ts_file):
         print("{} doesn't exist".format(ts_file))
@@ -262,12 +300,20 @@ def check_inps(inps):
     if scale <= 0:
         print('scale cannot less than or equal to 0')
         sys.exit()
-    # check flag
-    if flag not in ['vel', 'disp']:
-        print('flag must be vel or disp')
+    # check display_flag
+    if display_flag not in ['vel', 'disp']:
+        print('display_flag must be vel or disp')
         sys.exit()
+    # check lonlat
+    lon_min, lon_max, lat_min, lat_max = lonlat
+    if lon_min >= lon_max:
+        print('Error lonlat, {} {}'.format(lon_min, lon_max))
+        sys.exit(1)
+    if lat_min >= lat_max:
+        print('Error lonlat, {} {}'.format(lat_min, lat_max))
+        sys.exit(1)
 
-    return ts_file, out_file, js_file, scale, flag
+    return ts_file, out_file, js_file, scale, display_flag, number_flag, lonlat
 
 
 def get_id(d, bounds):
@@ -289,7 +335,9 @@ def write_kmz(ts_file,
               out_file,
               js_file,
               scale,
-              flag,
+              display_flag,
+              number_flag,
+              lonlat,
               colors,
               bounds,
               symbol_dpi=30,
@@ -301,7 +349,7 @@ def write_kmz(ts_file,
     print('Writing data to {}'.format(out_file))
     # get lons, lats, vels, ts, dates
     try:
-        data, dates = load_data(ts_file)
+        data, dates = load_data(ts_file, number_flag, lonlat)
         nums = data[:, 0]
         lons = data[:, 1]
         lats = data[:, 2]
@@ -328,7 +376,7 @@ def write_kmz(ts_file,
         description = get_description_string(
             lon, lat, vel, disp[-1]) + generate_js_datastring(
                 dates, js_file, disp)
-        if flag == 'vel':
+        if display_flag == 'vel':
             id = get_id(vel, bounds)
             height = vel
         else:
@@ -379,7 +427,7 @@ def write_kmz(ts_file,
     # plot symbol
     plot_symbol(colors, bounds, dir_name, symbol_dpi)
     # plot colorbar
-    plot_colorbar(colors, bounds, dir_name, colorbar_dpi, flag)
+    plot_colorbar(colors, bounds, dir_name, colorbar_dpi, display_flag)
     # unzip kml, symbol, colorbar, dygraph_file
     with zipfile.ZipFile(out_file, 'w') as f:
         os.chdir(dir_name)
@@ -400,16 +448,18 @@ if __name__ == "__main__":
         '#FF2A00', '#FF6600', '#FFA600', '#FFD300', '#FFFF00', '#55FF00',
         '#55FF00', '#21E5FF', '#3B9DFF', '#3358FF', '#1E32FF', '#0808FF'
     ]
-    bounds = sorted(
-        [-60, -50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60])
+    bounds = sorted([-60, -50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60])
 
     inps = cmdline_parser()
-    ts_file, out_file, js_file, scale, flag = check_inps(inps)
+    ts_file, out_file, js_file, scale, display_flag, number_flag, lonlat = check_inps(
+        inps)
     write_kmz(ts_file,
               out_file,
               js_file,
               scale,
-              flag,
+              display_flag,
+              number_flag,
+              lonlat,
               colors,
               bounds,
               symbol_dpi=30,
