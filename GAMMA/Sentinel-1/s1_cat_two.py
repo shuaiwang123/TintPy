@@ -180,6 +180,8 @@ def cat_slc(slc_dir, save_dir, iw_num, rlks, alks, del_flag):
     """concatenate adjacent SLC"""
     dates = get_date_for_cat(slc_dir)
     for date in dates:
+        slc1_dir = os.path.join(slc_dir, date + '-1')
+        slc2_dir = os.path.join(slc_dir, date + '-2')
         for iw in iw_num:
             iw = str(iw)
             cat_dir = os.path.join(save_dir, date)
@@ -187,16 +189,16 @@ def cat_slc(slc_dir, save_dir, iw_num, rlks, alks, del_flag):
                 os.mkdir(cat_dir)
 
             # get path of slc slc.par slc.tops_par
-            slc1_dir = os.path.join(slc_dir, date + '-1')
             slc1 = os.path.join(slc1_dir, date + '.iw' + iw + '.slc')
             slc_par1 = os.path.join(slc1_dir, date + '.iw' + iw + '.slc.par')
             tops_par1 = os.path.join(slc1_dir,
                                      date + '.iw' + iw + '.slc.tops_par')
-            slc2_dir = os.path.join(slc_dir, date + '-2')
+
             slc2 = os.path.join(slc2_dir, date + '.iw' + iw + '.slc')
             slc_par2 = os.path.join(slc2_dir, date + '.iw' + iw + '.slc.par')
             tops_par2 = os.path.join(slc2_dir,
                                      date + '.iw' + iw + '.slc.tops_par')
+
             slc = os.path.join(cat_dir, date + '.iw' + iw + '.slc')
             slc_par = os.path.join(cat_dir, date + '.iw' + iw + '.slc.par')
             tops_par = os.path.join(cat_dir,
@@ -251,10 +253,10 @@ def cat_slc(slc_dir, save_dir, iw_num, rlks, alks, del_flag):
                 if os.path.isfile(file):
                     os.remove(file)
 
-            # delete original data
-            if del_flag == 't':
-                shutil.rmtree(slc1_dir)
-                shutil.rmtree(slc2_dir)
+        # delete original data
+        if del_flag == 't':
+            shutil.rmtree(slc1_dir)
+            shutil.rmtree(slc2_dir)
 
 
 def main():
