@@ -9,6 +9,7 @@ import glob
 import argparse
 import re
 import sys
+import shutil
 
 EXAMPLE = """
 [Note:This script only concatenates adjacent SLC processed by zip2slc.py]
@@ -40,6 +41,11 @@ def cmdline_parse():
         help='azimuth looks for generating amplitude image (default: 5)',
         type=int,
         default=5)
+    parser.add_argument(
+        '--del_flag',
+        help=
+        'flag for deleting original data, t for deleting, f for not (default: f)',
+        default='f')
     inps = parser.parse_args()
     return inps
 
@@ -170,7 +176,7 @@ def get_date_for_cat(slc_dir):
     return sorted(list(dates))
 
 
-def cat_slc(slc_dir, save_dir, iw_num, rlks, alks):
+def cat_slc(slc_dir, save_dir, iw_num, rlks, alks, del_flag):
     """concatenate adjacent SLC"""
     dates = get_date_for_cat(slc_dir)
     for date in dates:
@@ -181,19 +187,20 @@ def cat_slc(slc_dir, save_dir, iw_num, rlks, alks):
                 os.mkdir(cat_dir)
 
             # get path of slc slc.par slc.tops_par
-            slc1 = os.path.join(slc_dir, date + '-1', date + '.iw' + iw + '.slc')
-            slc_par1 = os.path.join(slc_dir, date + '-1',
-                                    date + '.iw' + iw + '.slc.par')
-            tops_par1 = os.path.join(slc_dir, date + '-1',
-                                    date + '.iw' + iw + '.slc.tops_par')
-            slc2 = os.path.join(slc_dir, date + '-2', date + '.iw' + iw + '.slc')
-            slc_par2 = os.path.join(slc_dir, date + '-2',
-                                    date + '.iw' + iw + '.slc.par')
-            tops_par2 = os.path.join(slc_dir, date + '-2',
-                                    date + '.iw' + iw + '.slc.tops_par')
+            slc1_dir = os.path.join(slc_dir, date + '-1')
+            slc1 = os.path.join(slc1_dir, date + '.iw' + iw + '.slc')
+            slc_par1 = os.path.join(slc1_dir, date + '.iw' + iw + '.slc.par')
+            tops_par1 = os.path.join(slc1_dir,
+                                     date + '.iw' + iw + '.slc.tops_par')
+            slc2_dir = os.path.join(slc_dir, date + '-2')
+            slc2 = os.path.join(slc2_dir, date + '.iw' + iw + '.slc')
+            slc_par2 = os.path.join(slc2_dir, date + '.iw' + iw + '.slc.par')
+            tops_par2 = os.path.join(slc2_dir,
+                                     date + '.iw' + iw + '.slc.tops_par')
             slc = os.path.join(cat_dir, date + '.iw' + iw + '.slc')
             slc_par = os.path.join(cat_dir, date + '.iw' + iw + '.slc.par')
-            tops_par = os.path.join(cat_dir, date + '.iw' + iw + '.slc.tops_par')
+            tops_par = os.path.join(cat_dir,
+                                    date + '.iw' + iw + '.slc.tops_par')
 
             # backup par file
             call_str = f"cp {slc_par1} {slc_par1 + '-copy'}"
@@ -244,6 +251,11 @@ def cat_slc(slc_dir, save_dir, iw_num, rlks, alks):
                 if os.path.isfile(file):
                     os.remove(file)
 
+            # delete original data
+            if del_flag == 't':
+                shutil.rmtree(slc1_dir)
+                shutil.rmtree(slc2_dir)
+
 
 def main():
     inps = cmdline_parse()
@@ -265,7 +277,12 @@ def main():
     rlks = inps.rlks
     alks = inps.alks
 
-    cat_slc(slc_dir, save_dir, iw_num, rlks, alks)
+    del_flag = inps.del_flag.lower()
+    if del_flag not in ['t', 'f']:
+        print('Error del_flag, t for deleting, f for not (default: f)')
+        sys.exit()
+
+    cat_slc(slc_dir, save_dir, iw_num, rlks, alks, del_flag)
 
     print('\nall done, enjoy it.\n')
 
