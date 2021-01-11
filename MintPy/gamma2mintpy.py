@@ -34,8 +34,8 @@ def cmd_line_parser():
 
 
 EXAMPLE = """Example:
-  ./prep_mintpy.py /ly/mintpy /ly/stacking
-  ./prep_mintpy.py /ly/mintpy /ly/stacking --rlks 8 --alks 2
+  ./gamma2mintpy.py /ly/mintpy /ly/stacking
+  ./gamma2mintpy.py /ly/mintpy /ly/stacking --rlks 8 --alks 2
 """
 
 
