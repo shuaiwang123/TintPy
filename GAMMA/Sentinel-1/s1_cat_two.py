@@ -172,76 +172,77 @@ def get_date_for_cat(slc_dir):
 
 def cat_slc(slc_dir, save_dir, iw_num, rlks, alks):
     """concatenate adjacent SLC"""
-    iw = str(iw_num)
     dates = get_date_for_cat(slc_dir)
     for date in dates:
-        cat_dir = os.path.join(save_dir, date)
-        if not os.path.isdir(cat_dir):
-            os.mkdir(cat_dir)
+        for iw in iw_num:
+            iw = str(iw)
+            cat_dir = os.path.join(save_dir, date)
+            if not os.path.isdir(cat_dir):
+                os.mkdir(cat_dir)
 
-        # get path of slc slc.par slc.tops_par
-        slc1 = os.path.join(slc_dir, date + '-1', date + '.iw' + iw + '.slc')
-        slc_par1 = os.path.join(slc_dir, date + '-1',
-                                date + '.iw' + iw + '.slc.par')
-        tops_par1 = os.path.join(slc_dir, date + '-1',
-                                 date + '.iw' + iw + '.slc.tops_par')
-        slc2 = os.path.join(slc_dir, date + '-2', date + '.iw' + iw + '.slc')
-        slc_par2 = os.path.join(slc_dir, date + '-2',
-                                date + '.iw' + iw + '.slc.par')
-        tops_par2 = os.path.join(slc_dir, date + '-2',
-                                 date + '.iw' + iw + '.slc.tops_par')
-        slc = os.path.join(cat_dir, date + '.iw' + iw + '.slc')
-        slc_par = os.path.join(cat_dir, date + '.iw' + iw + '.slc.par')
-        tops_par = os.path.join(cat_dir, date + '.iw' + iw + '.slc.tops_par')
+            # get path of slc slc.par slc.tops_par
+            slc1 = os.path.join(slc_dir, date + '-1', date + '.iw' + iw + '.slc')
+            slc_par1 = os.path.join(slc_dir, date + '-1',
+                                    date + '.iw' + iw + '.slc.par')
+            tops_par1 = os.path.join(slc_dir, date + '-1',
+                                    date + '.iw' + iw + '.slc.tops_par')
+            slc2 = os.path.join(slc_dir, date + '-2', date + '.iw' + iw + '.slc')
+            slc_par2 = os.path.join(slc_dir, date + '-2',
+                                    date + '.iw' + iw + '.slc.par')
+            tops_par2 = os.path.join(slc_dir, date + '-2',
+                                    date + '.iw' + iw + '.slc.tops_par')
+            slc = os.path.join(cat_dir, date + '.iw' + iw + '.slc')
+            slc_par = os.path.join(cat_dir, date + '.iw' + iw + '.slc.par')
+            tops_par = os.path.join(cat_dir, date + '.iw' + iw + '.slc.tops_par')
 
-        # backup par file
-        call_str = f"cp {slc_par1} {slc_par1 + '-copy'}"
-        os.system(call_str)
-        call_str = f"cp {slc_par2} {slc_par2 + '-copy'}"
-        os.system(call_str)
-
-        # get image start_time and direction
-        start_time1, direction1 = get_time_and_direction(slc_par1)
-        start_time2, direction2 = get_time_and_direction(slc_par2)
-
-        if direction1 != direction2:
-            continue
-
-        # exchange values for the following cases
-        des = (direction1 == 'DES') and (start_time1 > start_time2)
-        asc = (direction1 == 'ASC') and (start_time1 > start_time2)
-        if asc or des:
-            slc1, slc2 = slc2, slc1
-            slc_par1, slc_par2 = slc_par2, slc_par1
-            tops_par1, tops_par2 = tops_par2, tops_par1
-
-        # delete repeated vectors
-        gen_new_par(slc_par1, slc_par2, slc_par2)
-
-        # write catlist
-        os.chdir(cat_dir)
-        call_str = f"echo {slc1} {slc_par1} {tops_par1} > catlist1"
-        os.system(call_str)
-        call_str = f"echo {slc2} {slc_par2} {tops_par2} > catlist2"
-        os.system(call_str)
-        call_str = f"echo {slc} {slc_par} {tops_par} > catlist"
-        os.system(call_str)
-
-        # concatenate adjacent Sentinel-1 TOPS SLC images
-        call_str = "SLC_cat_S1_TOPS.TOPS catlist1 catlist2 catlist"
-        os.system(call_str)
-
-        # generate amplitude image
-        width = read_gamma_par(slc_par, 'range_samples:')
-        if width:
-            bmp = slc + '.bmp'
-            call_str = f"rasSLC {slc} {width} 1 0 {rlks} {alks} 1. .35 1 0 0 {bmp}"
+            # backup par file
+            call_str = f"cp {slc_par1} {slc_par1 + '-copy'}"
+            os.system(call_str)
+            call_str = f"cp {slc_par2} {slc_par2 + '-copy'}"
             os.system(call_str)
 
-        # delete catlist, catlist1, catlist2
-        for file in ['catlist', 'catlist1', 'catlist2']:
-            if os.path.isfile(file):
-                os.remove(file)
+            # get image start_time and direction
+            start_time1, direction1 = get_time_and_direction(slc_par1)
+            start_time2, direction2 = get_time_and_direction(slc_par2)
+
+            if direction1 != direction2:
+                continue
+
+            # exchange values for the following cases
+            des = (direction1 == 'DES') and (start_time1 > start_time2)
+            asc = (direction1 == 'ASC') and (start_time1 > start_time2)
+            if asc or des:
+                slc1, slc2 = slc2, slc1
+                slc_par1, slc_par2 = slc_par2, slc_par1
+                tops_par1, tops_par2 = tops_par2, tops_par1
+
+            # delete repeated vectors
+            gen_new_par(slc_par1, slc_par2, slc_par2)
+
+            # write catlist
+            os.chdir(cat_dir)
+            call_str = f"echo {slc1} {slc_par1} {tops_par1} > catlist1"
+            os.system(call_str)
+            call_str = f"echo {slc2} {slc_par2} {tops_par2} > catlist2"
+            os.system(call_str)
+            call_str = f"echo {slc} {slc_par} {tops_par} > catlist"
+            os.system(call_str)
+
+            # concatenate adjacent Sentinel-1 TOPS SLC images
+            call_str = "SLC_cat_S1_TOPS.TOPS catlist1 catlist2 catlist"
+            os.system(call_str)
+
+            # generate amplitude image
+            width = read_gamma_par(slc_par, 'range_samples:')
+            if width:
+                bmp = slc + '.bmp'
+                call_str = f"rasSLC {slc} {width} 1 0 {rlks} {alks} 1. .35 1 0 0 {bmp}"
+                os.system(call_str)
+
+            # delete catlist, catlist1, catlist2
+            for file in ['catlist', 'catlist1', 'catlist2']:
+                if os.path.isfile(file):
+                    os.remove(file)
 
 
 def main():
@@ -264,8 +265,7 @@ def main():
     rlks = inps.rlks
     alks = inps.alks
 
-    for i in iw_num:
-        cat_slc(slc_dir, save_dir, i, rlks, alks)
+    cat_slc(slc_dir, save_dir, iw_num, rlks, alks)
 
     print('\nall done, enjoy it.\n')
 
