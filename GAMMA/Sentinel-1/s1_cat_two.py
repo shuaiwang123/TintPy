@@ -182,12 +182,11 @@ def cat_slc(slc_dir, save_dir, iw_num, rlks, alks, del_flag):
     for date in dates:
         slc1_dir = os.path.join(slc_dir, date + '-1')
         slc2_dir = os.path.join(slc_dir, date + '-2')
+        cat_dir = os.path.join(save_dir, date)
+        if not os.path.isdir(cat_dir):
+            os.mkdir(cat_dir)
         for iw in iw_num:
             iw = str(iw)
-            cat_dir = os.path.join(save_dir, date)
-            if not os.path.isdir(cat_dir):
-                os.mkdir(cat_dir)
-
             # get path of slc slc.par slc.tops_par
             slc1 = os.path.join(slc1_dir, date + '.iw' + iw + '.slc')
             slc_par1 = os.path.join(slc1_dir, date + '.iw' + iw + '.slc.par')

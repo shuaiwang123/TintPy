@@ -39,10 +39,10 @@ def cmdLineParse():
         type=int,
         default=5)
     parser.add_argument(
-        '--flag',
-        help='flag for deleting original Sentinel-1 zip data (default: False)',
-        type=bool,
-        default=False)
+        '--del_flag',
+        help=
+        'flag for deleting original Sentinel-1 zip data, t for deleting, f for not (default: f)',
+        default='f')
     inps = parser.parse_args()
 
     return inps
@@ -52,7 +52,7 @@ EXAMPLE = """Example:
   # for iw1
   ./zip2slc.py /ly/zip_dir /ly/orbits /ly/slc 1
   # for iw1 iw2 and iw3
-  ./zip2slc.py /ly/zip_dir /ly/orbits /ly/slc 1 2 3 --rlks 8 --alks 2
+  ./zip2slc.py /ly/zip_dir /ly/orbits /ly/slc 1 2 3 --rlks 8 --alks 2 --del_flag t
 """
 
 
@@ -112,7 +112,7 @@ def read_gamma_par(par_file, keyword):
     return value
 
 
-def check_inputs(zip_dir, orbit_dir, slc_dir, iw_num):
+def check_inputs(zip_dir, orbit_dir, slc_dir, iw_num, del_flag):
     # check zip directory
     if not os.path.isdir(zip_dir):
         print('{} not exists.'.format(zip_dir))
@@ -129,6 +129,10 @@ def check_inputs(zip_dir, orbit_dir, slc_dir, iw_num):
         if not i in [1, 2, 3]:
             print('IW{} not exists.'.format(i))
             sys.exit(1)
+    # check del_flag
+    if del_flag not in ['t', 'f']:
+        print("Error del_falg, it must be in ['t', 'f'']")
+        sys.exit(1)
 
 
 def unzip_file(safe_dir, zip_file, zip_file_dir, log_file):
@@ -217,9 +221,9 @@ def main():
     iw_num = inps.iw_num
     rlks = inps.rlks
     alks = inps.alks
-    del_flag = inps.flag
+    del_flag = inps.del_flag.lower()
     # check inputs
-    check_inputs(zip_dir, orbit_dir, slc_dir, iw_num)
+    check_inputs(zip_dir, orbit_dir, slc_dir, iw_num, del_flag)
     # get all zip
     zip_files = glob.glob(zip_dir + '/S1*_IW_SLC*.zip')
     s1_date_frequency = get_s1_date_and_frequency(zip_files)
@@ -271,7 +275,7 @@ def main():
             os.remove(slc_tab)
 
         # delete zip data
-        if del_flag:
+        if del_flag == 't':
             os.remove(zip_file)
 
         print("[{}] {} zip2slc for {} is done {}\n".format(
