@@ -53,7 +53,7 @@ init_offset $m_slc $s_slc $m_par $s_par $MS_off 1 1
 ### determine the bilinear registration offset polynomial using a least squares error method
 ### offset_fit computes range and azimuth registration offset polynomials from offsets estimated by one of the programs offset_pwr
 ##################################################################################################################
-offset_pwr $m_slc $s_slc $m_par $s_par $MS_off $m_date-$s_date.offs $m_date-$s_date.off.snr 32 32 $m_date-$s_date.offsets 1 500 500 7.0 2
+offset_pwr $m_slc $s_slc $m_par $s_par $MS_off $m_date-$s_date.offs $m_date-$s_date.off.snr 256 256 $m_date-$s_date.offsets 1 100 100 7.0 2
 offset_fit $m_date-$s_date.offs $m_date-$s_date.off.snr $MS_off $m_date-$s_date.coffs $m_date-$s_date.coffsets 9 4 0
 cp $m_date-$s_date.offsets offsets_datewr_1
 cp $m_date-$s_date.coffsets coffsets_datewr_1
@@ -204,7 +204,7 @@ USAGE = """Example:
   # calculate baseline
   ./diff_by_baseline.py /ly/slc /ly/stacking /ly/dem 20200202 0 500 0 300
   # calculate baseline and run stacking
-  ./diff_by_baseline.py /ly/slc /ly/stacking /ly/dem 20200202 0 500 0 300 --flag True --rlks 8 --alks 2
+  ./diff_by_baseline.py /ly/slc /ly/stacking /ly/dem 20200202 0 500 0 300 --flag t --rlks 8 --alks 2
 """
 
 
@@ -227,9 +227,8 @@ def cmdline_parser():
     parser.add_argument('delta_T_max', help='maximum time delta')
     parser.add_argument(
         '--flag',
-        help='flag for running calc_baseline(False) or stacking(True)',
-        default=False,
-        type=bool)
+        help='flag for running calc_baseline[f] or stacking[t] (default: f)',
+        default='f')
     parser.add_argument('--rlks',
                         help='range looks (defaults: 20)',
                         default=20,
@@ -297,7 +296,7 @@ def run():
     bperp_max = inps.bperp_max
     delta_T_min = inps.delta_T_min
     delta_T_max = inps.delta_T_max
-    flag = inps.flag
+    flag = inps.flag.lower()
     rlks = inps.rlks
     alks = inps.alks
     # check .dem and .dem.par
@@ -327,7 +326,7 @@ def run():
     ifg_pairs = gen_ifg_pairs(slc_dir, sm, bperp_min, bperp_max, delta_T_min,
                               delta_T_max)
     # baseline_calc and run stacking
-    if flag:
+    if flag == 't':
         for i in ifg_pairs:
             # make ifg_pair dir
             path = os.path.join(stacking_dir, i)
