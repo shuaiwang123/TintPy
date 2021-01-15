@@ -21,11 +21,11 @@ def cmd_line_parser():
         'mintpy_dir', help='directory path for MintPy time series processing.')
     parser.add_argument('stacking_dir', help='directory path of stacking.')
     parser.add_argument('--rlks',
-                        help='range looks for generating bmp',
+                        help='range looks for generating bmp (default: 20)',
                         type=int,
                         default=20)
     parser.add_argument('--alks',
-                        help='azimuth looks for generating bmp',
+                        help='azimuth looks for generating bmp (default: 5)',
                         type=int,
                         default=5)
     inps = parser.parse_args()
@@ -145,7 +145,7 @@ def main():
         dst_cor_path = os.path.join(dst_ifg_dir, dst_cor)
         copy_file(cor_path, dst_cor_path)
         # copy unw in rdc
-        unw = ifg_in + '.diff.int.sm.sub.unw'
+        unw = ifg_in + '.diff.int.sm.unw'
         unw_path = os.path.join(ifg_dir, unw)
         dst_unw = 'diff_' + ifg.replace('-', '_') + '_' + rlks + 'rlks.unw'
         dst_unw_path = os.path.join(dst_ifg_dir, dst_unw)
