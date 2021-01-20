@@ -1,9 +1,9 @@
 function []=ato_statistical(aec_unw_file,unw_file,inc_angle,line,width,range_spacing,azimuth_spacing)
 aecimage=freadbkbig(aec_unw_file,line,'float32');
 image=freadbkbig(unw_file,line,'float32');
-% figure;imagesc(image);colormap jet; colorbar ;
+% figure;imagesc(image);colormap jet; colorbar;
 wavelength=0.055165;
-aecimagedisp=-aecimage.*wavelength.*100./(4*pi);
+gacos_imagedisp=-aecimage.*wavelength.*100./(4*pi);
 imagedisp=-image.*wavelength.*100./(4*pi);
 % figure;imagesc(imagedisp);colormap jet; colorbar;
 % obtaining parameters of sampled pixels
@@ -19,7 +19,7 @@ width=randperm(maxrow);
 randline=line(1:n);
 randrow=width(1:n);
 for i=1:n
-    aecsample=aecimagedisp(randline(i):randline(i)+lbox-1,randrow(i):randrow(i)+rbox-1);
+    aecsample=gacos_imagedisp(randline(i):randline(i)+lbox-1,randrow(i):randrow(i)+rbox-1);
     pixelnumber=sum(sum(aecsample~=0));
     rms=sum(aecsample(:))/pixelnumber;
     aecsample(aecsample==0)=rms;
@@ -36,7 +36,9 @@ aecsd=mean(aecsamplesd);
 B=find(isnan(samplesd));
 samplesd(A)=0;
 sd=mean(samplesd);
-% figure,imagesc(aecimagedisp);colorbar;colormap(jet);title(aecsd);
-saveas(gcf,'aecdisp','png')
-% figure,imagesc(imagedisp);colorbar;colormap(jet);title(sd);
+figure('visible','off'),imagesc(gacos_imagedisp);colorbar;colormap(jet);title(aecsd);
+saveas(gcf,'gacos_disp','png')
+figure('visible','off'),imagesc(imagedisp);colorbar;colormap(jet);title(sd);
 saveas(gcf,'disp','png')
+
+end

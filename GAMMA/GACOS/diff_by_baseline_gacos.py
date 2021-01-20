@@ -197,12 +197,15 @@ rasrmg $m_date-$s_date.diff.int.sm.sub.unw -  $width 1 1 0 1 1 .5 1. .35 .0 1 $m
 ##################################################################################################################
 ### subtract gacos aps phase
 ##################################################################################################################
-geocode lookup $gacos_dir/${m_date}_rot.phs $width_map ${m_date}_rot.phs.rdr $width $line 1 0
-geocode lookup $gacos_dir/${s_date}_rot.phs $width_map ${s_date}_rot.phs.rdr $width $line 1 0
+matlab -nodesktop -nosplash -r "rot_interp_gacos('$gacos_dir/$m_date.ztd','dem_seg.par','${m_date}_rot.phs');quit;"
+matlab -nodesktop -nosplash -r "rot_interp_gacos('$gacos_dir/$s_date.ztd','dem_seg.par','${s_date}_rot.phs');quit;"
+
+geocode lookup_fine ${m_date}_rot.phs $width_map ${m_date}_rot.phs.rdr $width $line 1 0
+geocode lookup_fine ${s_date}_rot.phs $width_map ${s_date}_rot.phs.rdr $width $line 1 0
 raspwr ${m_date}_rot.phs.rdr $width 1 0 1 1 1. .35 1 ${m_date}_rot.phs.rdr.bmp
 raspwr ${s_date}_rot.phs.rdr $width 1 0 1 1 1. .35 1 ${s_date}_rot.phs.rdr.bmp
 
-inc_angle=$(awk '$1 == "incidence_angle:" {print $2}' $m_par)
+inc_angle=$(awk '$1 == "incidence_angle:" {print $2}' $m_date.pwr1.par)
 matlab -nodesktop -nosplash -r "sub_gacos('$m_date-$s_date.diff.int','${m_date}_rot.phs.rdr','${s_date}_rot.phs.rdr',$inc_angle,$line);quit;"
 rasmph_pwr $m_date-$s_date.diff.int.gacos $m_date-$s_date.pwr1 $width 1 1 0 1 1 1. 0.35 1 $m_date-$s_date.diff.int.gacos.pwr.bmp
 
@@ -229,7 +232,7 @@ matlab -nodesktop -nosplash -r "ato_statistical('$m_date-$s_date.diff.int.gacos.
 ##################################################################################################################
 ### delete files to release storage
 ##################################################################################################################
-rm -rf $s_date.rslc
+rm -rf $s_date.rslc lookup sim_sar ${m_date}_rot.phs ${s_date}_rot.phs
 """
 
 USAGE = """Example:
@@ -344,7 +347,7 @@ def run():
             print(".dem or .dem.par don't exist.")
             sys.exit(1)
     else:
-        print("{} don't exist.".format(dem_dir))
+        print("{} doesn't exist.".format(dem_dir))
         sys.exit(1)
     # get all dates
     tmp_files = os.listdir(slc_dir)
@@ -356,6 +359,22 @@ def run():
     # check stacking_dir
     if not os.path.isdir(stacking_dir):
         os.mkdir(stacking_dir)
+    # check gacos_dir
+    if not os.path.isdir(gacos_dir):
+        print(print("{} doesn't exist.".format(gacos_dir)))
+        sys.exit(1)
+    no_exist_file = []
+    for d in slc_dates:
+        ztd = os.path.join(gacos_dir, d + '.ztd')
+        rsc = ztd + '.rsc'
+        if not os.path.isfile(ztd):
+            no_exist_file.append(ztd)
+        if not os.path.isfile(rsc):
+            no_exist_file.append(rsc)
+    if no_exist_file:
+        for i in no_exist_file:
+            print('cannnot find {}\n'.format(i))
+        sys.exit(1)
     # baseline_calc
     ifg_pairs = gen_ifg_pairs(slc_dir, sm, bperp_min, bperp_max, delta_T_min,
                               delta_T_max)
@@ -378,8 +397,9 @@ def run():
             str_dem_par = f"dem_par={dem_par}\n"
             str_rlks = f"rlks={rlks}\n"
             str_alks = f"alks={alks}\n"
-            out_script = '#!/bin/sh\n\n' + str_m_date + str_s_date + str_slc_dir +\
-             str_gacos_dir + str_dem + str_dem_par + str_rlks + str_alks + dinsar_script
+            out_script = '#!/bin/sh\n' + str_m_date + str_s_date
+            out_script += str_slc_dir + str_gacos_dir + str_dem
+            out_script += str_dem_par + str_rlks + str_alks + dinsar_script
             out_script_path = os.path.join(path, i + '_DInSAR.sh')
             with open(out_script_path, 'w+') as f:
                 f.write(out_script)
