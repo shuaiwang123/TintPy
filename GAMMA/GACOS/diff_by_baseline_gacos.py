@@ -197,8 +197,7 @@ rasrmg $m_date-$s_date.diff.int.sm.sub.unw -  $width 1 1 0 1 1 .5 1. .35 .0 1 $m
 ##################################################################################################################
 ### subtract gacos aps phase
 ##################################################################################################################
-matlab -nodesktop -nosplash -r "rot_interp_gacos('$gacos_dir/$m_date.ztd','dem_seg.par','${m_date}_rot.phs');quit;"
-matlab -nodesktop -nosplash -r "rot_interp_gacos('$gacos_dir/$s_date.ztd','dem_seg.par','${s_date}_rot.phs');quit;"
+matlab -nodesktop -nosplash -r "rot_interp_gacos('$gacos_dir/$m_date.ztd','$gacos_dir/$s_date.ztd','dem_seg.par','${m_date}_rot.phs,'${s_date}_rot.phs');quit;"
 
 geocode lookup_fine ${m_date}_rot.phs $width_map ${m_date}_rot.phs.rdr $width $line 1 0
 geocode lookup_fine ${s_date}_rot.phs $width_map ${s_date}_rot.phs.rdr $width $line 1 0

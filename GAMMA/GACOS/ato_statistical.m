@@ -37,8 +37,8 @@ B=find(isnan(samplesd));
 samplesd(A)=0;
 sd=mean(samplesd);
 figure('visible','off'),imagesc(gacos_imagedisp);colorbar;colormap(jet);title(aecsd);
-saveas(gcf,'gacos_disp','png')
+saveas(gcf,'disp_gacos','png')
 figure('visible','off'),imagesc(imagedisp);colorbar;colormap(jet);title(sd);
-saveas(gcf,'disp','png')
+saveas(gcf,'disp_orig','png')
 
 end
