@@ -13,29 +13,27 @@ import sys
 
 
 def cmd_line_parser():
-    parser = argparse.ArgumentParser(description='Prepare files for MintPy time series processing.',\
-                                     formatter_class=argparse.RawTextHelpFormatter,\
-                                     epilog=EXAMPLE)
+    parser = argparse.ArgumentParser(
+        description='Prepare files for MintPy time series processing.',
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=EXAMPLE)
 
     parser.add_argument(
         'mintpy_dir', help='directory path for MintPy time series processing.')
     parser.add_argument('stacking_dir', help='directory path of stacking.')
-    parser.add_argument('--rlks',
-                        help='range looks for generating bmp (default: 20)',
-                        type=int,
-                        default=20)
-    parser.add_argument('--alks',
-                        help='azimuth looks for generating bmp (default: 5)',
-                        type=int,
-                        default=5)
+    parser.add_argument('unw_extension',
+                        help='filename extension of unwrapped file.')
+    parser.add_argument('rlks',
+                        help='range looks for generating bmp.',
+                        type=int)
     inps = parser.parse_args()
 
     return inps
 
 
 EXAMPLE = """Example:
-  ./gamma2mintpy.py /ly/mintpy /ly/stacking
-  ./gamma2mintpy.py /ly/mintpy /ly/stacking --rlks 8 --alks 2
+  ./gamma2mintpy.py /ly/mintpy /ly/stacking diff.int.sm.sub.unw
+  ./gamma2mintpy.py /ly/mintpy /ly/stacking diff.int.sm.sub.unw 20
 """
 
 
@@ -54,14 +52,20 @@ def main():
     stacking_dir = inps.stacking_dir
     mintpy_dir = os.path.abspath(mintpy_dir)
     stacking_dir = os.path.abspath(stacking_dir)
-    rlks = str(inps.rlks)
-    alks = str(inps.alks)
+    unw_extension = inps.unw_extension
+    rlks = inps.rlks
 
     if not os.path.isdir(mintpy_dir):
         os.mkdir(mintpy_dir)
     if not os.path.isdir(stacking_dir):
         print("{} not exists.".format(stacking_dir))
         sys.exit(1)
+
+    # check unws
+    unws = glob.glob(os.path.join(stacking_dir, '*/*' + unw_extension))
+    if not unws:
+        print('Error unw_extension, please check it.')
+        sys.exit()
 
     # dir for mintpy
     geom_master_dir = os.path.join(mintpy_dir, 'geom_master')
@@ -145,7 +149,7 @@ def main():
         dst_cor_path = os.path.join(dst_ifg_dir, dst_cor)
         copy_file(cor_path, dst_cor_path)
         # copy unw in rdc
-        unw = ifg_in + '.diff.int.sm.unw'
+        unw = ifg_in + '.' + unw_extension
         unw_path = os.path.join(ifg_dir, unw)
         dst_unw = 'diff_' + ifg.replace('-', '_') + '_' + rlks + 'rlks.unw'
         dst_unw_path = os.path.join(dst_ifg_dir, dst_unw)

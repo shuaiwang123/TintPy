@@ -12,7 +12,7 @@ import re
 import sys
 
 EXAMPLE = """Example:
-  ./diff_tab.py -i /media/ly/stacking -e diff.int.unw -o .
+  ./diff_tab.py /ly/stacking diff.int.sm.unw -o /ly/stacking
 """
 
 
@@ -22,13 +22,10 @@ def cmdline_parser():
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=EXAMPLE)
 
-    parser.add_argument('-i', dest='ifg_dir', help='path of ifg directory.')
-    parser.add_argument('-e',
-                        dest='extension',
+    parser.add_argument('ifg_dir', help='path of ifg directory.')
+    parser.add_argument('extension',
                         help='filename extension of unwrapping file.')
-    parser.add_argument('-o',
-                        dest='out_dir',
-                        help='path of directory saving diff_tab.')
+    parser.add_argument('out_dir', help='path of directory saving diff_tab.')
 
     inps = parser.parse_args()
 
@@ -37,7 +34,7 @@ def cmdline_parser():
 
 def get_baseline(unw):
     name = os.path.basename(unw)
-    dates = re.findall('\d{8}', name)
+    dates = re.findall(r'\d{8}', name)
     date1 = datetime.datetime.strptime(dates[0], '%Y%m%d')
     date2 = datetime.datetime.strptime(dates[1], '%Y%m%d')
     baseline = (date2 - date1).days
@@ -45,7 +42,7 @@ def get_baseline(unw):
 
 
 def get_unws(ifg_dir, extension):
-    unws = glob.glob(os.path.join(ifg_dir, '*/*.' + extension))
+    unws = glob.glob(os.path.join(ifg_dir, '*/*' + extension))
     return unws
 
 
@@ -56,7 +53,7 @@ def write_diff_tab(unws, out_dir):
         for unw in unws:
             baseline = get_baseline(unw)
             f.write(f"{unw} {baseline}\n")
-    print('done, enjot it.')
+    print('all done, enjot it.')
 
 
 def main():
