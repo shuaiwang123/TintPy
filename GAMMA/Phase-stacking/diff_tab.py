@@ -50,18 +50,18 @@ def get_unws(ifg_dir, extension):
     return unws
 
 
-def read_dem_par(dem_seg_par):
-    par_key = ['width', 'nlines']
+def read_diff_par(diff_par):
+    par_key = ['range_samp_1', 'az_samp_1']
     par_value = []
-    with open(dem_seg_par, 'r') as f:
+    with open(diff_par, 'r') as f:
         for line in f.readlines():
             for i in par_key:
                 if line.strip().startswith(i):
-                    par_value.append(line.strip().split()[1])
+                    par_value.append(int(line.strip().split()[1]))
     return par_value
 
 
-def read_gamma(file, data_type, dem_seg_par):
+def read_coh(file, data_type, diff_par):
     # unw, cor, dem_seg -------> float32
     # int               -------> complex64
     # convert into short style
@@ -74,7 +74,7 @@ def read_gamma(file, data_type, dem_seg_par):
     # read data
     try:
         data = np.fromfile(file, dtype=data_type)
-        width, length = read_dem_par(dem_seg_par)
+        width, length = read_diff_par(diff_par)
         data = data.reshape(length, width)
     except Exception as e:
         print(e)
@@ -82,11 +82,14 @@ def read_gamma(file, data_type, dem_seg_par):
 
 
 def statistic_coh(ifg_dir):
+    print('statisticing coherence:')
     cohs = glob.glob(os.path.join(ifg_dir, '*/*' + '.diff.sm.cc'))
     coh_array = np.zeros(len(cohs))
-    dem_seg_par = glob.glob(os.path.join(ifg_dir, '*/dem_seg.par'))[0]
     for coh in cohs:
-        value = np.mean(read_gamma(coh, 'float32', dem_seg_par))
+        dir_name = os.path.dirname(coh)
+        coh_name = os.path.basename(coh)
+        diff_par = os.path.join(dir_name, coh_name[0:17] + '.diff.par')
+        value = np.mean(read_coh(coh, 'float32', diff_par))
         coh_array[cohs.index(coh)] = value
 
     def count_coh(start, end, coh_array):
@@ -95,27 +98,30 @@ def statistic_coh(ifg_dir):
             if i > start and i <= end:
                 num += 1
         rate = num / coh_array.shape[0]
-        print(str(start)+ '~' + str(end) + ': ' + int(rate) * 20 *'#')
+        print(str(start)+ '~' + str(end) + ': ' + str(round(rate, 2)))
 
-    for i in range(0, 9):
-        start = i * 0.1
-        end = start + 0.1
+    for i in np.arange(0, 1, 0.1):
+        start = round(i, 1)
+        end = round(start + 0.1, 1)
         count_coh(start, end, coh_array)
 
 
 def write_diff_tab(unws, coh_thres, out_dir):
     diff_tab = os.path.join(out_dir, 'diff_tab')
     print('writing data to {}'.format(diff_tab))
+    unw_used = 0
     with open(diff_tab, 'w+') as f:
         for unw in unws:
             baseline = get_baseline(unw)
             dir_name = os.path.dirname(unw)
             unw_name = os.path.basename(unw)
             coh_file = os.path.join(dir_name, unw_name[0:17] + '.diff.sm.cc')
-            dem_seg_par = os.path.join(dir_name, 'dem_seg.par')
-            coh = read_gamma(coh_file, 'float32', dem_seg_par)
+            diff_par = os.path.join(dir_name, unw_name[0:17] + '.diff.par')
+            coh = read_coh(coh_file, 'float32', diff_par)
             if np.mean(coh) >= coh_thres:
                 f.write(f"{unw} {baseline}\n")
+                unw_used += 1
+    print('unwrapped file used: {}/{}'.format(unw_used, len(unws)))
     print('all done, enjot it.')
 
 
