@@ -53,7 +53,7 @@ def main():
     mintpy_dir = os.path.abspath(mintpy_dir)
     stacking_dir = os.path.abspath(stacking_dir)
     unw_extension = inps.unw_extension
-    rlks = inps.rlks
+    rlks = str(inps.rlks)
 
     if not os.path.isdir(mintpy_dir):
         os.mkdir(mintpy_dir)
