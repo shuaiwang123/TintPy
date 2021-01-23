@@ -7,15 +7,14 @@
 import os
 import re
 import argparse
-import shutil
-import glob
 import sys
 
 
 def cmd_line_parser():
-    parser = argparse.ArgumentParser(description='Cut all of co-registered SLCs.',\
-                                     formatter_class=argparse.RawTextHelpFormatter,\
-                                     epilog=EXAMPLE)
+    parser = argparse.ArgumentParser(
+        description='Cut all of co-registered SLCs.',
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=EXAMPLE)
 
     parser.add_argument('slc_dir', help='directory path of SLCs')
     parser.add_argument('save_dir',
@@ -86,7 +85,7 @@ def main():
     if len(all_date) < 1:
         print('no slc in {}'.format(slc_dir))
         sys.exit(1)
-    
+
     if slc_num < -1:
         print('slc_num must bigger than -1.')
         sys.exit(1)
