@@ -185,7 +185,10 @@ def cut_vel_single(kml_file, vel_file, number_flag):
         out_data = np.arange(vel.shape[1])
         for line in filter_vel:
             if inpolygon(line[1:3], polygon):
-                out_data = np.vstack((out_data, line))
+                if number_flag == 't':
+                    out_data = np.vstack((out_data, line))
+                else:
+                    out_data = np.vstack((out_data, line[1:4]))
         if out_data.size > vel.shape[1]:
             np.savetxt(out_vel_file, out_data[1:, :], fmt='%4f')
     print('all done, enjoy it.')
@@ -200,13 +203,17 @@ def cut_ts_single(kml_file, ts_file, number_flag):
         out_data = data[0, :]
         for line in filter_ts[1:, :]:
             if inpolygon(line[1:3], polygon):
-                out_data = np.vstack((out_data, line))
+                if number_flag == 't':
+                    out_data = np.vstack((out_data, line))
+                else:
+                    out_data = np.vstack((out_data, line[1:]))
         if out_data.size > filter_ts[1:, :].shape[1]:
             np.savetxt(out_ts_file, out_data, fmt='%4f')
     print('all done, enjoy it.')
 
 
 def cut_vel_multi(kml_file, vel_file, number_flag):
+    print('loading...')
     vel = np.loadtxt(vel_file)
     polygon_dict = kml2polygon_dict(kml_file)
     num = len(polygon_dict)
@@ -218,7 +225,10 @@ def cut_vel_multi(kml_file, vel_file, number_flag):
         filter_vel = filter_data(vel, polygon, 'v', number_flag)
         for line in filter_vel:
             if inpolygon(line[1:3], polygon):
-                out_data = np.vstack((out_data, line))
+                if number_flag == 't':
+                    out_data = np.vstack((out_data, line))
+                else:
+                    out_data = np.vstack((out_data, line[1:4]))
         out_file = name + '-vel.txt'
         if out_data.size > vel.shape[1]:
             np.savetxt(out_file, out_data[1:, :], fmt='%4f')
@@ -226,6 +236,7 @@ def cut_vel_multi(kml_file, vel_file, number_flag):
 
 
 def cut_ts_multi(kml_file, ts_file, number_flag):
+    print('loading...')
     data = np.loadtxt(ts_file)
     polygon_dict = kml2polygon_dict(kml_file)
     num = len(polygon_dict)
@@ -237,7 +248,10 @@ def cut_ts_multi(kml_file, ts_file, number_flag):
         filter_ts = filter_data(data, polygon, 't', number_flag)
         for line in filter_ts[1:, :]:
             if inpolygon(line[1:3], polygon):
-                out_data = np.vstack((out_data, line))
+                if number_flag == 't':
+                    out_data = np.vstack((out_data, line))
+                else:
+                    out_data = np.vstack((out_data, line[1:]))
         out_file = name + '-ts.txt'
         if out_data.size > filter_ts[1:, :].shape[1]:
             np.savetxt(out_file, out_data, fmt='%4f')
