@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-##################################
-# Get the coverage of SLC        #
-# Copyright (c) 2020, Lei Yuan   #
-##################################
+#####################################
+# Get the coverage of SLC with dem  #
+# Copyright (c) 2020, Lei Yuan      #
+#####################################
 
 import argparse
-import os
 import glob
+import os
 import sys
+import zipfile
 
 EXAMPLE = """Example:
 ./slc_area.py /ly/slc/20201229 /ly/slc/dem /ly/slc/area
@@ -17,7 +18,7 @@ EXAMPLE = """Example:
 
 def cmdline_parser():
     parser = argparse.ArgumentParser(
-        description="Get the coverage of SLC.",
+        description="Get the coverage of SLC with dem.",
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=EXAMPLE)
     parser.add_argument('slc_dir',
@@ -156,9 +157,17 @@ def main():
     call_str = f"raspwr {geo_m_mli} {width_utm_dem} 1 0 1 1 1. .35 1 {geo_m_mli_bmp}"
     os.system(call_str)
 
-    mli_kml = geo_m_mli + '.kml'
+    mli_kml = os.path.basename(geo_m_mli + '.kml')
+    geo_m_mli_bmp = os.path.basename(geo_m_mli_bmp)
+    os.chdir(out_dir)
     call_str = f"kml_map {geo_m_mli_bmp} {utm_dem_par} {mli_kml}"
     os.system(call_str)
+
+    # unzip bmp and kml
+    kmz_name = os.path.basename(geo_m_mli) + '.kmz'
+    with zipfile.ZipFile(kmz_name, 'w') as f:
+        f.write(mli_kml)
+        f.write(geo_m_mli_bmp)
 
 
 if __name__ == "__main__":
