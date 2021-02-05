@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
-#################################################################################
-# Download SRTM (30m[only get download link] or 90m) or ALOS (30m) DEM          #
-# Copyright (c) 2020, Lei Yuan                                                  #
-#################################################################################
+#################################################################
+# Download SRTM DEM [only get download link] or ALOS DSM [30m]  #
+# Copyright (c) 2020, Lei Yuan                                  #
+#################################################################
 import argparse
 import math
 import os
@@ -205,18 +205,20 @@ def main():
     args = parser.parse_args()
     flag = args.flag
     bound = args.bound
-    out_dir = os.path.abspath(args.out_dir)
-    if not os.path.isdir(out_dir):
-        os.mkdir(out_dir)
+    out_dir = args.out_dir
+    if out_dir:
+        out_dir = os.path.abspath(out_dir)
+        if not os.path.isdir(out_dir):
+            os.mkdir(out_dir)
     # get urls of DEM
     download_urls = get_urls(flag, bound)
     # download DEM
-    if flag.upper() == 'ALOS':
+    if flag.upper() == 'ALOS' and out_dir:
         print("Start to download all ALOS DSM:")
         for url in download_urls:
             print(f"{url.split('/')[-1]}")
             download_dem(url, out_dir)
-    else:
+    if flag.upper() in ['SRTM30', 'SRTM90'] and out_dir:
         print('cannot download SRTM DEM, you have to download them manually.')
 
 
