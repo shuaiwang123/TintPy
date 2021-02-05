@@ -31,7 +31,7 @@ def load_data(tif, band=1):
     return data, extent, size
 
 
-def plot_data(data, extent, cmap='rainbow'):
+def plot_data(data, extent, name, cmap='rainbow'):
     plt.figure()
     ax = plt.gca()
     im = ax.imshow(data, extent=extent, cmap='rainbow')
@@ -40,7 +40,10 @@ def plot_data(data, extent, cmap='rainbow'):
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="3%", pad=0.05)
     plt.colorbar(im, cax=cax)
-    plt.show()
+    plt.savefig(name,
+                bbox_inches='tight',
+                dpi=300)
+    # plt.show()
 
 
 def mosaic_tifs(tifs, out_tif):
@@ -228,12 +231,13 @@ def cmdline_parser():
     parser.add_argument('-o',
                         dest='out',
                         type=str,
+                        required=True,
                         help='output name of the generated DEM')
     return parser
 
 
 def main():
-    # argument parser
+    # get inputs
     parser = cmdline_parser()
     args = parser.parse_args()
     tifs = args.tifs
@@ -273,7 +277,7 @@ def main():
             make_dem(processor, mosaiced_tif, args.out, extent, size)
             # plot tif
             print('Plot tif.')
-            plot_data(data, extent)
+            plot_data(data, extent, dem_name + '.png')
             data = None
             print('Done.')
     else:
@@ -291,7 +295,7 @@ def main():
             make_dem(processor, tifs[0], args.out, extent, size)
         # plot tif
         print('Plot tif.')
-        plot_data(data, extent)
+        plot_data(data, extent, dem_name + '.png')
         data = None
         print('Done.')
 
