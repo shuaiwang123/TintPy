@@ -169,6 +169,12 @@ def main():
         f.write(mli_kml)
         f.write(geo_m_mli_bmp)
 
+    # delete file
+    files = os.listdir(out_dir)
+    for file in files:
+        if file not in [kmz_name, mli_kml, geo_m_mli_bmp]:
+            os.remove(file)
+
 
 if __name__ == "__main__":
     main()
