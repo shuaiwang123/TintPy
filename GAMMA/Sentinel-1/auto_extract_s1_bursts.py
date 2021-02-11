@@ -303,7 +303,7 @@ def main():
         print('length of iw_num must be equal to template_burst.')
         sys.exit(1)
     if len(iw_num) == 2:
-        if iw_num == [1, 2] and [2, 3]:
+        if iw_num == [1, 2] or iw_num == [2, 3]:
             pass
         else:
             print('Error iw_num for two IWs, must be 1 2 or 2 3.')
