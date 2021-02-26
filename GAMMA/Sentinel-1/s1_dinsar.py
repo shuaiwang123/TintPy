@@ -195,8 +195,8 @@ def run_dinsar():
     dem_dir = os.path.abspath(dem_dir)
     output_dir = inps.output_dir
     output_dir = os.path.abspath(output_dir)
-    rlks = inps.rlks
-    alks = inps.alks
+    rlks = str(inps.rlks)
+    alks = str(inps.alks)
     # get date
     m_date = get_date(m_dir)
     s_date = get_date(s_dir)
@@ -213,10 +213,12 @@ def run_dinsar():
             iw_info += f"\necho $m_dir/$m_date.iw{iw*2}.slc $m_dir/$m_date.iw{iw*2}.slc.par $m_dir/$m_date.iw{iw*2}.slc.tops_par >> SLC1_tab"
             iw_info += f"\necho $s_date.iw{iw}.rslc $s_date.iw{iw}.rslc.par $s_date.iw{iw}.rslc.tops_par >> RSLC2_tab"
     # write D-InSAR script
-    script.replace('m_dir_flag', m_dir).replace('s_dir_flag', s_dir)
-    script.replace('m_date_flag', m_date).replace('s_date_flag', s_date)
-    script.replace('rlks_flag', rlks).replace('alks_flag', alks)
-    script.replace('dem_flag', dem).replace('iw_info_flag', iw_info)
+    global script
+    script = script.replace('m_dir_flag', m_dir).replace('s_dir_flag', s_dir)
+    script = script.replace('m_date_flag',
+                            m_date).replace('s_date_flag', s_date)
+    script = script.replace('rlks_flag', rlks).replace('alks_flag', alks)
+    script = script.replace('dem_flag', dem).replace('iw_info_flag', iw_info)
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
     script_path = os.path.join(output_dir, f"{m_date}-{s_date}_DInSAR.sh")
