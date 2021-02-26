@@ -11,8 +11,8 @@ import zipfile
 
 EXAMPLE = """Example:
   ./ph2kmz.py ph_rate lookup_fine dem_seg.par 20201111-20201123.cc 20201111.pwr 20201111-20201123.diff.par res
-  ./ph2kmz.py ph_rate lookup_fine dem_seg.par 20201111-20201123.cc 20201111.pwr 20201111-20201123.diff.par res --c 5 -t 0.3
-  ./ph2kmz.py ph_rate lookup_fine dem_seg.par 20201111-20201123.cc 20201111.pwr 20201111-20201123.diff.par res --c 3 4 5 -t 0.3
+  ./ph2kmz.py ph_rate lookup_fine dem_seg.par 20201111-20201123.cc 20201111.pwr 20201111-20201123.diff.par res --c 5 --t 0.3
+  ./ph2kmz.py ph_rate lookup_fine dem_seg.par 20201111-20201123.cc 20201111.pwr 20201111-20201123.diff.par res --c 3 4 5 --t 0.3
 """
 
 
