@@ -18,11 +18,11 @@ from pykml.factory import KML_ElementMaker as KML
 
 EXAMPLE = r"""Example:
   # Windows
-  python make_kmz.py -v vels.txt -o D:\kmz\vels.kmz
-  python make_kmz.py -v vels.txt -o D:\kmz\vels.kmz -s 0.6 -n f -l 100 101 31 32
+  python make_kmz.py vels.txt D:\kmz\vels.kmz
+  python make_kmz.py vels.txt D:\kmz\vels.kmz -s 0.6 -n f -l 100 101 31 32
   # Linux
-  python3 make_kmz.py -v vels.txt -o /home/ly/vels
-  python3 make_kmz.py -v vels.txt -o /home/ly/vels -s 0.6 -n f -l 100 101 31 32
+  python3 make_kmz.py vels.txt /home/ly/vels
+  python3 make_kmz.py vels.txt /home/ly/vels -s 0.6 -n f -l 100 101 31 32
   # data format
   num1 lon1 lat1 vel1
   num2 lon2 lat2 vel2
@@ -36,13 +36,9 @@ def create_parser():
         description='Display velocity derived by InSAR in Google Earth.',
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=EXAMPLE)
-    parser.add_argument('-v',
-                        dest='vel_file',
-                        required=True,
+    parser.add_argument('vel_file',
                         help='velocity file for generate KMZ file')
-    parser.add_argument('-o',
-                        dest='out_file',
-                        required=True,
+    parser.add_argument('out_file',
                         help='output KMZ file')
     parser.add_argument('-s',
                         dest='scale',

@@ -18,13 +18,13 @@ from pykml.factory import KML_ElementMaker as KML
 
 EXAMPLE = r"""Example:
   # Windows
-  python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz
-  python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js
-  python make_kmz_timeseries.py -t ts.txt -o D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js -s 0.6 -f vel -n f -l 100 101 31 32
+  python make_kmz_timeseries.py ts.txt D:\kmz\ts.kmz
+  python make_kmz_timeseries.py ts.txt D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js
+  python make_kmz_timeseries.py ts.txt D:\kmz\ts.kmz -j D:\kmz\dygraph-combined.js -s 0.6 -f vel -n f -l 100 101 31 32
   # Linux
-  python3 make_kmz_timeseries.py -t ts.txt -o /home/ly/ts
-  python3 make_kmz_timeseries.py -t ts.txt -o /home/ly/ts -j /home/ly/tsdygraph-combined.js
-  python3 make_kmz_timeseries.py -t ts.txt -o /home/ly/ts -j /home/ly/tsdygraph-combined.js -s 0.6 -f disp -n f -l 100 101 31 32
+  python3 make_kmz_timeseries.py ts.txt /home/ly/ts
+  python3 make_kmz_timeseries.py ts.txt /home/ly/ts -j /home/ly/tsdygraph-combined.js
+  python3 make_kmz_timeseries.py ts.txt /home/ly/ts -j /home/ly/tsdygraph-combined.js -s 0.6 -f disp -n f -l 100 101 31 32
   # data format
     -1   -1   -1    -1       date1       date2       date3 ...
   num1 lon1 lat1  vel1 date1-disp1 date2-disp1 date3-disp1 ...
@@ -40,13 +40,9 @@ def create_parser():
         'Display velocity (or cumulative displacement) and time-series displacement derived by InSAR in Google Earth.',
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=EXAMPLE)
-    parser.add_argument('-t',
-                        dest='ts_file',
-                        required=True,
+    parser.add_argument('ts_file',
                         help='timeseries file for generating KMZ file')
-    parser.add_argument('-o',
-                        dest='out_file',
-                        required=True,
+    parser.add_argument('out_file',
                         help='output KMZ file')
     parser.add_argument(
         '-j',
