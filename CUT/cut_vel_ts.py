@@ -13,10 +13,10 @@ import sys
 from multiprocessing import Process
 
 EXAMPLE = """Example:
-  python3 cut_vel_ts.py -d vel.txt -f v -k cut.kml
-  python3 cut_vel_ts.py -d vel.txt -f v -k cut_multi.kml -n f -a m
-  python3 cut_vel_ts.py -d ts.txt -f t -k cut.kmz
-  python3 cut_vel_ts.py -d ts.txt -f t -k cut_multi.kmz -n f -a m
+  python3 cut_vel_ts.py vel.txt v cut.kml
+  python3 cut_vel_ts.py vel.txt v cut_multi.kml -n f -a m
+  python3 cut_vel_ts.py ts.txt t cut.kmz
+  python3 cut_vel_ts.py ts.txt t cut_multi.kmz -n f -a m
 """
 
 
@@ -25,19 +25,12 @@ def cmdline_parser():
         description="cut velocity or timeseries data using kml or kmz",
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=EXAMPLE)
-    parser.add_argument('-d',
-                        dest='data_file',
-                        required=True,
+    parser.add_argument('data_file',
                         help='original velocity or timeseries data')
     parser.add_argument(
-        '-f',
-        dest='data_flag',
-        required=True,
+        'data_flag',
         help='flag of data, t for timeseries data, v for velocity data')
-    parser.add_argument('-k',
-                        dest='kml',
-                        required=True,
-                        help='kml or kmz file for cutting data')
+    parser.add_argument('kml', help='kml or kmz file for cutting data')
     parser.add_argument(
         '-n',
         dest='number_flag',
@@ -179,6 +172,7 @@ def filter_data(orig_data, polygon, data_flag, number_flag):
 def cut_vel_single(kml_file, vel_file, number_flag):
     out_vel_file = os.path.splitext(vel_file)[0] + '_cut.txt'
     polygon_dict = kml2polygon_dict(kml_file)
+    print('loading...')
     vel = np.loadtxt(vel_file)
     for _, polygon in polygon_dict.items():
         filter_vel = filter_data(vel, polygon, 'v', number_flag)
@@ -191,12 +185,13 @@ def cut_vel_single(kml_file, vel_file, number_flag):
                     out_data = np.vstack((out_data, line[1:4]))
         if out_data.size > vel.shape[1]:
             np.savetxt(out_vel_file, out_data[1:, :], fmt='%4f')
-    print('all done, enjoy it.')
+    print('all done, enjoy it.\n')
 
 
 def cut_ts_single(kml_file, ts_file, number_flag):
     out_ts_file = os.path.splitext(ts_file)[0] + '_cut.txt'
     polygon_dict = kml2polygon_dict(kml_file)
+    print('loading...')
     data = np.loadtxt(ts_file)
     for _, polygon in polygon_dict.items():
         filter_ts = filter_data(data, polygon, 't', number_flag)
@@ -209,7 +204,7 @@ def cut_ts_single(kml_file, ts_file, number_flag):
                     out_data = np.vstack((out_data, line[1:]))
         if out_data.size > filter_ts[1:, :].shape[1]:
             np.savetxt(out_ts_file, out_data, fmt='%4f')
-    print('all done, enjoy it.')
+    print('all done, enjoy it.\n')
 
 
 def cut_vel_multi(kml_file, vel_file, number_flag):
@@ -233,6 +228,7 @@ def cut_vel_multi(kml_file, vel_file, number_flag):
         if out_data.size > vel.shape[1]:
             np.savetxt(out_file, out_data[1:, :], fmt='%4f')
     print(f'\rProcessed: {i}/{num}, enjoy it.', end=" ", flush=True)
+    print('\n')
 
 
 def cut_ts_multi(kml_file, ts_file, number_flag):
@@ -256,6 +252,7 @@ def cut_ts_multi(kml_file, ts_file, number_flag):
         if out_data.size > filter_ts[1:, :].shape[1]:
             np.savetxt(out_file, out_data, fmt='%4f')
     print(f'\rProcessed: {i}/{num}, enjoy it.', end=" ", flush=True)
+    print('\n')
 
 
 def main():

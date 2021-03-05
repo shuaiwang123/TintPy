@@ -256,6 +256,7 @@ def main():
     zip_files = glob.glob(zip_dir + '/S1*_IW_SLC*.zip')
     # get all dates
     dates = get_all_s1_date(zip_files)
+    num = 1
     for date in dates:
         # get zipfiles
         same_date_zips = glob.glob(zip_dir + '/S1*' + date + '*.zip')
@@ -267,8 +268,8 @@ def main():
                 os.mkdir(slc_path)
             run_all(zip_file, slc_path, orbit_dir, iw_num, rlks, alks,
                     del_flag)
-            print("[{}] {} zip2slc for {} is done {}\n".format(
-                zip_files.index(zip_file) + 1, '>' * 10, date, '<' * 10))
+            print("[{}] {} zip2slc for {} is done {}\n".format(num, '>' * 10, date, '<' * 10))
+            num += 1
         else:
             for i in range(len(same_date_zips)):
                 zip_file = same_date_zips[i]
@@ -277,8 +278,8 @@ def main():
                     os.mkdir(slc_path)
                 run_all(zip_file, slc_path, orbit_dir, iw_num, rlks, alks,
                         del_flag)
-                print("[{}] {} zip2slc for {} is done {}\n".format(
-                    zip_files.index(zip_file) + 1, '>' * 10, date, '<' * 10))
+                print("[{}] {} zip2slc for {} is done {}\n".format(num, '>' * 10, date, '<' * 10))
+                num += 1
 
 
 if __name__ == "__main__":

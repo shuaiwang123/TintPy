@@ -176,10 +176,10 @@ def print_oneline_five(print_list, num=5):
 
 EXAMPLE = '''Example:
   # get orbit date from zip files
-  python download_orbits.py -i . -s .
-  python download_orbits.py -i D:\\test -s D:\\test
+  python download_orbits.py . .
+  python download_orbits.py D:\\test D:\\test
   # get orbit date from image names in text file
-  python download_orbits.py -i D:\\test\\test.txt -s D:\\test
+  python download_orbits.py D:\\test\\test.txt D:\\test
 '''
 
 
@@ -189,14 +189,10 @@ def cmdline_parser():
         formatter_class=argparse.RawTextHelpFormatter,
         epilog=EXAMPLE)
     parser.add_argument(
-        '-i',
-        dest='input_path',
-        required=True,
+        'input_path',
         type=str,
         help='path of text or directory for getting images names')
-    parser.add_argument('-s',
-                        dest='save_path',
-                        required=True,
+    parser.add_argument('save_path',
                         type=str,
                         help='path of directory for saving orbits')
     return parser
@@ -206,67 +202,55 @@ def main():
     # argument parser
     parser = cmdline_parser()
     args = parser.parse_args()
+    input_path = args.input_path
+    save_path = args.save_path
     # check path
-    exist_i = os.path.exists(args.input_path)
-    exist_s = os.path.exists(args.save_path)
-    if exist_i and exist_s:
-        date_and_mission = get_sentinel1_date_and_mission(args.input_path)
-        if len(date_and_mission):
-            print("Sentinel-1 A/B date_mission found: {}\n".format(
+    if not os.path.exists(input_path):
+        print("Wrong path of text or directory for getting images names.")
+        sys.exit()
+    if not os.path.isdir(save_path):
+        os.mkdir(save_path)
+    date_and_mission = get_sentinel1_date_and_mission(input_path)
+    if len(date_and_mission):
+        print("Sentinel-1 A/B date_mission found: {}\n".format(
+            len(date_and_mission)))
+        print_oneline_five(date_and_mission)
+        # check date_missions (now - date <= 21)
+        no_orbit_date_and_mission = check_date_and_mission(date_and_mission)
+        if len(no_orbit_date_and_mission) > 0:
+            print(
+                "\nSentinel-1 A/B date_missions are excluded (now - date <= 21): {}\n"
+                .format(len(no_orbit_date_and_mission)))
+            print_oneline_five(no_orbit_date_and_mission)
+        else:
+            print(
+                "\nNo Sentinel-1 A/B date_missions is excluded (now - date <= 21)"
+            )
+        # check orbit files if exist in saving directory
+        date_and_mission, exist_date_and_mission = check_exist_orbits(
+            save_path, date_and_mission)
+        if exist_date_and_mission:
+            print("\nSentinel-1 A/B date_and_mission exist in save_path: {}\n".
+                  format(len(exist_date_and_mission)))
+            print_oneline_five(exist_date_and_mission)
+        else:
+            print(
+                "\nNo Sentinel-1 A/B date_missions(orbits) exist in save_path")
+        if date_and_mission:
+            print("\nSentinel-1 A/B orbit urls need to crawl: {}\n".format(
                 len(date_and_mission)))
             print_oneline_five(date_and_mission)
-            # check date_missions (now - date <= 21)
-            no_orbit_date_and_mission = check_date_and_mission(
-                date_and_mission)
-            if len(no_orbit_date_and_mission) > 0:
-                print(
-                    "\nSentinel-1 A/B date_missions are excluded (now - date <= 21): {}\n"
-                    .format(len(no_orbit_date_and_mission)))
-                print_oneline_five(no_orbit_date_and_mission)
-            else:
-                print(
-                    "\nNo Sentinel-1 A/B date_missions is excluded (now - date <= 21)"
-                )
-            # check orbit files if exist in saving directory
-            date_and_mission, exist_date_and_mission = check_exist_orbits(
-                args.save_path, date_and_mission)
-            if exist_date_and_mission:
-                print(
-                    "\nSentinel-1 A/B date_and_mission exist in save_path: {}\n"
-                    .format(len(exist_date_and_mission)))
-                print_oneline_five(exist_date_and_mission)
-            else:
-                print(
-                    "\nNo Sentinel-1 A/B date_missions(orbits) exist in save_path"
-                )
-            if date_and_mission:
-                print("\nSentinel-1 A/B orbit urls need to crawl: {}\n".format(
-                    len(date_and_mission)))
-                print_oneline_five(date_and_mission)
-            else:
-                print("\nAll orbits exist, nothing to download")
-            num = 0
-            if date_and_mission:
-                for d_m in date_and_mission:
-                    num += 1
-                    tmp = str(num) + '.'
-                    print(f"\n{tmp}Crawling: {d_m}")
-                    url = get_urls(d_m)
-                    if url:
-                        print(f"Crawled: {url}")
-                        download_orbits(url, args.save_path)
         else:
-            print("Nothing found, please check path!")
-    elif exist_i and not exist_s:
-        print("Wrong path of saving orbits, please reset it!")
-    elif not exist_i and exist_s:
-        print(
-            "Wrong path of text or directory for getting images names, please reset it!"
-        )
-    else:
-        print("Wrong path of all, please reset them!")
-    print("")
-    sys.exit()
+            print("\nAll orbits exist, nothing to download")
+        num = 0
+        if date_and_mission:
+            for d_m in date_and_mission:
+                num += 1
+                print(f"\n{num}.Crawling: {d_m}")
+                url = get_urls(d_m)
+                if url:
+                    print(f"Crawled: {url}")
+                    download_orbits(url, save_path)
 
 
 if __name__ == '__main__':

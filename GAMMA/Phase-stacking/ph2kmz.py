@@ -11,8 +11,8 @@ import zipfile
 
 EXAMPLE = """Example:
   ./ph2kmz.py ph_rate lookup_fine dem_seg.par 20201111-20201123.cc 20201111.pwr 20201111-20201123.diff.par res
-  ./ph2kmz.py ph_rate lookup_fine dem_seg.par 20201111-20201123.cc 20201111.pwr 20201111-20201123.diff.par res --c 5 --t 0.3
-  ./ph2kmz.py ph_rate lookup_fine dem_seg.par 20201111-20201123.cc 20201111.pwr 20201111-20201123.diff.par res --c 3 4 5 --t 0.3
+  ./ph2kmz.py ph_rate lookup_fine dem_seg.par 20201111-20201123.cc 20201111.pwr 20201111-20201123.diff.par res 5 --t 0.3
+  ./ph2kmz.py ph_rate lookup_fine dem_seg.par 20201111-20201123.cc 20201111.pwr 20201111-20201123.diff.par res 3 4 5 --t 0.3
 """
 
 
@@ -37,12 +37,10 @@ def cmdline_parser():
     parser.add_argument('diff_par', type=str, help='path of *.diff.par.')
     parser.add_argument('out_dir', type=str, help='path of output directory.')
 
-    parser.add_argument('--c',
-                        dest='cycles',
+    parser.add_argument('cycles',
                         type=float,
                         nargs='+',
-                        help='data value per color cycle (default: 3.14).',
-                        default=(3.14))
+                        help='data value per color cycle.')
     parser.add_argument(
         '--t',
         dest='threshold',
@@ -133,7 +131,7 @@ def main():
         call_str = f"kml_map {bmp_name} {dem_seg_par} {kml_name}"
         os.system(call_str)
         # unzip bmp and kml
-        kmz_name =  geo_ph_rate_name + '_' + str(cycle) + '.kmz'
+        kmz_name = geo_ph_rate_name + '_' + str(cycle) + '.kmz'
         with zipfile.ZipFile(kmz_name, 'w') as f:
             f.write(kml_name)
             os.remove(kml_name)
@@ -141,6 +139,7 @@ def main():
             os.remove(bmp_name)
 
     print('All done, enjoy it!')
+
 
 if __name__ == "__main__":
     main()

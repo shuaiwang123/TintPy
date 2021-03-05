@@ -35,31 +35,31 @@ EXAMPLE = """Example:
   ./gamma2mintpy.py /ly/stacking /ly/mintpy diff.int.gacos.sm.sub.unw 20
 """
 
-TEMPLATE = """mintpy.load.processor      = gamma
-mintpy.load.unwFile        = ./interferograms/*/diff_*rlks.unw
-mintpy.load.corFile        = ./interferograms/*/filt_*rlks.cor
-mintpy.load.connCompFile   = None
-mintpy.load.intFile        = None
-
-mintpy.load.demFile        = ./geom_master/sim_*.rdc.dem
-mintpy.load.lookupYFile    = ./geom_master/sim_*.UTM_TO_RDC
-mintpy.load.lookupXFile    = ./geom_master/sim_*.UTM_TO_RDC
-mintpy.load.incAngleFile   = None
-mintpy.load.azAngleFile    = None
-mintpy.load.shadowMaskFile = None
-mintpy.load.waterMaskFile  = None
+TEMPLATE = """
+ mintpy.load.processor      = gamma
+ mintpy.load.unwFile        = ./interferograms/*/diff_*rlks.unw
+ mintpy.load.corFile        = ./interferograms/*/filt_*rlks.cor
+ mintpy.load.connCompFile   = None
+ mintpy.load.intFile        = None
+ mintpy.load.demFile        = ./geom_master/sim_*.rdc.dem
+ mintpy.load.lookupYFile    = ./geom_master/sim_*.UTM_TO_RDC
+ mintpy.load.lookupXFile    = ./geom_master/sim_*.UTM_TO_RDC
+ mintpy.load.incAngleFile   = None
+ mintpy.load.azAngleFile    = None
+ mintpy.load.shadowMaskFile = None
+ mintpy.load.waterMaskFile  = None
 """
 
 
 def check_data(stacking_dir, ifg_pairs, extension):
     no_num = 0
-    for ifg in ifg_pairs:
-        file = glob.glob(os.path.join(stacking_dir, ifg_pairs,
+    for ifg in sorted(ifg_pairs):
+        file = glob.glob(os.path.join(stacking_dir, ifg,
                                       '*' + extension))
         if not file:
             no_num += 1
             print("cannot find {} file for {}".format(extension, ifg))
-    if no_num >= 0:
+    if no_num > 0:
         sys.exit()
 
 
@@ -107,6 +107,8 @@ def main():
 
     # flag for copying files into geom_master_dir
     flag = True
+
+    print('Copying files into {}'.format(mintpy_dir))
 
     for ifg in ifg_pairs:
         ifg_dir = os.path.join(stacking_dir, ifg)
