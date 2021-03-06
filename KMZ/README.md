@@ -13,7 +13,7 @@ num3 lon3 lat3 vel3
 
 #### Made by make_kmz.py
 
-![velocity](vel_cut.png)
+![velocity](./../Pictures/vel_cut.png)
 
 #### Data format required by make_kmz_timeseries.py
 ```
@@ -32,4 +32,4 @@ num4 lon4 lat4 vel4 date1-disp4 date2-disp4 date3-disp4 ...
 
 #### Made by make_kmz_timeseries.py
 
-![velocity+timeseries](ts_cut.png)
+![velocity+timeseries](./../Pictures/ts_cut.png)
