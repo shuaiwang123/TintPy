@@ -122,16 +122,16 @@ def main():
         sys.exit()
     if not os.path.isfile(html):
         print('cannot find {}'.format(html))
+        sys.exit()
     # get date_and_mission
     date_and_mission = get_sentinel1_date_and_mission(input_path)
-    if len(date_and_mission):
+    if date_and_mission:
         num = 0
-        if date_and_mission:
-            all_urls = get_urls_from_html(html)
-            needed_urls = get_needed_urls(date_and_mission, all_urls)
-            for url in needed_urls:
-                num += 1
-                print(f"{num}. {url}")
+        all_urls = get_urls_from_html(html)
+        needed_urls = get_needed_urls(date_and_mission, all_urls)
+        for url in needed_urls:
+            num += 1
+            print(f"{num}. {url}")
     else:
         print("Nothing found, please check path!")
 
