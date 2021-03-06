@@ -43,6 +43,9 @@ function [] = rot_interp_gacos(m_gacos_ztd, s_gacos_ztd, dem_seg_par, m_gacos_ph
             % figure,imagesc(ztd_pha);colorbar;colormap;
             inter_ztd_pha=interp2(lon,lat,ztd_pha,lon2,lat2,'cubic');
             % figure,imagesc(inter_ztd_pha);colorbar;colormap;
+            if exist(gacos_phs, 'file'):
+                delete(gacos_phs)
+            end
             fwritebkbig(inter_ztd_pha,gacos_phs,'float32');
             clear lon;clear lat;clear ztd;clear ztd_pha;clear inter_ztd_pha;
         end
