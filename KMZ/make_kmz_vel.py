@@ -17,12 +17,8 @@ from lxml import etree
 from pykml.factory import KML_ElementMaker as KML
 
 EXAMPLE = r"""Example:
-  # Windows
-  python make_kmz.py vels.txt D:\kmz\vels.kmz
-  python make_kmz.py vels.txt D:\kmz\vels.kmz -s 0.6 -n f -l 100 101 31 32
-  # Linux
-  python3 make_kmz.py vels.txt /home/ly/vels
-  python3 make_kmz.py vels.txt /home/ly/vels -s 0.6 -n f -l 100 101 31 32
+  python3 make_km_velz.py vels.txt /home/ly/vels
+  python3 make_kmz_vel.py vels.txt /home/ly/vels -s 0.6 -n f -l 100 101 31 32
   # data format
   num1 lon1 lat1 vel1
   num2 lon2 lat2 vel2
