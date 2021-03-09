@@ -1,4 +1,4 @@
-#### Data format required by make_kmz.py
+#### Data format required by make_kmz_vel.py
 ```
 num1 lon1 lat1 vel1
 num2 lon2 lat2 vel2
@@ -11,11 +11,11 @@ num3 lon3 lat3 vel3
 ...
 ```
 
-#### Made by make_kmz.py
+#### Made by make_kmz_vel.py
 
 ![velocity](./../Pictures/vel_cut.png)
 
-#### Data format required by make_kmz_timeseries.py
+#### Data format required by make_kmz_ts.py
 ```
   -1   -1   -1   -1       date1       date2       date3 ...
 num1 lon1 lat1 vel1 date1-disp1 date2-disp1 date3-disp1 ...
@@ -30,6 +30,6 @@ num4 lon4 lat4 vel4 date1-disp4 date2-disp4 date3-disp4 ...
  5  100.2   31.1  -10         0      -10      -20      -23      -28
 ```
 
-#### Made by make_kmz_timeseries.py
+#### Made by make_kmz_ts.py
 
 ![velocity+timeseries](./../Pictures/ts_cut.png)
