@@ -180,9 +180,9 @@ rasrmg $m_date-$s_date.diff.int.sm.sub.unw -  $width 1 1 0 1 1 .5 1. .35 .0 1 $m
 
 USAGE = """Example:
   # calculate baseline
-  ./diff_by_baseline2.py /ly/slc /ly/stacking /ly/dem 20200202 0 500 0 300
+  ./diff_by_baseline_nocoreg.py /ly/slc /ly/stacking /ly/dem 20200202 0 500 0 300
   # calculate baseline and run stacking
-  ./diff_by_baseline2.py /ly/slc /ly/stacking /ly/dem 20200202 0 500 0 300 --flag t --rlks 8 --alks 2
+  ./diff_by_baseline_nocoreg.py /ly/slc /ly/stacking /ly/dem 20200202 0 500 0 300 --flag t --rlks 8 --alks 2
 """
 
 

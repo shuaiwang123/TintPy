@@ -211,8 +211,8 @@ def cmd_line_parser():
 
 
 EXAMPLE = """Example:
-  ./diff_by_number2.py /ly/slc /ly/stacking /ly/dem 4
-  ./diff_by_number2.py /ly/slc /ly/stacking /ly/dem 4 --rlks 8 --alks 2
+  ./diff_by_number_nocoreg.py /ly/slc /ly/stacking /ly/dem 4
+  ./diff_by_number_nocoreg.py /ly/slc /ly/stacking /ly/dem 4 --rlks 8 --alks 2
 """
 
 
