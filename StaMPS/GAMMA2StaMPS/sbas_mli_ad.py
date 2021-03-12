@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-#####################################################################################
-# prepare necessary files(multilooked) processed by GAMMA for StaMPS PS processing  #
-# Copyright (c) 2020, Lei Yuan                                                      #
-#####################################################################################
+#######################################################################################
+# prepare necessary files(multilooked) processed by GAMMA for StaMPS SBAS processing  #
+# Copyright (c) 2020, Lei Yuan                                                        #
+#######################################################################################
 
 # Expected directory structure:
 #
-# PS:
-#   rslc/*.rslc
-#   rslc/*.rslc.par
-#   diff0/*.diff
-#   diff0/*.base
+# SB:
+#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/YYYYMMDD.rslc (master)
+#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/YYYYMMDD.rslc (slave)
+#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/*.rslc.par
+#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/*.diff
+#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/*.base
 #   geo/*dem.rdc
 #   geo/*diff_par
 #   geo/YYYYMMDD.lon (master)
@@ -24,18 +25,19 @@ import shutil
 import re
 
 EXAMPLE = """Example:
-  ./ps_mli_stamps.py ./stacking ./
+  ./sbas_mli_ad.py ./stacking 20200202 ./
 """
 
 
 def cmdline_parser():
     parser = argparse.ArgumentParser(
         description=
-        'Prepare necessary files(multilooked) processed by GAMMA for StaMPS PS processing.',
+        'Prepare necessary files(multilooked) processed by GAMMA for StaMPS SBAS processing.',
         epilog=EXAMPLE,
         formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('stacking_dir', help='path of stacking directory')
+    parser.add_argument('supermaster', help='supermaster for coregistration')
     parser.add_argument('output_dir',
                         help='parent directory of INSAR_supermaster')
 
@@ -106,62 +108,54 @@ def gen_lon_lat(stacking_dir, supermaster, sm_dir, geo_dir):
     os.system(cmd)
 
 
-def modify_par(par_in, par_out):
-    with open(par_in, 'r') as f:
-        par_content = f.read()
-        par_content = par_content.replace('FLOAT', 'FCOMPLEX')
-    with open(par_out, 'w+') as f:
-        f.write(par_content)
-
-
-def prep_rslc_and_diff0_dir(stacking_dir, insar_dir):
+def prep_sb_dir(stacking_dir, supermaster, sm_dir, insar_dir):
     # mkdir
-    rslc_dir = os.path.join(insar_dir, 'rslc')
-    if not os.path.isdir(rslc_dir):
-        os.mkdir(rslc_dir)
-    diff0_dir = os.path.join(insar_dir, 'diff0')
-    if not os.path.isdir(diff0_dir):
-        os.mkdir(diff0_dir)
+    sb_dir = os.path.join(insar_dir, 'SMALL_BASELINES')
+    if not os.path.isdir(sb_dir):
+        os.mkdir(sb_dir)
     # get width
-    diff_par = glob.glob(os.path.join(stacking_dir, '*', '*.diff.par'))[0]
+    diff_par = glob.glob(os.path.join(sm_dir, '*.diff.par'))[0]
+    # get content of mli.par and modify it
+    mli_par = glob.glob(os.path.join(sm_dir,
+                                     '*' + supermaster + '*pwr*.par'))[0]
+    with open(mli_par, 'r') as f:
+        mli_par_content = f.read()
+        mli_par_content = mli_par_content.replace('FLOAT', 'FCOMPLEX')
     width = read_gamma_par(diff_par, 'range_samples')
     # get ifg_pairs
     files = os.listdir(stacking_dir)
     ifg_pairs = sorted([i for i in files if re.match(r'^\d{8}[-_]\d{8}$', i)])
     for ifg in ifg_pairs:
-        ifg_out = ifg.replace('-', '_')
+        ifg_out = ifg.replace('_', '-')
         ifg_in_dir = os.path.join(stacking_dir, ifg)
+        # mkdir
+        ifg_out_dir = os.path.join(sb_dir, ifg.replace('-', '_'))
+        if not os.path.isdir(ifg_out_dir):
+            os.mkdir(ifg_out_dir)
         # prep .diff
         diff = glob.glob(os.path.join(ifg_in_dir, '*.diff.int'))[0]
-        diff_dst = os.path.join(diff0_dir, ifg_out + '.diff')
+        diff_dst = os.path.join(ifg_out_dir, ifg_out + '.diff')
         print(diff_dst)
         shutil.copy(diff, diff_dst)
         # prep .base
         baseline = glob.glob(os.path.join(ifg_in_dir, '*.base'))[0]
-        baseline_dst = os.path.join(diff0_dir, ifg_out + '.base')
+        baseline_dst = os.path.join(ifg_out_dir, ifg_out + '.base')
         print(baseline_dst)
         shutil.copy(baseline, baseline_dst)
-        # prep .rslc and .rslc.par
+        # prep YYYYMMDD.rslc and .rslc.par
         # real_to_cpx
-        # supermaster rslc and rslc.par
         mli1 = glob.glob(os.path.join(ifg_in_dir, '*.pwr1'))[0]
-        mli1_dst = os.path.join(rslc_dir, ifg[0:8] + '.rslc')
-        if not os.path.isfile(mli1_dst):
-            call_str = f"real_to_cpx {mli1} - {mli1_dst} {width} 0"
-            os.system(call_str)
-            # get content of mli.par and modify it
-            mli1_par = glob.glob(os.path.join(ifg_in_dir, '*pwr1.par'))[0]
-            mli1_par_dst = mli1_dst + '.par'
-            modify_par(mli1_par, mli1_par_dst)
-        # slaves rslc and rslc.par
+        mli1_dst = os.path.join(ifg_out_dir, ifg[0:8] + '.rslc')
+        call_str = f"real_to_cpx {mli1} - {mli1_dst} {width} 0"
+        os.system(call_str)
         mli2 = glob.glob(os.path.join(ifg_in_dir, '*.pwr2'))[0]
-        mli2_dst = os.path.join(rslc_dir, ifg[9:17] + '.rslc')
+        mli2_dst = os.path.join(ifg_out_dir, ifg[9:17] + '.rslc')
         call_str = f"real_to_cpx {mli2} - {mli2_dst} {width} 0"
         os.system(call_str)
-        # get content of mli.par and modify it
-        mli2_par = glob.glob(os.path.join(ifg_in_dir, '*pwr2.par'))[0]
-        mli2_par_dst = mli2_dst + '.par'
-        modify_par(mli2_par, mli2_par_dst)
+        # write .rslc.par
+        mli_par_path = os.path.join(ifg_out_dir, supermaster + '.rslc.par')
+        with open(mli_par_path, 'w+') as f:
+            f.write(mli_par_content)
 
 
 def prep_geo_dir(stacking_dir, supermaster, sm_dir, insar_dir):
@@ -198,18 +192,15 @@ def prep_dem_dir(stacking_dir, supermaster, sm_dir, insar_dir):
     shutil.copy(seg_par, seg_par_dst)
 
 
-def prep_files(stacking_dir, output_dir):
-    # get supermaster and sm_dir
-    files = os.listdir(stacking_dir)
-    ifg_pairs = sorted([i for i in files if re.match(r'^\d{8}[-_]\d{8}$', i)])
-    supermaster = ifg_pairs[0][0:8]
-    sm_dir = os.path.join(stacking_dir, ifg_pairs[0])
+def prep_files(stacking_dir, supermaster, output_dir):
     # mkdir
     insar_dir = os.path.join(output_dir, 'INSAR_' + supermaster)
     if not os.path.isdir(insar_dir):
         os.mkdir(insar_dir)
-    # rslc and diff0
-    prep_rslc_and_diff0_dir(stacking_dir, insar_dir)
+    # get sm dir
+    sm_dir = glob.glob(os.path.join(stacking_dir, '*' + supermaster + '*'))[0]
+    # SMALL_BASELINES
+    prep_sb_dir(stacking_dir, supermaster, sm_dir, insar_dir)
     # geo
     prep_geo_dir(stacking_dir, supermaster, sm_dir, insar_dir)
     # dem
@@ -223,10 +214,13 @@ def run():
     inps = cmdline_parser()
     stacking_dir = inps.stacking_dir
     stacking_dir = os.path.abspath(stacking_dir)
+    supermaster = inps.supermaster
     output_dir = inps.output_dir
     output_dir = os.path.abspath(output_dir)
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir)
     # run
-    prep_files(stacking_dir, output_dir)
+    prep_files(stacking_dir, supermaster, output_dir)
 
 
 if __name__ == "__main__":
