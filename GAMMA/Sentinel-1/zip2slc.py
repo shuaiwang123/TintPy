@@ -68,7 +68,7 @@ def get_all_s1_date(zip_files):
         date = get_s1_date(file)
         dates.append(date)
     dates = list(set(dates))
-    return dates
+    return sorted(dates)
 
 
 def get_satellite(zip_file):
