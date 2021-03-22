@@ -26,7 +26,7 @@ saveas(gcf,'diff_gacos_cpx','png')
 diff_correct=diff_int.*(atodata_cpx);
 figure('visible','off'),imagesc(angle(diff_correct));colorbar;colormap(jet);
 saveas(gcf,'diff_correct','png')
-if exist([diff_file '.gacos'], 'file'):
+if exist([diff_file '.gacos'], 'file')
     delete([diff_file '.gacos'])
 end
 fwritebkbig(diff_correct,[diff_file '.gacos'],'cpxfloat32');
