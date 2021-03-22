@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 ###########################################
 # Download Sentinel-1 A/B precise orbits  #
-# Copyright (c) 2021, Lei Yuan            #
+# Copyright (c) 2020, Lei Yuan            #
 ###########################################
 import argparse
 import datetime
@@ -12,17 +12,13 @@ import sys
 import urllib
 
 import requests
+from bs4 import BeautifulSoup
 
-try:
-    from bs4 import BeautifulSoup
-except:
-    print("cannot import bs4, you can install it using 'pip install bs4'")
-
-URL_PREFIX = 'http://aux.sentinel1.eo.esa.int/POEORB/'
+URL_PREFIX = 'https://qc.sentinel1.eo.esa.int/aux_poeorb/'
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36\
-                    (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-    'Connection': 'close'
+    'User-Agent':
+    'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36\
+                    (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'
 }
 
 
@@ -98,28 +94,28 @@ def get_sentinel1_date_and_mission(path):
         return get_sentinel1_date_and_mission_from_text(path)
 
 
-def get_url(date_mission):
+def get_urls(date_and_mission):
     """
-    :param date_mission: date and mission (str)
-    :return: orbit_url
+    :param date_and_mission: date_mission (str)
+    :return:
     """
-    orbit_url = None
-    date = date_mission[0:8]
-    mission = date_mission[-3:]
-    date20 = date_operation(date, 20, '/')
-    page_url = URL_PREFIX + date20 + '/'
-    html = requests.get(page_url, headers=HEADERS)
+    url = ''
+    url_param = {}
+    url_param['sentinel1__mission'] = date_and_mission[-3:]
+    url_param['validity_start'] = date_operation(date_and_mission[0:8])
+    url_param = urllib.parse.urlencode(url_param)
+    url = URL_PREFIX + "?" + url_param
+    html = requests.get(url, headers=HEADERS)
     if html.status_code == 200:
         dom = BeautifulSoup(html.text, "html.parser")
-        names = re.findall(
-            r'S1[A|B]_OPER_AUX_POEORB_OPOD_\d{8}T\d{6}_V\d{8}T\d{6}_\d{8}T\d{6}\.EOF',
-            str(dom))
-        names = list(set(names))
-        if names:
-            for name in names:
-                if name.startswith(mission):
-                    orbit_url = page_url + name
-    return orbit_url
+        eofs = re.findall(r"http.*EOF", str(dom))
+        if eofs:
+            url = eofs[0]
+        else:
+            print('Cannot find http.*EOF from html.text')
+    else:
+        print('Error to get html')
+    return url
 
 
 def download_progress(blocknum, blocksize, totalsize):
@@ -140,19 +136,19 @@ def download_progress(blocknum, blocksize, totalsize):
               flush=True)
 
 
-def download_orbit(url, out_dir):
-    file_path = os.path.join(out_dir, url.split('/')[-1])
+def download_orbits(url, save_path):
+    abs_path = os.path.join(save_path, url.split('/')[-1])
     try:
-        urllib.request.urlretrieve(url, file_path, download_progress)
+        urllib.request.urlretrieve(url, abs_path, download_progress)
     except Exception as e:
         print(f'{e}')
 
 
-def check_exist_orbits(out_dir, all_date_and_mission):
+def check_exist_orbits(save_path, all_date_and_mission):
     exist_date_and_mission = []
     tmp = all_date_and_mission
-    orbits = [i for i in os.listdir(out_dir) if i.endswith('.EOF')]
-    orbits_path = [os.path.join(out_dir, o) for o in orbits]
+    orbits = [i for i in os.listdir(save_path) if i.endswith('.EOF')]
+    orbits_path = [os.path.join(save_path, o) for o in orbits]
     date_and_mission = [
         date_operation(o[-19:-11], flag="") + o[:3] for o in orbits
     ]
@@ -196,9 +192,9 @@ def cmdline_parser():
         'input_path',
         type=str,
         help='path of text or directory for getting images names')
-    parser.add_argument('out_dir',
+    parser.add_argument('save_path',
                         type=str,
-                        help='directory path for saving orbits')
+                        help='path of directory for saving orbits')
     return parser
 
 
@@ -207,15 +203,15 @@ def main():
     parser = cmdline_parser()
     args = parser.parse_args()
     input_path = args.input_path
-    out_dir = args.out_dir
+    save_path = args.save_path
     # check path
     if not os.path.exists(input_path):
         print("Wrong path of text or directory for getting images names.")
         sys.exit()
-    if not os.path.isdir(out_dir):
-        os.mkdir(out_dir)
+    if not os.path.isdir(save_path):
+        os.mkdir(save_path)
     date_and_mission = get_sentinel1_date_and_mission(input_path)
-    if date_and_mission:
+    if len(date_and_mission):
         print("Sentinel-1 A/B date_mission found: {}\n".format(
             len(date_and_mission)))
         print_oneline_five(date_and_mission)
@@ -232,13 +228,14 @@ def main():
             )
         # check orbit files if exist in saving directory
         date_and_mission, exist_date_and_mission = check_exist_orbits(
-            out_dir, date_and_mission)
+            save_path, date_and_mission)
         if exist_date_and_mission:
-            print("\nSentinel-1 A/B date_and_mission exist in out_dir: {}\n".
+            print("\nSentinel-1 A/B date_and_mission exist in save_path: {}\n".
                   format(len(exist_date_and_mission)))
             print_oneline_five(exist_date_and_mission)
         else:
-            print("\nNo Sentinel-1 A/B date_missions(orbits) exist in out_dir")
+            print(
+                "\nNo Sentinel-1 A/B date_missions(orbits) exist in save_path")
         if date_and_mission:
             print("\nSentinel-1 A/B orbit urls need to crawl: {}\n".format(
                 len(date_and_mission)))
@@ -250,12 +247,10 @@ def main():
             for d_m in date_and_mission:
                 num += 1
                 print(f"\n{num}.Crawling: {d_m}")
-                url = get_url(d_m)
+                url = get_urls(d_m)
                 if url:
                     print(f"Crawled: {url}")
-                    download_orbit(url, out_dir)
-                else:
-                    print('cannot get orbit url for {}'.format(d_m))
+                    download_orbits(url, save_path)
 
 
 if __name__ == '__main__':
