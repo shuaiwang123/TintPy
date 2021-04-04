@@ -1,1 +1,1 @@
-## Here are some abandoned script
+## Here are some abandoned scripts

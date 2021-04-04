@@ -1,5 +1,5 @@
 function [] = cut_vel( vel_in, lonlat, vel_out )
-%cut data using longitude and latitued
+%cut data using longitude and latitude
 
 data=load(vel_in);
 lon=data(:,1);
