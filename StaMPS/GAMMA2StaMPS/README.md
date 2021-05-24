@@ -1,4 +1,4 @@
-# How to run SBAS using StaMPS
+# How to run SBAS using StaMPS (GMT is required)
 
 ## 1. Select points based on coherence
 
