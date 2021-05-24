@@ -13,7 +13,8 @@ import sys
 import numpy as np
 
 EXAMPLE = """Example:
-  ./diff_tab.py /ly/stacking diff.int.sm.unw 0.3 /ly/stacking
+  python3 diff_tab.py /ly/stacking diff.int.gacos.sm.sub.unw 0.3 /ly/res
+  python3 diff_tab.py /ly/stacking diff.int.gacos.sm.sub.unw 0.3 /ly/res --ce diff.gacos.sm.cc --de diff.par
 """
 
 
@@ -24,13 +25,16 @@ def cmdline_parser():
         epilog=EXAMPLE)
 
     parser.add_argument('ifg_dir', help='path of ifg directory.')
-    parser.add_argument('extension',
+    parser.add_argument('unw_extension',
                         help='filename extension of unwrapped file.')
     parser.add_argument('coh',
-                        help='coherence threshold for Phase-Stacking.',
+                        help='coherence threshold (smaller than this will not be used) for Phase-Stacking.',
                         type=float)
-    parser.add_argument('out_dir', help='path of directory saving diff_tab.')
-
+    parser.add_argument('out_dir', help='directory path for saving diff_tab.')
+    parser.add_argument('--ce', dest='coh_extension',
+                        help='filename extension of coherence file (default: diff.sm.cc).', default='diff.sm.cc')
+    parser.add_argument('--de', dest='diff_par_extension',
+                        help='filename extension of diff.par file (default: diff.par).', default='diff.par')
     inps = parser.parse_args()
 
     return inps
@@ -45,18 +49,22 @@ def get_baseline(unw):
     return baseline
 
 
-def get_unws_cohs_diff_pars(ifg_dir, unw_extension, coh_extension, diff_par_extension):
-    unws = glob.glob(os.path.join(ifg_dir, '*/*' + unw_extension))
+def get_unws_cohs(ifg_dir, unw_extension, coh_extension):
+    unws = glob.glob(os.path.join(ifg_dir, '*', '*' + unw_extension))
     cohs = []
-    diff_pars = []
     for unw in unws:
         dir_name = os.path.dirname(unw)
-        coh = glob.glob(os.path.join(dir_name, '*' + coh_extension))[0]
-        cohs.append(coh)
-        diff_par = glob.glob(os.path.join(
-            dir_name, '*' + diff_par_extension))[0]
-        diff_pars.append(diff_par)
-    return unws, cohs, diff_pars
+        coh_files = glob.glob(os.path.join(dir_name, '*' + coh_extension))
+        if coh_files:
+            cohs.append(coh_files[0])
+    return unws, cohs
+
+
+def get_diff_par(ifg_dir, diff_par_extension):
+    diff_pars = glob.glob(os.path.join(ifg_dir, '*', '*' + diff_par_extension))
+    if diff_pars:
+        return diff_pars[0]
+    return None
 
 
 def read_diff_par(diff_par):
@@ -70,7 +78,7 @@ def read_diff_par(diff_par):
     return par_value
 
 
-def read_coh(file, data_type, diff_par):
+def read_coh(file, data_type, width, length):
     # unw, cor, dem_seg -------> float32
     # int               -------> complex64
     # convert into short style
@@ -83,20 +91,24 @@ def read_coh(file, data_type, diff_par):
     # read data
     try:
         data = np.fromfile(file, dtype=data_type)
-        width, length = read_diff_par(diff_par)
         data = data.reshape(length, width)
     except Exception as e:
         print(e)
     return data
 
 
-def statistic_coh(cohs, diff_pars):
+def get_mean_coh(cohs, diff_par):
     print('\nstatisticing coherence:')
     mean_coh_array = np.zeros(len(cohs))
-    for coh, diff_par in zip(cohs, diff_pars):
-        mean_coh = np.mean(read_coh(coh, 'float32', diff_par))
+    width, length = read_diff_par(diff_par)
+    for coh in cohs:
+        mean_coh = np.mean(read_coh(coh, 'float32', width, length))
         mean_coh_array[cohs.index(coh)] = mean_coh
+    np.save('mean_coh_array', mean_coh_array)
+    return mean_coh_array
 
+
+def statistic_coh(mean_coh, step=0.05):
     def count_coh(start, end, coh_array):
         num = 0
         for i in coh_array:
@@ -105,13 +117,10 @@ def statistic_coh(cohs, diff_pars):
         rate = num / coh_array.shape[0]
         print(str(start) + '~' + str(end) + ': ' + str(round(rate, 2)))
 
-    step = 0.05
     for i in np.arange(0, 1, step):
         start = round(i, 2)
         end = round(start + step, 2)
-        count_coh(start, end, mean_coh_array)
-
-    return mean_coh_array
+        count_coh(start, end, mean_coh)
 
 
 def write_diff_tab(unws, mean_coh_array, coh_thres, out_dir):
@@ -134,23 +143,36 @@ def main():
     # get inputs
     inps = cmdline_parser()
     ifg_dir = os.path.abspath(inps.ifg_dir)
-    unw_extension = inps.extension
+    unw_extension = inps.unw_extension
     coh_thres = inps.coh
     out_dir = os.path.abspath(inps.out_dir)
+    coh_extension = inps.coh_extension
+    diff_par_extension = inps.diff_par_extension
+
     # check out_dir
     if not os.path.isdir(out_dir):
         os.mkdir(out_dir)
+
+    # get diff.par
+    diff_par = get_diff_par(ifg_dir, diff_par_extension)
+    if not diff_par:
+        print('Cannot find any {} file'.format(diff_par_extension))
+        sys.exit()
+
     # get unws
-    coh_extension = 'diff.sm.cc'
-    diff_par_extension = 'diff.par'
-    unws, cohs, diff_pars = get_unws_cohs_diff_pars(
-        ifg_dir, unw_extension, coh_extension, diff_par_extension)
+    unws, cohs = get_unws_cohs(ifg_dir, unw_extension, coh_extension)
     if len(unws) == 0:
         print('no unws in {}'.format(ifg_dir))
         sys.exit()
-    if len(unws) == len(cohs) and len(unws) == len(diff_pars):
+
+    if len(unws) == len(cohs):
         # statistic coherence
-        mean_coh_array = statistic_coh(cohs, diff_pars)
+        if os.path.isfile('mean_coh_array.npy'):
+            mean_coh_array = np.load('mean_coh_array.npy')
+        else:
+            mean_coh_array = get_mean_coh(cohs, diff_par)
+        statistic_coh(mean_coh_array)
+
         # write diff_tab
         write_diff_tab(unws, mean_coh_array, coh_thres, out_dir)
     else:

@@ -24,6 +24,8 @@ def cmd_line_parser():
     parser.add_argument('unw_extension',
                         help='filename extension of unwrapped file.')
     parser.add_argument('rlks', help='range looks.', type=int)
+    parser.add_argument('--ce', dest='coh_extension',
+                        help='filename extension of coherence file (default: diff.sm.cc).', default='diff.sm.cc')
     inps = parser.parse_args()
 
     return inps
@@ -32,7 +34,7 @@ def cmd_line_parser():
 EXAMPLE = """Example:
   ./gamma2mintpy.py /ly/stacking /ly/mintpy diff.int.sm.unw 20
   ./gamma2mintpy.py /ly/stacking /ly/mintpy diff.int.sm.sub.unw 20
-  ./gamma2mintpy.py /ly/stacking /ly/mintpy diff.int.gacos.sm.sub.unw 20
+  ./gamma2mintpy.py /ly/stacking /ly/mintpy diff.int.gacos.sm.sub.unw 20 --ce diff.gacos.sm.cc
 """
 
 TEMPLATE = """
@@ -72,6 +74,7 @@ def main():
     stacking_dir = os.path.abspath(stacking_dir)
     unw_extension = inps.unw_extension
     rlks = str(inps.rlks)
+    coh_extension = inps.coh_extension
 
     if not os.path.isdir(mintpy_dir):
         os.mkdir(mintpy_dir)
@@ -97,13 +100,13 @@ def main():
     # check unw
     check_data(stacking_dir, ifg_pairs, unw_extension)
     # check .off
-    check_data(stacking_dir, ifg_pairs, '.off')
+    check_data(stacking_dir, ifg_pairs, 'off')
     # check .pwr1.par
-    check_data(stacking_dir, ifg_pairs, '.pwr1.par')
+    check_data(stacking_dir, ifg_pairs, 'pwr1.par')
     # check .pwr2.par
-    check_data(stacking_dir, ifg_pairs, '.pwr2.par')
-    # check .diff.sm.cc
-    check_data(stacking_dir, ifg_pairs, '.diff.sm.cc')
+    check_data(stacking_dir, ifg_pairs, 'pwr2.par')
+    # check cc
+    check_data(stacking_dir, ifg_pairs, coh_extension)
 
     # flag for copying files into geom_master_dir
     flag = True
@@ -175,7 +178,7 @@ def main():
         dst_s_amp_par_path = os.path.join(dst_ifg_dir, dst_s_amp_par)
         shutil.copy(s_amp_par_path, dst_s_amp_par_path)
         # copy cor in rdc
-        cor = ifg_in + '.diff.sm.cc'
+        cor = ifg_in + '.' + coh_extension
         cor_path = os.path.join(ifg_dir, cor)
         dst_cor = 'filt_' + ifg.replace('-', '_') + '_' + rlks + 'rlks.cor'
         dst_cor_path = os.path.join(dst_ifg_dir, dst_cor)
