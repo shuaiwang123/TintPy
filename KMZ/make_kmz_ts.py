@@ -18,8 +18,8 @@ from pykml.factory import KML_ElementMaker as KML
 
 EXAMPLE = r"""Example:
   python3 make_kmz_ts.py ts.txt /home/ly/ts
-  python3 make_kmz_ts.py ts.txt /home/ly/ts -j /home/ly/tsdygraph-combined.js
-  python3 make_kmz_ts.py ts.txt /home/ly/ts -j /home/ly/tsdygraph-combined.js -s 0.6 -f disp -n f -l 100 101 31 32
+  python3 make_kmz_ts.py ts.txt /home/ly/ts -j /home/ly/dygraph-combined.js
+  python3 make_kmz_ts.py ts.txt /home/ly/ts -j /home/ly/dygraph-combined.js -s 0.6 -f disp -n f -l 100 101 31 32
   # data format
     -1   -1   -1    -1       date1       date2       date3 ...
   num1 lon1 lat1  vel1 date1-disp1 date2-disp1 date3-disp1 ...
@@ -265,7 +265,11 @@ def check_inps(inps):
     """check input data"""
     ts_file = os.path.abspath(inps.ts_file)
     out_file = os.path.abspath(inps.out_file)
-    js_file = os.path.abspath(inps.js_file)
+    js_file = inps.js_file
+    if js_file == 'dygraph-combined.js':
+        js_file = os.path.join(sys.path[0], 'dygraph-combined.js')
+    else:
+        js_file = os.path.abspath(js_file)
     scale = inps.scale
     display_flag = inps.display_flag
     number_flag = inps.number_flag.lower()

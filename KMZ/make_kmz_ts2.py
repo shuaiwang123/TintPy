@@ -244,7 +244,11 @@ def check_inps(inps):
     """check input data"""
     ts_file = os.path.abspath(inps.ts_file)
     out_file = os.path.abspath(inps.out_file)
-    js_file = os.path.abspath(inps.js_file)
+    js_file = inps.js_file
+    if js_file == 'dygraph-combined.js':
+        js_file = os.path.join(sys.path[0], 'dygraph-combined.js')
+    else:
+        js_file = os.path.abspath(js_file)
     scale = inps.scale
     flag = inps.flag
     # check ts_file
