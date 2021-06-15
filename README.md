@@ -13,7 +13,7 @@ Add to your ~/.bashrc file for bash user. Source the file for the first time. It
 ```Bash
 # >>> TintPy >>>
 export TintPy_HOME=/home/ly/TintPy
-export PATH=${PATH}:${TintPy_HOME}
+export PATH=${PATH}:${TintPy_HOME}/CUT:${TintPy_HOME}/DEM:${TintPy_HOME}/GAMMA:${TintPy_HOME}/GAMMA/Sentinel-1:${TintPy_HOME}/GAMMA/Phase-stacking:${TintPy_HOME}/GAMMA/GACOS:${TintPy_HOME}/GAMMA/ALOS:${TintPy_HOME}/KMZ:${TintPy_HOME}/MintPy:${TintPy_HOME}/POEORB:${TintPy_HOME}/StaMPS:${TintPy_HOME}/StaMPS/GAMMA2StaMPS
 export PYTHONPATH=${PYTHONPATH}:${TintPy_HOME}/CUT:${TintPy_HOME}/DEM:${TintPy_HOME}/GAMMA:${TintPy_HOME}/GAMMA/Sentinel-1:${TintPy_HOME}/GAMMA/Phase-stacking:${TintPy_HOME}/GAMMA/GACOS:${TintPy_HOME}/GAMMA/ALOS:${TintPy_HOME}/KMZ:${TintPy_HOME}/MintPy:${TintPy_HOME}/POEORB:${TintPy_HOME}/StaMPS:${TintPy_HOME}/StaMPS/GAMMA2StaMPS
 export MATLABPATH=${TintPy_HOME}/GAMMA/GACOS:`echo $MATLABPATH`
 # <<< TintPy <<<
