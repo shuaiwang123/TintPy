@@ -16,7 +16,7 @@ def cmdline_parser():
         'Reformat EORC PALSAR + PALSAR2 level 1.1 CEOS format SLC data and generate the ISP parameter file',
         formatter_class=argparse.RawTextHelpFormatter)
 
-    parser.add_argument('-s', dest='slc_dir', help='directory including ALOS data')
+    parser.add_argument('-s', dest='slc_dir', help='directory including ALOS raw data (**unzip data first**)')
     parser.add_argument('-o', dest='output_dir', help='directory saving ALOS SLC')
     parser.add_argument('--rlks',
                         help='range looks (defaults: 8)',
@@ -31,12 +31,13 @@ def cmdline_parser():
     return inps
 
 
-def get_slc(slc_dir):
+def get_raw_slc(slc_dir):
     all_slc = []
     files = os.listdir(slc_dir)
     for file in files:
         if re.search(r'\d{10}_\d{6}_ALOS\d{10}-\d{6}', file):
-            all_slc.append(file)
+            if os.path.isdir(os.path.join(slc_dir, file)):
+                all_slc.append(file)
     return all_slc
 
 
@@ -72,10 +73,10 @@ def reformat_alos(slc_dir, output_dir, rlks, alks):
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
     # get all slc
-    all_slc = get_slc(slc_dir)
+    all_raw_slc = get_raw_slc(slc_dir)
     # reformat alos data
-    if all_slc:
-        for slc in all_slc:
+    if all_raw_slc:
+        for slc in all_raw_slc:
             slc_path = os.path.join(slc_dir, slc)
             img = glob.glob(os.path.join(slc_path, 'IMG-HH-ALOS*'))
             led = glob.glob(os.path.join(slc_path, 'LED-ALOS*'))
